@@ -1,0 +1,30 @@
+[
+  {
+    "instance": "2o100t75s1p100",
+    "model": "ilp_min_lateness",
+    "n_orders": 708,
+    "n_routes": 693,
+    "file": "2o100t75s1p100__min_lateness.json"
+  },
+  {
+    "instance": "2o100t75s1p100",
+    "model": "ilp_max_equity",
+    "n_orders": 708,
+    "n_routes": 683,
+    "file": "2o100t75s1p100__max_equity.json"
+  },
+  {
+    "instance": "2o100t75s1p100",
+    "model": "ilp_min_cost",
+    "n_orders": 708,
+    "n_routes": 682,
+    "file": "2o100t75s1p100__min_cost.json"
+  },
+  {
+    "instance": "2o100t75s1p100",
+    "model": "ilp_max_throughput",
+    "n_orders": 708,
+    "n_routes": 692,
+    "file": "2o100t75s1p100__max_throughput.json"
+  }
+]

@@ -1,5 +1,8 @@
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
-# Route re-extraction in progress (adds assignment_time_min); committed once complete.
-simulator/route_data_v2/
+# Dashboard-upload packaging only (flattened/bin-packed copy of
+# route_data_v2/ for the Artifact's 8 MB-per-file limit) -- regenerate with
+# build_all_route_bundles.py, no need to duplicate it in git.
+simulator/build_all_route_bundles_out/
+simulator/build_new_route_bundles_out/
