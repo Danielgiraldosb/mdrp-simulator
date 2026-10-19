@@ -31,9 +31,12 @@ en este archivo.
   simulador replica en varios puntos (ver "Qué cambia respecto al
   simulador original" más abajo).
 - **[`real_instancies/`](real_instancies)** — las 24 instancias originales
-  (datos reales de Bogotá, formato CSV) del simulador de la tesis previo a
-  esta adaptación a mdrplib (`mdrp-sim-master`, ver la comparación
-  detallada más abajo) — no las usa ningún script de este repo todavía, se
+  (datos reales de Bogotá, coordenadas lat/lng) del simulador de la tesis
+  previo a esta adaptación a mdrplib (`mdrp-sim-master`, ver la comparación
+  detallada más abajo), una carpeta `Instancia_0`..`Instancia_23` por
+  instancia con `couriers.csv` (domiciliario, vehículo, turno),
+  `orders.csv` (pedido, tienda, recogida/entrega) y `stores.csv`
+  (ubicación de cada tienda) — no las usa ningún script de este repo todavía, se
   dejan aquí para trabajo futuro.
 
 ## El simulador (`simulator/`)
