@@ -3,17 +3,10 @@
 Copia del simulador de eventos discretos (DES) de la tesis, reescrita para
 trabajar **nativamente** con las 240 instancias de
 [`grubhub/mdrplib`](https://github.com/grubhub/mdrplib), incluidas en este
-repo en [`../public_instances/`](../public_instances) para que el clon quede
-autocontenido. Cómo está construida cada instancia (el procedimiento de
-reducción de tamaño `o100`/`o50`/`r50`, los horarios `s1`/`s2`, los factores
-de velocidad `t100`/`t75` y de preparación `p100`/`p125`, y la definición
-completa del problema) está documentado en detalle en
-[`../MDRPInstances.pdf`](../MDRPInstances.pdf?raw=true) ("Meal Delivery
-Routing: The Grubhub Instances", el documento oficial de mdrplib) y en
-[`../README.md`](../README.md); el evaluador de referencia está en
-[`../MDRP_code/`](../MDRP_code).
+repo en [`public_instances/`](public_instances) para que el clon quede
+autocontenido (antes vivían en una carpeta hermana fuera del repo).
 
-También se incluye [`../real_instancies/`](../real_instancies): las 24
+También se incluye [`mdrpsim_instances/`](mdrpsim_instances): las 24
 instancias originales (datos reales de Bogotá, formato CSV) del simulador
 de la tesis previo a esta adaptación a mdrplib
 (`mdrp-sim-master`, ver la comparación detallada más abajo) — no las usa
