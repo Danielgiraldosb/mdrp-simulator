@@ -64,11 +64,13 @@ def extract_one(instance_name: str, instances_dir: str, policy_name: str = 'ilp'
         routes.append({
             'courier_id': courier_id,
             'pickup_time_min': pickup_t,
+            'assignment_time_min': rows[0]['assignment_time_min'],
             'store': [sx, sy],
             'stops': [
                 {
                     'order_id': r['order_id'],
                     'x': r['user_x'], 'y': r['user_y'],
+                    'assignment_time_min': r['assignment_time_min'],
                     'delivery_time_min': r['delivery_time_min'],
                     'overage_min': r['overage_min'],
                     'c2d_min': r['c2d_min'],

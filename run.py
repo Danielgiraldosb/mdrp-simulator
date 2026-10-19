@@ -48,9 +48,12 @@ logging.basicConfig(
 )
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-# This simulator lives inside mdrplib-master/simulator/, right next to
-# public_instances/ -- no absolute-path configuration needed or to go stale.
-DEFAULT_INSTANCES_DIR = os.path.normpath(os.path.join(THIS_DIR, '..', 'public_instances'))
+# Prefers a local copy (simulator/public_instances/, committed to the repo so
+# a fresh clone is self-contained) and falls back to the sibling copy this
+# project originally developed against (mdrplib-master/public_instances/).
+_LOCAL_INSTANCES_DIR = os.path.join(THIS_DIR, 'public_instances')
+_SIBLING_INSTANCES_DIR = os.path.normpath(os.path.join(THIS_DIR, '..', 'public_instances'))
+DEFAULT_INSTANCES_DIR = _LOCAL_INSTANCES_DIR if os.path.isdir(_LOCAL_INSTANCES_DIR) else _SIBLING_INSTANCES_DIR
 
 
 def _hm_to_min(hm: str) -> float:

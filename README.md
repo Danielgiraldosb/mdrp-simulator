@@ -2,9 +2,15 @@
 
 Copia del simulador de eventos discretos (DES) de la tesis, reescrita para
 trabajar **nativamente** con las 240 instancias de
-[`grubhub/mdrplib`](../public_instances) (carpeta hermana `public_instances/`)
-y con las características que el propio repositorio documenta
-(`../README.md`, `../MDRPInstances.pdf`, `../MDRP_code/compute_performance_summary.py`).
+[`grubhub/mdrplib`](https://github.com/grubhub/mdrplib), incluidas en este
+repo en [`public_instances/`](public_instances) para que el clon quede
+autocontenido (antes vivían en una carpeta hermana fuera del repo).
+
+También se incluye [`mdrpsim_instances/`](mdrpsim_instances): las 24
+instancias originales (datos reales de Bogotá, formato CSV) del simulador
+de la tesis previo a esta adaptación a mdrplib
+(`mdrp-sim-master`, ver la comparación detallada más abajo) — no las usa
+ningún script de este repo todavía, se dejan aquí para trabajo futuro.
 
 ## Qué cambia respecto al simulador original ("simulador plataforma")
 

@@ -25,7 +25,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import StandardScaler
 
-INSTANCES_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'public_instances'))
+from run import DEFAULT_INSTANCES_DIR as INSTANCES_DIR
 NAME_RE = re.compile(r'^(\d+)(o100|o50|r50)(t100|t75)(s1|s2)(p100|p125)$')
 
 
