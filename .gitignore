@@ -1,3 +1,5 @@
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
+# Route re-extraction in progress (adds assignment_time_min); committed once complete.
+simulator/route_data_v2/
