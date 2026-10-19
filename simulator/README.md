@@ -6,6 +6,126 @@ trabajar **nativamente** con las 240 instancias de
 y con las características que el propio repositorio documenta
 (`../README.md`, `../MDRPInstances.pdf`, `../MDRP_code/compute_performance_summary.py`).
 
+## Qué es y cómo funciona
+
+### El problema
+
+El *Meal Delivery Routing Problem* (MDRP): a lo largo de un día operativo hay
+restaurantes, domiciliarios con turnos fijos (hora de entrada/salida) y
+pedidos que van llegando (cada uno con su restaurante, su cliente, la hora en
+que se hizo y la hora en que la comida está lista). El simulador decide, cada
+cierto tiempo, qué domiciliario recoge y entrega cuál(es) pedido(s), y mide
+qué tan bien queda el servicio: cuántos pedidos se entregan, qué tan rápido,
+a qué costo y qué tan parejo queda el reparto de trabajo/pago entre
+domiciliarios.
+
+### Arquitectura: simulación de eventos discretos por actores
+
+El motor es [SimPy](https://simpy.readthedocs.io/) con el reloj en
+**minutos** (la unidad nativa de mdrplib, no segundos). Una corrida empieza
+en `cfg.sim_start_clock_min` y avanza `cfg.sim_end` minutos (por defecto el
+día completo, 1,440 min). Todo vive en `simulator.py`, organizado en 4 tipos
+de actor:
+
+- **`World`** — arma la instancia (pedidos, domiciliarios, restaurantes) y
+  arranca a todos los demás actores en el tiempo 0.
+- **`UserActor`** (uno por pedido) — "duerme" hasta el `placement_time` del
+  pedido y entonces avisa al `Dispatcher` que ya está pendiente. Si
+  `cfg.enable_cancellation` está activo (apagado por defecto, porque mdrplib
+  no modela cancelaciones) también puede cancelarlo por impaciencia del
+  cliente o por un plazo límite de la plataforma — una extensión propia de
+  la tesis, no parte del benchmark oficial.
+- **`CourierActor`** (uno por domiciliario) — está disponible solo dentro de
+  su turno (`on_time`/`off_time`). Cuando el `Dispatcher` le notifica una
+  ruta, decide aceptarla o rechazarla (`acceptance.py`) y, si acepta, la
+  ejecuta parada por parada: viaja al restaurante, espera si el pedido aún
+  no está listo, lo recoge (`pickup_service_min`), viaja a cada cliente en
+  el orden de la ruta y entrega (`dropoff_service_min`).
+- **`Dispatcher`** — el cerebro. Corre la *ventana rodante* de despacho (ver
+  abajo) y lleva los registros de pedidos pendientes/asignados y el log de
+  entregas que alimenta las métricas.
+
+### El ciclo de despacho (ventana rodante de 2 minutos)
+
+Cada `cfg.rolling_horizon` minutos (2 min por defecto, el mismo intervalo
+que usa el panel de "costo computacional" del dashboard) el `Dispatcher`
+corre una *ronda de despacho* (`_dispatch_event` en `simulator.py`):
+
+1. Reúne los domiciliarios libres en ese instante y los pedidos aún sin
+   asignar.
+2. Le pasa ambos conjuntos a la política de asignación activa:
+   `policy.assign(state) -> [(courier_id, [order_ids], pay_offer), ...]`.
+3. Notifica a cada domiciliario asignado, que entonces decide aceptar o
+   rechazar la ruta ofrecida.
+
+Este ciclo se repite hasta que termina la ventana simulada. El tiempo real
+(wall-clock) que tarda cada llamada a `assign()` se mide aparte
+(`solve_mean/p90/max`) y se compara contra el presupuesto real de 120 s por
+ronda — independiente del reloj simulado, que avanza sin importar cuánto
+tarde Python en decidir.
+
+### Las 11 políticas de asignación
+
+Todas implementan la misma interfaz (`Policy.assign`), así que cualquiera
+puede correr sobre las mismas 240 instancias y compararse en igualdad de
+condiciones. Nuestras 7 propias comparten de hecho el mismo objetivo real
+—maximizar cobertura— y solo difieren en *cómo* llegan ahí; las 4 portadas
+de `mdrp-sim-master` persiguen un objetivo distinto (ver más abajo).
+
+| Política | De dónde | Qué hace |
+|---|---|---|
+| `greedy` | propia | Por domiciliario (prioridad: el que menos pedidos lleva hoy), toma el bundle factible más urgente en la tienda más cercana (`routing.py`). |
+| `fair_greedy` | propia | Igual que `greedy`, pero prioriza domiciliarios con menor ganancia por hora y les suma un bono por ruta. |
+| `ilp_max_coverage` | propia (PuLP/CBC) | MIP sobre (domiciliario, ruta candidata): maximiza pedidos cubiertos. |
+| `ilp_max_equity` | propia | Mismo MIP, criterio de desempate: minimizar dispersión de ganancia entre domiciliarios. |
+| `ilp_max_throughput` | propia | Mismo MIP, desempate: maximizar rutas por minuto de viaje. |
+| `ilp_min_cost` | propia | Mismo MIP, desempate: minimizar pago total. |
+| `ilp_min_lateness` | propia | Mismo MIP, desempate: minimizar atraso total sobre el SLA blando. |
+| `mdrpsim_greedy` | portada de `mdrp-sim-master` | Por pedido (no por domiciliario): a cada uno le busca, entre todos los domiciliarios libres, el de menor tiempo total de viaje. Sin bundling; cada domiciliario recibe máximo un pedido por ronda. |
+| `mdrpsim_mip` | portada | MIP exacto sobre bundles agrupados por restaurante: maximiza densidad de throughput menos una penalización por atraso (no cobertura). |
+| `mdrpsim_graph` | portada | Relajación LP continua del mismo `mdrpsim_mip` — matemáticamente idéntica porque el poliedro de asignación es íntegro. |
+| `mdrpsim_graph_prospects` | portada | Igual que `mdrpsim_graph`, pero solo considera candidatos dentro de 3&nbsp;km (filtro de "prospectos" de mdrp-sim-master). |
+
+Más detalle de cada una en [`policies.py`](policies.py),
+[`ilp_policy.py`](ilp_policy.py) y [`mdrpsim_policies.py`](mdrpsim_policies.py)
+(el docstring de este último documenta además qué se adaptó y qué NO se
+portó de mdrp-sim-master, y por qué).
+
+### Parámetros clave de cada instancia y de la corrida
+
+De `instance_parameters.txt` (uno por instancia, ver `loader.py`):
+
+- `meters_per_minute` — velocidad del domiciliario (varía con el factor `t100`/`t75`).
+- `target click-to-door` / `maximum click-to-door` — SLA blanda (mide atraso) y dura (corte de factibilidad); ver la sección de equidad/SLA más abajo y `routing.py::route_feasibility`.
+- `pay per order`, `guaranteed pay per hour` — pago base y piso garantizado (con *true-up*, ver punto 7 más abajo).
+
+De `config.py` (transversales a las 11 políticas):
+
+- `max_bundle_size` (3 por defecto) — cuántos pedidos del mismo restaurante puede llevar un domiciliario en un solo viaje.
+- `acceptance_mode` (`auto`/`fixed`/`logistic`) — si el domiciliario notificado siempre acepta la ruta, o puede rechazarla.
+- `ilp_time_limit_sec` (`None` por defecto) — el solver nunca se corta por tiempo; corre hasta la solución óptima real (ver punto 14 más abajo).
+- `enable_cancellation`, `enable_repositioning` — extensiones propias de la tesis, apagadas por defecto para igualar el supuesto del benchmark oficial.
+
+### Qué produce una corrida
+
+`metrics.compute_metrics()` (ver [`metrics.py`](metrics.py)) resume el log
+de entregas en:
+
+- **Servicio**: `coverage_rate` (% de pedidos entregados), percentiles de
+  click-to-door/ready-to-door/ready-to-pickup, `overage` (minutos de atraso
+  sobre el SLA blando), tamaño de bundle.
+- **Económico**: `total_payment`, `proportion_trueup` (qué fracción de
+  domiciliarios necesitó el piso garantizado).
+- **Equidad**: `F_Gini` (desigualdad de ganancia por hora — ver la pregunta
+  de equidad más abajo), `F_MaxMin`, `F_Orders`, `F_Deficit`, `F_Dist`.
+- **Cómputo**: `solve_mean/p90/max` (segundos reales por ronda de
+  despacho) y `wall_clock_sec` (duración total de la corrida).
+
+Con esto, `batch_sensitivity.py`/`batch_mdrpsim.py`/`batch_greedy_fair.py`
+corren las 11 políticas sobre las 240 instancias y producen un CSV con una
+fila por corrida, listo para el análisis de sensibilidad (ver más abajo) o
+para el dashboard interactivo del proyecto.
+
 ## Qué cambia respecto al simulador original ("simulador plataforma")
 
 El simulador original fue construido primero para otro dataset (24 instancias
