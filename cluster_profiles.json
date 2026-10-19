@@ -1,0 +1,91 @@
+{
+  "0": {
+    "n_instances": 24,
+    "n_orders": 1166.333,
+    "n_couriers": 292.167,
+    "n_restaurants": 206.0,
+    "orders_per_courier_hour": 1.224,
+    "degree_of_dynamism": 0.547,
+    "delivery_dist_m_mean": 2624.828,
+    "restaurant_spacing_m_mean": 7578.313,
+    "preparation_mean": 18.678,
+    "meters_per_minute": 366.5,
+    "size_breakdown": {
+      "o100": 8,
+      "o50": 8,
+      "r50": 8
+    },
+    "seed_breakdown": [
+      9
+    ]
+  },
+  "1": {
+    "n_instances": 105,
+    "n_orders": 439.914,
+    "n_couriers": 100.152,
+    "n_restaurants": 100.648,
+    "orders_per_courier_hour": 1.796,
+    "degree_of_dynamism": 0.415,
+    "delivery_dist_m_mean": 2249.72,
+    "restaurant_spacing_m_mean": 3440.335,
+    "preparation_mean": 19.696,
+    "meters_per_minute": 374.01,
+    "size_breakdown": {
+      "o50": 40,
+      "r50": 40,
+      "o100": 25
+    },
+    "seed_breakdown": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "2": {
+    "n_instances": 87,
+    "n_orders": 1262.356,
+    "n_couriers": 194.759,
+    "n_restaurants": 186.207,
+    "orders_per_courier_hour": 2.119,
+    "degree_of_dynamism": 0.488,
+    "delivery_dist_m_mean": 2270.1,
+    "restaurant_spacing_m_mean": 5678.894,
+    "preparation_mean": 19.353,
+    "meters_per_minute": 367.092,
+    "size_breakdown": {
+      "o50": 32,
+      "r50": 32,
+      "o100": 23
+    },
+    "seed_breakdown": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ]
+  },
+  "3": {
+    "n_instances": 24,
+    "n_orders": 2793.667,
+    "n_couriers": 392.667,
+    "n_restaurants": 271.667,
+    "orders_per_courier_hour": 2.147,
+    "degree_of_dynamism": 0.313,
+    "delivery_dist_m_mean": 2288.34,
+    "restaurant_spacing_m_mean": 6431.637,
+    "preparation_mean": 20.028,
+    "meters_per_minute": 366.5,
+    "size_breakdown": {
+      "o100": 24
+    },
+    "seed_breakdown": [
+      5,
+      7,
+      8
+    ]
+  }
+}
