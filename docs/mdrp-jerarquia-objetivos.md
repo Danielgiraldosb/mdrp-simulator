@@ -271,7 +271,7 @@ por ronda en Bogotá (no bloquea). X0 (42 corridas) en curso.
 | E3 Métodos | BRKGA, BRKGA-Fair, MIP-Fair, Pay-BRKGA; 77 tests; E1–E6, E4', E5'; pieza 1b | hecho |
 | E4 Diseño experimental | zona 3 km, 18 configuraciones, X0–X3, batch_paper.py, piloto local | hecho |
 | E5 Corridas y análisis | X0 en curso; X1, X3, X2; Pareto, cumplimiento, régimen, umbral, α | en curso |
-| E6 Escritura | 35 páginas + suplemento | pendiente |
+| E6 Escritura | borrador completo en estilo EJOR del director (`docs/paper-cmdp/paper/main.tex`, guía `estilo-ejor.md`); resultados con huecos para X1–X3 | en curso |
 
 Pendiente del autor: visto bueno a E5' y D1–D7; verificar las instancias 16 y 17 (una tienda por pedido).
 

@@ -243,3 +243,13 @@ igualaba) porque el decodificador buscaba los K = 3 repartidores de mayor clave 
 ruta; ahora los toma entre los candidatos de la ruta (`porte-brkga.md`, cambio 6). Bogotá 12–14 h: 0,446 en 30 s.
 Pay-BRKGA (0,555 en Pereira) era el mismo defecto: ahora 0,731. Presupuesto total baja a ≈ 475 h de CPU.
 Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente: X0 (42 corridas) aquí o en la máquina de cómputo.
+
+## Estado de las Etapas 5 y 6 (2026-10-21, madrugada)
+
+- X1 lanzado el 21 oct 00:05 en la máquina del autor (`batch_paper.py --experiment main --workers 4`, orden por
+  semilla, reanudable; `simulator/output/paper/main.csv`). Estimación: ≈ 235 h de CPU, 2,5 días de pared.
+  Después: X3 (840) y X2 (2.400, con el α de la rodilla). Resúmenes con `analyze_paper.py --main`.
+- Etapa 6 arrancada en paralelo: el director dejó sus dos manuscritos EJOR en `papers/`; guía de estilo
+  extraída en `docs/paper-cmdp/paper/estilo-ejor.md` y borrador reescrito con esa estructura
+  (`main.tex`, 878 líneas, 61 TODO, la mayoría celdas de resultados; borrador anterior `main_v0.tex`).
+  No compilado: no hay TeX en esta máquina. Figuras F1 y F2 en `docs/paper-cmdp/figures/`.
