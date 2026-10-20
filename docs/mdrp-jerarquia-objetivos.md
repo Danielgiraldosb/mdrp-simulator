@@ -293,6 +293,6 @@ procesos, 0 fallos. Media de las seis zonas:
 Gini corporativo por ciudad: Barranquilla 0,468, Bogotá 0,372, Bucaramanga 0,361, Cali 0,528, Medellín
 0,394, Pereira 0,387 (media 0,419): la malla de α se mantiene. Lecturas: cobertura plana entre métodos; el
 jerárquico empeora el Gini de fin de día; F_Deficit ≈ 0,98–1,00. El greedy es el método más lento (35 min
-en Bogotá) por recorrer todos los repartidores por pedido: se arregla con rejilla espacial antes de X1; el
+en Bogotá) porque cada repartidor evaluaba todos los pedidos pendientes: resuelto (H7, 116 → 26 s en la ventana de Bogotá, resultado idéntico); el
 radio de 3 km se mantiene (MIP-Fair 15 min < 20). Estimación de X1 con estos tiempos: 308 h de CPU (≈ 235 h
 con el greedy arreglado).
