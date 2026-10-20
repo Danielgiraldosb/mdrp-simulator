@@ -141,7 +141,7 @@ if __name__ == '__main__':
     parser.add_argument('--preps',     type=str, nargs='*', default=None, help='e.g. p100 p125')
 
     parser.add_argument('--policies', type=str, nargs='+', default=['greedy'],
-                        choices=['greedy', 'fair_greedy', 'ilp', 'mdrpsim_greedy',
+                        choices=['greedy', 'fair_greedy', 'ilp', 'hier', 'mdrpsim_greedy',
                                 'mdrpsim_mip', 'mdrpsim_graph', 'mdrpsim_graph_prospects'])
     parser.add_argument('--objectives', type=str, nargs='*', default=['max_coverage'],
                         choices=['max_coverage', 'max_throughput', 'min_lateness',

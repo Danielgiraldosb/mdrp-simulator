@@ -1,0 +1,17 @@
+{
+  "fixtures": [
+    {
+      "id": "TC-HIER-01",
+      "file": "hier/toy.json",
+      "source_execution": "tests/fixtures/hier/make_toy.py (hand-built didactic round, 2026-10-19)",
+      "tags": ["hier", "toy", "lexicographic", "deck"],
+      "summary": "3 idle couriers, 4 orders at 2 restaurants, bundles of 2, 18 candidates, 121 feasible assignments. Lateness-first and equity-first hierarchies give different optima; a weighted sum flips at lambda = 2.",
+      "expected": {
+        "default_order": ["coverage", "lateness", "equity", "cost"],
+        "vector": [4, -8.0, 21.9999, -44.0],
+        "solution": {"1": [1, 2], "2": [4], "3": [3]}
+      },
+      "tests": ["tests/test_hier.py::test_toy_matches_brute_force", "tests/test_hier.py::test_toy_default_hierarchy_values"]
+    }
+  ]
+}

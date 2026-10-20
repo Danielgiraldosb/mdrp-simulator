@@ -37,6 +37,8 @@ import pandas as pd
 
 from config import Config
 from loader import load_instance, list_instances
+from loader_real import (load_real_instance, list_real_instances, is_real_instance,
+                         is_real_dir, parse_speeds)
 from simulator import MDRPSimulator
 from policies import GreedyPolicy, FairGreedyPolicy
 from metrics import (compute_metrics, courier_table, delivery_detail_table,
@@ -72,10 +74,25 @@ def build_policy(name: str, cfg: Config):
     if name == 'ilp':
         from ilp_policy import ILPPolicy
         return ILPPolicy(cfg)
+    if name == 'hier':
+        from hier_policy import HierPolicy
+        return HierPolicy(cfg)
+    if name == 'brkga':
+        from brkga_policy import BRKGAPolicy
+        return BRKGAPolicy(cfg)
+    if name == 'brkga_fair':
+        from brkga_fair import BRKGAFairPolicy
+        return BRKGAFairPolicy(cfg)
+    if name == 'mip_fair':
+        from mip_fair import MIPFairPolicy
+        return MIPFairPolicy(cfg)
+    if name == 'pay_brkga':
+        from pay_brkga import PayBRKGAPolicy
+        return PayBRKGAPolicy(cfg)
     if name in ('mdrpsim_greedy', 'mdrpsim_mip', 'mdrpsim_graph', 'mdrpsim_graph_prospects'):
         from mdrpsim_policies import build_mdrpsim_policy
         return build_mdrpsim_policy(name, cfg)
-    raise ValueError(f"Unknown policy '{name}'. Choices: greedy | fair_greedy | ilp | "
+    raise ValueError(f"Unknown policy '{name}'. Choices: greedy | fair_greedy | ilp | hier | brkga | brkga_fair | mip_fair | pay_brkga | "
                      f"mdrpsim_greedy | mdrpsim_mip | mdrpsim_graph | mdrpsim_graph_prospects. "
                      f"(Acceptance criterion is set separately via --acceptance-mode.)")
 
@@ -248,9 +265,40 @@ if __name__ == '__main__':
     parser.add_argument('--until', dest='sim_until', type=str, default='24:00', metavar='HH:MM')
 
     parser.add_argument('--policy', type=str, default='greedy',
-                        choices=['greedy', 'fair_greedy', 'ilp', 'mdrpsim_greedy',
+                        choices=['greedy', 'fair_greedy', 'ilp', 'hier', 'brkga', 'brkga_fair', 'mip_fair', 'pay_brkga', 'mdrpsim_greedy',
                                 'mdrpsim_mip', 'mdrpsim_graph', 'mdrpsim_graph_prospects'])
     parser.add_argument('--ilp', action='store_true', help='Shortcut for --policy ilp')
+    parser.add_argument('--hier-order', type=str, nargs='+', default=None, metavar='OBJ',
+                        help='--policy hier: lexicographic pass order, highest priority first '
+                             '(default: coverage lateness equity cost)')
+    parser.add_argument('--hier-write', action='store_true',
+                        help='--policy hier: write per-round artifacts under output/hier/')
+    parser.add_argument('--brkga-fitness', type=str, default='coverage', choices=['coverage', 'travel'],
+                        help='--policy brkga: BRKGA-Coverage or BRKGA-Travel fitness')
+    parser.add_argument('--brkga-pop', type=int, default=10, metavar='N',
+                        help='--policy brkga: population per dispatch round (default 10)')
+    parser.add_argument('--brkga-gens', type=int, default=10, metavar='N',
+                        help='--policy brkga: generations per dispatch round (default 10)')
+    parser.add_argument('--brkga-score', type=str, default='finish_per_order', choices=['finish', 'finish_per_order'],
+                        help='--policy brkga: decoder score of a (route, courier) pair')
+    parser.add_argument('--brkga-fair-weight', type=float, default=10.0, metavar='MIN',
+                        help='--policy brkga_fair: minutes of score credit for a courier with full deficit (0 = plain brkga)')
+    parser.add_argument('--brkga-fair-basis', type=str, default='hourly', choices=['hourly', 'total'],
+                        help='--policy brkga_fair: earnings basis of the deficit (hourly as F_Gini, or total)')
+    parser.add_argument('--mipfair-alpha', type=float, default=0.30, metavar='A',
+                        help='--policy mip_fair: tolerated Gini of projected earnings (eq:fair_const)')
+    parser.add_argument('--mipfair-priority', type=str, default='fairness', choices=['fairness', 'coverage'],
+                        help='--policy mip_fair: lexicographic order (Gini excess first, or coverage first)')
+    parser.add_argument('--mipfair-basis', type=str, default='hourly', choices=['hourly', 'total'],
+                        help='--policy mip_fair: earnings basis of the Gini (hourly as F_Gini, or total)')
+    parser.add_argument('--mipfair-scope', type=str, default='all', choices=['all', 'idle'],
+                        help='--policy mip_fair: Gini over every logged-on courier, or only the idle ones')
+    parser.add_argument('--pay-range', type=float, default=0.30, metavar='D',
+                        help='--policy pay_brkga: pay offers within (1-D, 1+D) of the tariff')
+    parser.add_argument('--lambda-deficit', type=float, default=0.5, metavar='L',
+                        help='--policy pay_brkga: weight of projected F_Deficit')
+    parser.add_argument('--lambda-pay', type=float, default=0.2, metavar='L',
+                        help='--policy pay_brkga: weight of relative pay excess (eq:cost_plus)')
     parser.add_argument('--objective', type=str, default='max_coverage',
                         choices=['max_coverage', 'max_throughput', 'min_lateness',
                                 'max_equity', 'min_cost'],
@@ -268,7 +316,7 @@ if __name__ == '__main__':
                         help='Enable the 2-threshold cancellation hazard (off by default)')
 
     parser.add_argument('--acceptance-mode', type=str, default='auto',
-                        choices=['auto', 'fixed', 'logistic'],
+                        choices=['auto', 'fixed', 'logistic', 'logit_ppk'],
                         help="Courier acceptance criterion, transversal to --policy "
                              "(default: auto -- always accepts)")
     parser.add_argument('--acceptance-range', type=float, nargs=2, default=[1.0, 1.0],
@@ -276,6 +324,19 @@ if __name__ == '__main__':
                         help='Used when --acceptance-mode fixed: range to draw each '
                              "courier's own acceptance rate from (set MIN=MAX for a "
                              'single global probability)')
+    parser.add_argument('--regime', type=str, default='manual', choices=['manual', 'autoaccept'],
+                        help="Courier decision regime for --acceptance-mode logit_ppk "
+                             "(manual: per-offer logit; autoaccept: every offer accepted)")
+    parser.add_argument('--ppk-threshold', type=float, default=903.0, metavar='COP_KM',
+                        help='logit_ppk: pay per km at which P(accept)=0.5 (default 903; CI 615-1242)')
+    parser.add_argument('--ppk-slope', type=float, default=2.89, metavar='B',
+                        help='logit_ppk: slope on ln(pay/km) (default 2.89; CI 2.02-5.23)')
+    parser.add_argument('--circuity', type=float, default=1.0, metavar='K',
+                        help='Real instances: multiply projected distances by K (1.0 haversine, ~1.3 street)')
+    parser.add_argument('--speeds', type=str, nargs='+', default=None, metavar='VEH=KMH',
+                        help='Real instances: per-vehicle speed, e.g. bicycle=15 motorcycle=25')
+    parser.add_argument('--pickup-service', type=float, default=None, metavar='MIN',
+                        help='Real instances: minutes at the store (default 20 = survey median; 60 = stress)')
     parser.add_argument('--min-wage', type=float, default=None,
                         help='External statutory wage threshold for F_Deficit '
                              '(default: the instance guaranteed_pay_per_hour)')
@@ -290,8 +351,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.list:
-        names = list_instances(args.instances_dir)
-        print(f"mdrplib instances ({len(names)}) in {args.instances_dir}:")
+        if is_real_dir(args.instances_dir):
+            names = list_real_instances(args.instances_dir)
+            print(f"Real instances ({len(names)}) in {args.instances_dir}:")
+        else:
+            names = list_instances(args.instances_dir)
+            print(f"mdrplib instances ({len(names)}) in {args.instances_dir}:")
         for n in names:
             print(f"  {n}")
         raise SystemExit(0)
@@ -310,6 +375,21 @@ if __name__ == '__main__':
         sim_end=until_min - from_min,
         objective=args.objective,
         ilp_solver=args.solver,
+        hier_order=args.hier_order,
+        hier_write_artifacts=args.hier_write,
+        brkga_fitness=args.brkga_fitness,
+        brkga_population=args.brkga_pop,
+        brkga_generations=args.brkga_gens,
+        brkga_score=args.brkga_score,
+        brkga_fair_weight=args.brkga_fair_weight,
+        brkga_fair_basis=args.brkga_fair_basis,
+        mipfair_alpha=args.mipfair_alpha,
+        mipfair_priority=args.mipfair_priority,
+        mipfair_basis=args.mipfair_basis,
+        mipfair_scope=args.mipfair_scope,
+        paybrkga_pay_range=args.pay_range,
+        paybrkga_lambda_deficit=args.lambda_deficit,
+        paybrkga_lambda_pay=args.lambda_pay,
         max_bundle_size=args.bundle,
         late_tolerance_min=args.late_tolerance,
         enable_cancellation=args.cancellation,
@@ -318,9 +398,20 @@ if __name__ == '__main__':
         min_acceptance_rate=args.acceptance_range[0],
         max_acceptance_rate=args.acceptance_range[1],
         min_wage_hourly=args.min_wage,
+        accept_regime=args.regime,
+        accept_ppk_threshold=args.ppk_threshold,
+        accept_ppk_slope=args.ppk_slope,
+        real_circuity=args.circuity,
     )
+    if args.speeds:
+        cfg.real_speeds_kmh.update(parse_speeds(args.speeds))
+    if args.pickup_service is not None:
+        cfg.real_pickup_service_min = args.pickup_service
 
-    instance = load_instance(args.instance, args.instances_dir, cfg)
+    if is_real_instance(args.instance, args.instances_dir):
+        instance = load_real_instance(args.instance, args.instances_dir, cfg)
+    else:
+        instance = load_instance(args.instance, args.instances_dir, cfg)
 
     policy_name = 'ilp' if args.ilp else args.policy
     policy = build_policy(policy_name, cfg)

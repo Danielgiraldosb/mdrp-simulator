@@ -1,0 +1,1469 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>MDRP · Jerarquía de objetivos</title>
+<style id="fonts">/*__FONTS__*/</style>
+<style>
+/* ============================================================
+   MDRP · Jerarquía de objetivos (Gurobi) · Documento de decisión
+   Mismo sistema de diseño que docs/ore-hauling-offline (2).html:
+   un solo tema claro, pensado para proyectar (escenario 1600×900)
+   ============================================================ */
+:root{
+  --paper:#F5F4F0; --surface:#FFFFFF; --surface-2:#ECEAE3; --surface-3:#E3E1D8;
+  --ink:#171A1F; --ink-2:#464B54; --muted:#7A7F88; --line:#D9D7CF; --line-2:#C0BDB3;
+  --accent:#A8431C; --accent-2:#8A3616; --accent-soft:#F6E6DD; --accent-soft-2:#EBC9B7;
+  --steel:#2E4A6B; --steel-soft:#E1E8F0; --steel-2:#5C7EA6; --cat:#F2B01E;
+  --p1:#3B4252; --p2:#A8431C; --p3:#1BAF7A; --p4:#2A78D6;
+  --good:#0CA30C; --bad:#D03B3B;
+  --f-display:"Barlow Condensed","Arial Narrow","Roboto Condensed",sans-serif;
+  --f-body:"Barlow","Segoe UI",system-ui,-apple-system,sans-serif;
+  --f-mono:"JetBrains Mono","Cascadia Mono",Consolas,"Courier New",monospace;
+  --f-math:"STIX Two Text","Times New Roman",Times,serif;
+  --r:8px;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:20px;line-height:1.4;overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--steel-2);outline-offset:2px}
+b,strong{font-weight:600}
+sub,sup{line-height:0}
+
+/* ---------- stage ---------- */
+#stage{position:absolute;left:0;top:0;width:1600px;height:900px;transform-origin:0 0;background:var(--paper);overflow:hidden}
+.slide{position:absolute;inset:0;padding:56px 88px 84px;display:none}
+.slide.active{display:block;animation:fadein .35s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.slide.active{animation:none}*{animation-duration:.001s!important;transition-duration:.001s!important}}
+.eyebrow{font-family:var(--f-mono);font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.eyebrow::after{content:"";height:1px;flex:0 0 46px;background:var(--accent-soft-2)}
+.eyebrow .sec{color:var(--muted)}
+h1,h2,h3,h4{font-family:var(--f-display);font-weight:600;line-height:1.05;margin:0;text-wrap:balance;letter-spacing:-.005em}
+h2{font-size:50px;color:var(--ink)}
+h3{font-size:26px}
+h4{font-size:21px;font-weight:600}
+p{margin:0}
+.lede{font-size:22px;color:var(--ink-2);max-width:62ch;margin-top:12px}
+.small{font-size:16px;color:var(--muted)}
+.mono{font-family:var(--f-mono)}
+.num{font-variant-numeric:tabular-nums}
+.k{font-family:var(--f-mono);font-size:13px;padding:1px 7px;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:5px;background:var(--surface);color:var(--ink-2)}
+.hint{position:absolute;left:88px;bottom:66px;font-size:14.5px;color:var(--muted);display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.hint .k{font-size:12px}
+
+/* ---------- math ---------- */
+.m{font-family:var(--f-math);font-style:italic;font-size:1.06em}
+.m .rm,.rm{font-style:normal}
+.m sub,.m sup{font-size:.68em;font-style:italic}
+.sum{display:inline-flex;align-items:center;gap:2px;vertical-align:middle;line-height:1;font-style:normal;margin:0 3px 0 1px}
+.sum .sig{font-size:1.45em;line-height:1;font-style:normal;font-family:var(--f-math)}
+.sum .lims{display:inline-flex;flex-direction:column;justify-content:center;font-size:.6em;line-height:1.15;font-style:italic;white-space:nowrap}
+.sym{font-style:italic;border-radius:4px;padding:0 2px;transition:background .2s,color .2s}
+.hl-x .s-x,.hl-y .s-y,.hl-n .s-n,.hl-l .s-l,.hl-t .s-t,.hl-d .s-d,.hl-K .s-K{background:var(--accent-soft);color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+
+/* ---------- footer / chrome ---------- */
+#footer{position:absolute;left:0;right:0;bottom:0;height:54px;padding:0 88px;display:flex;align-items:center;gap:22px;font-size:14px;color:var(--muted);border-top:1px solid var(--line)}
+#footer .ttl{font-family:var(--f-display);font-size:16px;letter-spacing:.02em;color:var(--ink-2);text-transform:uppercase;white-space:nowrap}
+#footer .track{white-space:nowrap}
+#progress{flex:1;height:3px;background:var(--surface-3);border-radius:2px;overflow:hidden}
+#progress i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+#counter{font-family:var(--f-mono);font-size:14px;white-space:nowrap}
+#timer{font-family:var(--f-mono);font-size:14px;white-space:nowrap;color:var(--muted);cursor:pointer;padding:3px 9px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+#timer.run{color:var(--ink)}
+#timer.late{color:var(--bad);border-color:var(--bad)}
+#timer .tg{color:var(--muted)}
+#notes{position:absolute;left:88px;right:88px;bottom:66px;background:var(--ink);color:#F1EFE8;padding:16px 22px;border-radius:10px;font-size:17px;line-height:1.45;display:none;box-shadow:0 10px 30px rgba(0,0,0,.25);z-index:40}
+#notes.on{display:block}
+#notes b{color:var(--cat)}
+#notes ul{margin:6px 0 0;padding-left:20px}
+#notes li{margin:2px 0}
+#notes .hd{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#B9B5AA;display:flex;justify-content:space-between}
+#menu{position:absolute;inset:0;background:rgba(23,26,31,.88);display:none;z-index:60;padding:70px 120px;color:#F1EFE8}
+#menu.on{display:block}
+#menu h3{color:#fff;font-size:34px;margin-bottom:22px}
+#menu ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:10px 28px}
+#menu li button{width:100%;text-align:left;background:transparent;border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:10px 14px;color:#F1EFE8;display:flex;gap:12px;align-items:baseline;font-size:18px}
+#menu li button:hover,#menu li button.cur{background:rgba(255,255,255,.1);border-color:var(--cat)}
+#menu li button .n{font-family:var(--f-mono);font-size:13px;color:var(--cat);min-width:26px}
+#menu li button .t{font-family:var(--f-mono);font-size:12px;color:#B9B5AA;margin-left:auto}
+#menu .keys{margin-top:26px;color:#B9B5AA;font-size:15px;display:flex;gap:22px;flex-wrap:wrap}
+#menu .keys .k{background:transparent;color:#F1EFE8;border-color:rgba(255,255,255,.35)}
+#laser{position:fixed;width:16px;height:16px;border-radius:50%;background:#FF2B2B;box-shadow:0 0 14px 5px rgba(255,43,43,.55);pointer-events:none;transform:translate(-50%,-50%);display:none;z-index:100}
+body.laser{cursor:none}
+body.laser #laser{display:block}
+#tip{position:absolute;background:var(--ink);color:#F1EFE8;font-size:14px;line-height:1.35;padding:8px 11px;border-radius:7px;pointer-events:none;display:none;z-index:50;max-width:340px;box-shadow:0 6px 18px rgba(0,0,0,.2)}
+#tip.on{display:block}
+#tip b{color:var(--cat)}
+
+/* ---------- generic components ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 22px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.chip{border:1px solid var(--line-2);background:var(--surface);border-radius:999px;padding:6px 14px;font-size:16px;color:var(--ink-2);transition:all .15s}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn{border:1px solid var(--line-2);background:var(--surface);border-radius:7px;padding:8px 14px;font-size:16px;font-weight:500;color:var(--ink);display:inline-flex;align-items:center;gap:8px;transition:all .15s}
+.btn:hover{border-color:var(--ink-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-2)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.sm{padding:5px 10px;font-size:14px}
+.kv{display:flex;justify-content:space-between;gap:16px;padding:7px 0;border-bottom:1px solid var(--line);font-size:17px}
+.kv:last-child{border-bottom:none}
+.kv .l{color:var(--muted)}
+.kv .v{font-weight:500;text-align:right}
+.stat{display:flex;flex-direction:column;gap:3px}
+.stat .v{font-family:var(--f-display);font-size:46px;font-weight:600;line-height:1;color:var(--ink)}
+.stat .v.acc{color:var(--accent)}
+.stat .l{font-size:15px;color:var(--ink-2);max-width:28ch;line-height:1.3}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:4px;background:var(--surface-2);color:var(--ink-2)}
+.tag.p1{background:#E4E6EB;color:var(--p1)}.tag.p2{background:var(--accent-soft);color:var(--accent)}.tag.p3{background:#DDF5EB;color:#0E7A52}.tag.p4{background:#DCEBFB;color:#1D5EA8}
+table.t{border-collapse:collapse;width:100%;font-size:15px;font-variant-numeric:tabular-nums}
+table.t th{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line-2)}
+table.t td{padding:6px 8px;border-bottom:1px solid var(--line)}
+table.t td.n,table.t th.n{text-align:right}
+table.t tr.hl td{background:var(--accent-soft)}
+table.t tr.dim td{color:var(--muted)}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:13px;font-family:var(--f-mono)}
+.pill.ok{background:#E3F4E3;color:#0A6E0A}
+.pill.warn{background:#FBEEDC;color:#8A5A00}
+.pill.no{background:var(--surface-2);color:var(--muted)}
+.pill.bad{background:#FBE1E1;color:#9B2424}
+.dcards{display:flex;flex-direction:column;gap:10px}
+.dcard{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:12px 16px;cursor:pointer;transition:all .18s;display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:start}
+.dcard .n{font-family:var(--f-display);font-size:30px;font-weight:700;color:var(--line-2);line-height:1}
+.dcard h4{font-size:19px;color:var(--ink)}
+.dcard p{font-size:15.5px;color:var(--ink-2);margin-top:4px;display:none;line-height:1.35}
+.dcard .who{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+.dcard.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.dcard.on .n{color:var(--accent)}
+.dcard.on p{display:block}
+.dcard:hover{border-color:var(--accent-soft-2)}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.stats3 .stat .v{font-size:40px}
+.stats3 .stat .l{font-size:14px;max-width:40ch}
+.nphard{margin-top:14px;display:flex;gap:16px;align-items:flex-start;background:var(--ink);color:#F1EFE8;border-radius:var(--r);padding:14px 18px;font-size:16px;line-height:1.4}
+.nphard .big{font-family:var(--f-display);font-size:30px;font-weight:700;color:var(--cat);line-height:1;white-space:nowrap}
+.nphard b{color:#fff}
+
+/* ---------- title ---------- */
+#s0{padding:0}
+#s0 .top{position:absolute;left:88px;right:88px;top:44px;display:flex;justify-content:space-between;align-items:flex-start;gap:30px}
+#s0 .brand{font-family:var(--f-display);font-size:22px;font-weight:600;color:var(--ink-2);letter-spacing:.02em}
+#s0 .brand small{display:block;font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-top:4px}
+#s0 .track{text-align:right;font-size:15px;color:var(--ink-2);line-height:1.35;max-width:48ch}
+#s0 .track b{font-family:var(--f-mono);letter-spacing:.1em;text-transform:uppercase;font-size:13px;color:var(--accent);display:block;margin-bottom:6px}
+#s0 .body{position:absolute;left:88px;top:200px;right:88px}
+#s0 h1{font-size:72px;line-height:1;max-width:24ch;color:var(--ink);font-weight:700}
+#s0 h1 span{color:var(--accent)}
+#s0 .sub{font-size:22px;color:var(--ink-2);max-width:66ch;margin-top:22px;line-height:1.4}
+#s0 .authors{position:absolute;left:88px;bottom:140px;display:flex;align-items:flex-end;gap:46px}
+#s0 .authors .names{font-family:var(--f-display);font-size:26px;font-weight:600;line-height:1.2}
+#s0 .authors .names small{display:block;font-family:var(--f-body);font-size:17px;color:var(--ink-2);font-weight:400;margin-top:6px}
+#s0 .passes{position:absolute;right:88px;bottom:110px;display:flex;gap:10px;align-items:flex-end}
+#s0 .passes .p{width:150px;border-radius:10px;color:#fff;font-family:var(--f-display);font-weight:600;font-size:20px;padding:12px 14px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 10px 24px rgba(0,0,0,.12)}
+#s0 .passes .p small{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.8;margin-bottom:6px}
+#s0 .start{position:absolute;right:88px;bottom:74px;font-size:14.5px;color:var(--muted)}
+
+/* ---------- s1 flujo de una ronda ---------- */
+#s1 .layout{display:grid;grid-template-columns:1fr 480px;gap:30px;margin-top:14px;align-items:start}
+#flow{width:100%;height:auto;display:block;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+#flow text{font-family:var(--f-body);fill:var(--ink-2)}
+#flow .lbl{font-size:14px;fill:var(--ink)}
+#flow .lbl2{font-size:12px;fill:var(--muted)}
+#flow .mono{font-family:var(--f-mono);font-size:11px}
+#flow .box{fill:#fff;stroke:var(--line-2);stroke-width:1.2}
+#flow .box.acc{stroke:var(--accent);stroke-width:2}
+#flow .arr{stroke:var(--line-2);stroke-width:2;fill:none;marker-end:url(#arrow)}
+
+/* ---------- s2 inventario ---------- */
+.inv{display:grid;grid-template-columns:720px 1fr;gap:26px;margin-top:14px;align-items:start}
+.objrows{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:6px}
+.objrow{display:grid;grid-template-columns:150px 1fr auto;gap:12px;align-items:center;padding:9px 12px;border-radius:6px;cursor:pointer;border-left:3px solid transparent;transition:background .15s}
+.objrow:hover{background:var(--paper)}
+.objrow.on{background:var(--accent-soft);border-left-color:var(--accent)}
+.objrow .nm{font-family:var(--f-mono);font-size:15px;color:var(--ink)}
+.objrow .ex{font-family:var(--f-math);font-style:italic;font-size:17px;color:var(--ink-2)}
+.objrow .ex .rm{font-style:normal}
+.objrow .st{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.objrow.hdr{cursor:default;font-family:var(--f-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:6px 12px 4px}
+.objrow.hdr:hover{background:transparent}
+.objx{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;min-height:520px;display:flex;flex-direction:column;gap:12px}
+.objx h3{font-size:27px}
+.objx h3 .no{font-family:var(--f-mono);font-size:13px;color:var(--accent);letter-spacing:.1em;margin-right:8px;vertical-align:middle}
+.objx p{font-size:16.5px;color:var(--ink-2);line-height:1.42}
+.objx .where{font-family:var(--f-mono);font-size:13px;color:var(--ink-2);background:var(--surface-2);border-radius:5px;padding:5px 9px;display:inline-block}
+.objx .verdict{margin-top:auto;border-left:3px solid var(--accent);padding:4px 0 4px 14px;font-size:16px;color:var(--ink)}
+.objx .verdict b{display:block;font-family:var(--f-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+.objx .formula{font-family:var(--f-math);font-style:italic;font-size:22px;background:var(--paper);border-radius:8px;padding:12px 16px;line-height:1.5}
+.objx .formula .rm{font-style:normal}
+
+/* ---------- s3 suma ponderada ---------- */
+.wsum{display:grid;grid-template-columns:1fr 560px;gap:30px;margin-top:14px;align-items:start}
+.wsum .ctl{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 20px}
+.wsum input[type=range]{width:100%;margin:10px 0 2px;accent-color:var(--accent)}
+.wsum .ticks{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.wsum .big{font-family:var(--f-display);font-size:44px;font-weight:600;line-height:1}
+.wsum .big small{font-size:18px;color:var(--muted);font-family:var(--f-body);font-weight:400}
+.wsum .sols{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.wsol{display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;padding:8px 12px;border:1px solid var(--line);border-radius:7px;background:var(--surface);font-size:15px;transition:all .15s}
+.wsol.win{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent-soft)}
+.wsol .rk{font-family:var(--f-display);font-size:22px;color:var(--line-2);font-weight:700}
+.wsol.win .rk{color:var(--accent)}
+.wsol .as{font-family:var(--f-mono);font-size:13px;color:var(--ink-2)}
+.wsol .sc{font-family:var(--f-mono);font-size:14px;color:var(--ink);text-align:right;white-space:nowrap}
+.wsol .sc small{color:var(--muted)}
+.lexi{background:var(--ink);color:#F1EFE8;border-radius:var(--r);padding:18px 22px;font-size:16.5px;line-height:1.45}
+.lexi h3{color:var(--cat);font-size:24px;margin-bottom:8px}
+.lexi ol{margin:8px 0 0;padding-left:22px}
+.lexi li{margin:5px 0}
+.lexi b{color:#fff}
+.flipnote{margin-top:12px;font-size:15.5px;color:var(--ink-2);line-height:1.4;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px}
+.flipnote b{color:var(--ink)}
+
+/* ---------- s4 orden propuesto ---------- */
+.passes4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:20px}
+.pcard{background:var(--surface);border:1px solid var(--line);border-top:5px solid var(--c);border-radius:var(--r);padding:16px 18px;min-height:360px;display:flex;flex-direction:column;gap:8px}
+.pcard .tp{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between}
+.pcard .tp b{color:var(--c)}
+.pcard h4{font-size:28px;color:var(--ink)}
+.pcard .ex{font-family:var(--f-math);font-style:italic;font-size:19px;color:var(--ink);background:var(--paper);border-radius:6px;padding:8px 10px}
+.pcard .ex .rm{font-style:normal}
+.pcard p{font-size:14.5px;color:var(--ink-2);line-height:1.38}
+.pcard .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
+.pcard .why{border-left:3px solid var(--c);padding-left:10px;font-size:14px;color:var(--ink-2)}
+.pcard .why b{color:var(--ink)}
+.gone{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.gone .g{display:flex;gap:14px;align-items:flex-start;background:var(--surface-2);border-radius:var(--r);padding:12px 16px;font-size:15px;color:var(--ink-2);line-height:1.4}
+.gone .g .x{font-family:var(--f-display);font-size:30px;color:var(--bad);font-weight:700;line-height:1}
+.gone .g b{color:var(--ink)}
+.gone .g code{font-family:var(--f-mono);font-size:13.5px;color:var(--ink)}
+
+/* ---------- s5 modelo ---------- */
+.notation{display:flex;gap:26px;margin-top:12px;align-items:center;flex-wrap:wrap;font-size:15px}
+.notation .grp{display:flex;align-items:center;gap:6px}
+.notation .grp>span{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.nchip{border:1px solid var(--line-2);background:var(--surface);border-radius:6px;padding:2px 9px;font-family:var(--f-math);font-style:italic;font-size:18px;cursor:pointer;line-height:1.3;transition:all .15s}
+.nchip .rm{font-style:normal}
+.nchip:hover{border-color:var(--accent)}
+.nchip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.model{display:grid;grid-template-columns:760px 1fr;gap:26px;margin-top:14px;align-items:start}
+.eqs{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px 6px}
+.eq{display:grid;grid-template-columns:1fr auto 54px;gap:12px;align-items:center;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:18.5px;line-height:1.35;transition:background .15s;border-left:3px solid transparent}
+.eq:hover{background:var(--paper)}
+.eq.on{background:var(--accent-soft);border-left-color:var(--accent)}
+.eq .cond{font-size:15px;color:var(--muted);font-family:var(--f-math);font-style:italic;white-space:nowrap;text-align:right}
+.eq .cond .rm{font-style:normal}
+.eq .no{font-family:var(--f-mono);font-size:13px;color:var(--muted);text-align:right}
+.eq.on .no{color:var(--accent)}
+.eq.obj{font-size:20px;padding-top:7px;padding-bottom:7px}
+.eq.st{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);cursor:default;padding:4px 12px 2px;grid-template-columns:1fr}
+.eq.st:hover{background:transparent}
+.cxp{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;min-height:560px;display:flex;flex-direction:column;gap:14px}
+.cxp h3{font-size:27px}
+.cxp h3 .no{font-family:var(--f-mono);font-size:14px;color:var(--accent);letter-spacing:.1em;margin-right:8px;vertical-align:middle}
+.cxp p{font-size:16.5px;color:var(--ink-2);line-height:1.42}
+.cxp .viz{margin-top:auto;background:var(--paper);border-radius:8px;padding:12px 14px;min-height:250px;display:flex;align-items:center;justify-content:center}
+.cxp .viz svg{width:100%;height:auto;display:block;overflow:visible}
+.cxp .foot{font-size:14px;color:var(--muted);font-family:var(--f-mono)}
+svg .gtxt{font-family:var(--f-mono);font-size:11px;fill:var(--muted)}
+svg .gl{font-family:var(--f-body);font-size:13px;fill:var(--ink-2)}
+svg .gli{font-family:var(--f-math);font-style:italic;font-size:14px;fill:var(--ink-2)}
+
+/* ---------- s6 ejemplo didáctico ---------- */
+.toy{display:grid;grid-template-columns:640px 1fr;gap:24px;margin-top:10px;align-items:start}
+.toy .ctrls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.toy .ctrls .sep{width:1px;height:24px;background:var(--line-2);margin:0 4px}
+.toy .ctrls select{font:inherit;font-size:14px;padding:5px 8px;border:1px solid var(--line-2);border-radius:6px;background:var(--surface)}
+.orderchips{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:14px;color:var(--muted)}
+.ochip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);border-radius:999px;padding:4px 6px 4px 12px;font-size:15px;background:var(--surface);color:var(--ink)}
+.ochip i{display:inline-block;width:10px;height:10px;border-radius:50%}
+.ochip button{border:none;background:transparent;font-size:13px;padding:2px 5px;color:var(--muted);border-radius:4px}
+.ochip button:hover{background:var(--surface-2);color:var(--ink)}
+.ochip .pn{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+#map{width:100%;height:auto;display:block;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+#map text{font-family:var(--f-body);fill:var(--ink-2);font-size:13px}
+#map .mono{font-family:var(--f-mono);font-size:11px;fill:var(--muted)}
+#map .store{fill:var(--ink);}
+#map .user{fill:#fff;stroke:var(--ink-2);stroke-width:1.5}
+#map .cour{fill:var(--steel);stroke:#fff;stroke-width:1.5}
+#map text.w{fill:#fff;font-weight:600;font-size:11px}
+#map .route{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
+#map .route.c1{stroke:var(--p3)}#map .route.c2{stroke:var(--p4)}#map .route.c3{stroke:var(--accent)}
+#map .ghost{fill:none;stroke:var(--line-2);stroke-width:1;stroke-dasharray:3 4}
+.toy .readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px}
+.toy .ro{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px 12px}
+.toy .ro .lbl{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block}
+.toy .ro .v{font-family:var(--f-display);font-size:30px;font-weight:600;line-height:1.1;color:var(--ink)}
+.toy .ro .v small{font-size:14px;color:var(--muted);font-family:var(--f-body);font-weight:400}
+.toy .ro.acc .v{color:var(--accent)}
+.passlog{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:6px 8px;min-height:230px}
+.plrow{display:grid;grid-template-columns:28px 110px 1fr 120px 150px;gap:10px;align-items:center;padding:7px 8px;border-radius:6px;font-size:15px;color:var(--muted)}
+.plrow .pn{font-family:var(--f-mono);font-size:12px}
+.plrow .nm{font-weight:500}
+.plrow .cnt{font-family:var(--f-mono);font-size:13.5px}
+.plrow .val{font-family:var(--f-mono);font-size:13.5px;text-align:right}
+.plrow .lock{font-size:13px}
+.plrow.done{color:var(--ink)}
+.plrow.cur{background:var(--accent-soft);color:var(--ink)}
+.plrow.cur .pn{color:var(--accent)}
+.plrow.hdr{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:4px 8px 2px}
+.toy .cap{margin-top:10px;min-height:66px;font-size:15px;color:var(--ink-2);line-height:1.4;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:9px 14px}
+.toy .cap b{color:var(--ink)}
+.candtbl{margin-top:10px;max-height:190px;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:4px 8px;display:none}
+.candtbl.on{display:block}
+.candtbl table.t td,.candtbl table.t th{padding:3px 6px;font-size:13px}
+.candtbl tr.pick td{background:var(--accent-soft)}
+
+/* ---------- s7 gurobi ---------- */
+.algo{display:grid;grid-template-columns:640px 1fr;gap:26px;margin-top:14px;align-items:start}
+.pcode{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 6px;font-family:var(--f-mono);font-size:13.2px;line-height:1.5}
+.pcode ol{margin:0;padding:0;list-style:none;counter-reset:ln}
+.pcode li{display:grid;grid-template-columns:26px 1fr;gap:8px;padding:1px 10px;border-radius:5px;color:var(--ink-2);overflow:hidden}
+.pcode li .txt{white-space:pre;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.pcode li::before{counter-increment:ln;content:counter(ln);color:var(--line-2);text-align:right;font-size:12px}
+.pcode li.hl{background:var(--accent-soft);color:var(--ink)}
+.pcode li.hl::before{color:var(--accent)}
+.pcode li .cm{color:var(--muted)}
+.pcode li .kw{color:var(--steel);font-weight:500}
+.pcode li .fn{color:var(--accent)}
+.pcode .hd{padding:0 10px 8px;color:var(--ink);font-weight:500;border-bottom:1px solid var(--line);margin-bottom:8px;display:flex;justify-content:space-between;font-size:13px}
+.pcode .hd span{color:var(--muted);font-weight:400}
+.steps{display:flex;flex-direction:column;gap:8px}
+.step{display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px;cursor:pointer;transition:all .15s}
+.step .n{font-family:var(--f-display);font-size:26px;font-weight:700;color:var(--line-2);line-height:1}
+.step h4{font-size:18px}
+.step p{font-size:14.5px;color:var(--ink-2);line-height:1.35;margin-top:3px}
+.step.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.step.on .n{color:var(--accent)}
+.ends{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.ends .pill{font-size:12.5px}
+.passtbl{margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px 10px}
+.passtbl .ct{font-size:14px;color:var(--ink-2);display:flex;justify-content:space-between;margin-bottom:4px}
+.passtbl .ct b{color:var(--ink)}
+.passtbl table.t td,.passtbl table.t th{padding:4px 6px;font-size:13.5px}
+
+/* ---------- s8 resultados ---------- */
+.results{display:grid;grid-template-columns:1fr 420px;gap:22px;margin-top:16px;align-items:start}
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.chart .ct{font-size:16px;font-weight:600;color:var(--ink);display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.chart .ct small{font-weight:400;color:var(--muted);font-size:13px}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+svg .ax{stroke:var(--line-2);stroke-width:1}
+svg .gr{stroke:var(--line);stroke-width:1}
+svg .axt{font-family:var(--f-mono);font-size:11.5px;fill:var(--muted)}
+svg .bl{font-family:var(--f-mono);font-size:12.5px;fill:var(--ink);text-anchor:middle;font-weight:500}
+svg .bn{font-family:var(--f-body);font-size:12.5px;fill:var(--ink-2);text-anchor:end}
+svg .bn.hi{font-weight:600;fill:var(--ink)}
+.takeaways{display:flex;flex-direction:column;gap:16px}
+.take{border-left:3px solid var(--accent);padding:2px 0 2px 16px}
+.take .v{font-family:var(--f-display);font-size:42px;font-weight:600;line-height:1;color:var(--ink)}
+.take .v small{font-size:20px;color:var(--muted);font-weight:500}
+.take p{font-size:15px;color:var(--ink-2);margin-top:4px;line-height:1.35}
+.charts2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px}
+
+/* ---------- s9 dudas ---------- */
+.dudas{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;margin-top:12px}
+.duda{display:grid;grid-template-columns:40px 1fr;gap:10px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:9px 14px;cursor:pointer;transition:all .15s}
+.duda .n{font-family:var(--f-display);font-size:28px;font-weight:700;color:var(--line-2);line-height:1}
+.duda h4{font-size:17px;line-height:1.15}
+.duda .q{font-size:13px;color:var(--muted);line-height:1.3;margin-top:2px}
+.duda .rec{display:block;margin-top:6px;border-left:3px solid var(--accent);padding:2px 0 2px 10px;font-size:13.5px;color:var(--ink);line-height:1.3}
+.duda .rec b{display:block;font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:2px}
+.duda.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.duda.on .n{color:var(--accent)}
+.duda.on .q{color:var(--ink-2)}
+.duda .goto{font-family:var(--f-mono);font-size:11.5px;color:var(--steel-2);margin-left:8px}
+
+
+/* ---------- s11c resultados por cluster ---------- */
+.clus{display:grid;grid-template-columns:1fr 430px;gap:22px;margin-top:14px;align-items:start}
+.clus table.t td,.clus table.t th{padding:5px 7px;font-size:14px}
+.clus table.t td.g{color:var(--muted)}
+.clus table.t td.h{font-weight:600}
+.clus .better{color:#0A6E0A;font-weight:600}
+.clus .worse{color:#9B2424;font-weight:600}
+.clus .same{color:var(--muted)}
+.clus .pend{font-size:18px;color:var(--muted);padding:40px;text-align:center;background:var(--surface);border:1px dashed var(--line-2);border-radius:var(--r)}
+
+
+/* ---------- s11d mdrp-sim bajo nuestros objetivos ---------- */
+.msim{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:22px;margin-top:12px;align-items:start}
+.msim table.t{table-layout:auto}
+.msim table.t td,.msim table.t th{padding:4px 6px;font-size:13px}
+.msim .take .v{font-size:26px;line-height:1.1}
+.msim .take .v small{font-size:14px}
+.msim .take p{font-size:13.5px}
+.msim table.t tr.ours td{background:var(--accent-soft)}
+.msim table.t td.best{font-weight:600;color:#0A6E0A}
+.msim .wins{margin-top:12px}
+.msim .wins table.t td,.msim .wins table.t th{font-size:12.5px;white-space:normal}
+.msim table.t th{white-space:normal}
+
+/* ---------- s10 decisiones / s11 plan ---------- */
+.dec table.t td{vertical-align:top;line-height:1.35}
+.dec table.t td.d{font-family:var(--f-mono);font-size:13px;color:var(--accent);white-space:nowrap}
+.plan{display:grid;grid-template-columns:1.1fr 1fr;gap:30px;margin-top:18px;align-items:start}
+.files{background:var(--ink);color:#DCD9D0;border-radius:var(--r);padding:14px 20px;font-family:var(--f-mono);font-size:13px;line-height:1.5;white-space:pre-wrap}
+.files b{color:var(--cat);font-weight:500}
+.files .d{color:#9A968C}
+.sprints{display:flex;flex-direction:column;gap:8px}
+.sprint{display:grid;grid-template-columns:54px 1fr auto;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:9px 14px;font-size:15px}
+.sprint .s{font-family:var(--f-mono);font-size:13px;color:var(--accent)}
+.sprint .t{color:var(--ink-2)}
+.sprint .t b{color:var(--ink)}
+
+/* ---------- cierre ---------- */
+#s12{padding:0}
+#s12 .wrap{position:absolute;left:88px;right:88px;top:120px;display:grid;grid-template-columns:1fr 440px;gap:60px;align-items:start}
+#s12 h2{font-size:74px;font-weight:700}
+#s12 .repo{margin-top:26px;font-family:var(--f-mono);font-size:15px;color:var(--ink-2);line-height:1.6;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 18px}
+#s12 .repo b{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+#s12 .next{background:var(--ink);color:#F1EFE8;border-radius:var(--r);padding:22px 24px}
+#s12 .next h3{color:var(--cat);font-size:24px;margin-bottom:12px}
+#s12 .next ul{margin:0;padding-left:20px;font-size:16.5px;line-height:1.5;color:#E4E1D8}
+#s12 .next li{margin:6px 0}
+#s12 .next b{color:#fff}
+</style></head><body>
+<div id="stage">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#C0BDB3"/></marker>
+<pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#ECEAE3"/><rect width="2.2" height="6" fill="#C0BDB3"/></pattern>
+</defs></svg>
+
+<!-- ================= 0 · PORTADA ================= -->
+<section class="slide" id="s0" data-title="Portada" data-time="30">
+  <div class="top">
+    <div class="brand">mdrp-simulator<small>Marco de optimización jerárquico · portado de XO</small></div>
+    <div class="track"><b>Documento de decisión</b>Épica: <span class="mono">Epicas/mdrp-marco-de-optimizacion.md</span> · brief v1 · <b style="color:var(--accent)">decisiones tomadas el 20 oct 2026</b> (slide 10)<br>Preparado sobre el repo <span class="mono">Danielgiraldosb/mdrp-simulator</span> · 19 oct 2026</div>
+  </div>
+  <div class="body">
+    <h1>Un modelo multiobjetivo <span>jerárquico</span> para el despacho del MDRP</h1>
+    <p class="sub">Qué objetivos tenemos hoy en el simulador, en qué orden corren, cómo queda montado en Gurobi siguiendo el marco de XO, y las ocho dudas que cerramos el 20 de octubre con su decisión. Con un ejemplo de tres repartidores y cuatro pedidos que se puede reordenar en vivo.</p>
+  </div>
+  <div class="authors"><div class="names">Equipo MDRP<small>Dueño de la épica: David · solver <span class="mono">hier/</span> · Gurobi 11.0.3</small></div></div>
+  <div class="passes">
+    <div class="p" style="background:var(--p1);height:150px"><small>pasada 1</small>Cobertura</div>
+    <div class="p" style="background:var(--p2);height:125px"><small>pasada 2</small>Atraso</div>
+    <div class="p" style="background:var(--p3);height:100px"><small>pasada 3</small>Equidad</div>
+    <div class="p" style="background:var(--p4);height:78px"><small>pasada 4</small>Costo</div>
+  </div>
+  <div class="start">→ o espacio para avanzar · <span class="k">M</span> índice · <span class="k">N</span> notas · <span class="k">F</span> pantalla completa</div>
+</section>
+
+<!-- ================= 1 · DE DÓNDE PARTIMOS ================= -->
+<section class="slide" id="s1" data-title="De dónde partimos" data-time="120">
+  <div class="eyebrow"><span class="sec">01</span> Contexto</div>
+  <h2>De dónde partimos: una ronda de despacho cada dos minutos</h2>
+  <div class="layout">
+    <div>
+      <p class="lede" style="max-width:100ch;font-size:19px">El simulador (SimPy) dispara una ronda cada <span class="mono">rolling_horizon</span> = 2 min. La política recibe los repartidores ociosos y los pedidos pendientes, y devuelve rutas. Todas las políticas comparten la misma generación de candidatos (<span class="mono">routing.py</span>): una ruta sirve un solo restaurante, con 1 a 3 pedidos, y es factible si cada parada cumple su <i>maximum click-to-door</i>. Haz clic en cada bloque.</p>
+      <svg id="flow" viewBox="0 0 980 300" style="margin-top:14px">
+        <g class="hot" data-k="pend"><rect class="box" x="20" y="100" width="170" height="90" rx="9"/><text class="lbl" x="105" y="135" text-anchor="middle">pedidos pendientes</text><text class="lbl2" x="105" y="156" text-anchor="middle">O<tspan baseline-shift="sub" font-size="9">t</tspan> · media 3,2 · máx 15</text><text class="mono" x="105" y="176" text-anchor="middle">+ repartidores ociosos L_t</text></g>
+        <path class="arr" d="M190 145 L240 145"/>
+        <g class="hot" data-k="cand"><rect class="box" x="240" y="90" width="200" height="110" rx="9"/><text class="lbl" x="340" y="122" text-anchor="middle">candidatos</text><text class="lbl2" x="340" y="143" text-anchor="middle">rutas por restaurante × K=25</text><text class="lbl2" x="340" y="161" text-anchor="middle">repartidores más cercanos</text><text class="mono" x="340" y="183" text-anchor="middle">route_feasibility → atraso, minutos</text></g>
+        <path class="arr" d="M440 145 L490 145"/>
+        <g class="hot" data-k="pol"><rect class="box acc" x="490" y="80" width="220" height="130" rx="9"/><text class="lbl" x="600" y="112" text-anchor="middle" font-weight="600">política de asignación</text><text class="lbl2" x="600" y="134" text-anchor="middle">greedy · fair_greedy · ilp (5 objetivos)</text><text class="lbl2" x="600" y="152" text-anchor="middle">mdrpsim × 4</text><text class="mono" x="600" y="176" text-anchor="middle">assign(state) → [(c, [o…], pago)]</text><text class="mono" x="600" y="194" text-anchor="middle" fill="#A8431C">← aquí entra hier</text></g>
+        <path class="arr" d="M710 145 L760 145"/>
+        <g class="hot" data-k="acc"><rect class="box" x="760" y="100" width="200" height="90" rx="9"/><text class="lbl" x="860" y="135" text-anchor="middle">notificación y aceptación</text><text class="lbl2" x="860" y="156" text-anchor="middle">auto · fixed · logistic</text><text class="mono" x="860" y="176" text-anchor="middle">rechazo → rejected_by</text></g>
+        <path class="arr" d="M860 190 L860 240 L600 240 L600 212" style="marker-end:url(#arrow)"/>
+        <text class="lbl2" x="730" y="262" text-anchor="middle">2 min después, otra ronda con lo que quedó pendiente</text>
+      </svg>
+      <div class="stats3">
+        <div class="stat"><div class="v">240</div><div class="l">instancias públicas mdrplib (Grubhub), 242 a 3 213 pedidos</div></div>
+        <div class="stat"><div class="v">7 + 1</div><div class="l">políticas hoy, más la jerárquica que se presenta aquí</div></div>
+        <div class="stat"><div class="v acc">1</div><div class="l">objetivo verdadero compartido por las siete: maximizar cobertura</div></div>
+      </div>
+    </div>
+    <div class="dcards" id="dc1">
+      <div class="dcard on" data-k="pend"><div class="n">1</div><div><h4>Qué se decide en una ronda</h4><div class="who">unidad de decisión</div><p>Quién toma qué ruta <b>ahora</b>. Lo que no se cubre vuelve a la siguiente ronda: no es infactible, es pendiente. En la instancia 0o100t100s1p100 hay 235 rondas con decisión en un día.</p></div></div>
+      <div class="dcard" data-k="cand"><div class="n">2</div><div><h4>Candidatos: columnas enumeradas</h4><div class="who">prefiltro exacto</div><p>Una ruta por pedido (singleton) y una ruta-bundle por restaurante con los pedidos más urgentes. Para cada (repartidor, ruta) se calcula fuera del MIP la factibilidad de SLA, el atraso frente al <i>target</i> y los minutos totales. Media 19 candidatos por ronda, máximo 275.</p></div></div>
+      <div class="dcard" data-k="pol"><div class="n">3</div><div><h4>La política: hoy cinco objetivos, un solo truco</h4><div class="who">ilp_policy.py</div><p>Los cinco objetivos del ILP son <b>cobertura + un desempate</b>, forzados con un término dominante <span class="mono">M·|r|</span>. Funciona, pero no hay certificado de que el desempate sea el óptimo bajo cobertura máxima, ni progreso por objetivo, ni forma de saltar o parar.</p></div></div>
+      <div class="dcard" data-k="acc"><div class="n">4</div><div><h4>Lo que queda fuera del modelo</h4><div class="who">transversal</div><p>La aceptación del repartidor (auto/fixed/logistic), la cancelación y el reposicionamiento son extensiones de la tesis, transversales a toda política. El modelo jerárquico no las toca: decide igual que las demás y deja que el simulador resuelva lo estocástico.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 2 · INVENTARIO ================= -->
+<section class="slide" id="s2" data-title="Inventario de objetivos" data-time="150">
+  <div class="eyebrow"><span class="sec">02</span> Objetivos actuales</div>
+  <h2>Inventario: los cinco objetivos del ILP son cobertura más un desempate</h2>
+  <div class="inv">
+    <div class="objrows" id="objrows">
+      <div class="objrow hdr"><span>cfg.objective</span><span>expresión que maximiza (x = 1 si el repartidor toma la ruta)</span><span>veredicto</span></div>
+      <div class="objrow on" data-k="cov"><span class="nm">max_coverage</span><span class="ex"><span class="rm">Σ</span> |r| · x<sub>cr</sub></span><span class="st">base</span></div>
+      <div class="objrow" data-k="thr"><span class="nm">max_throughput</span><span class="ex"><span class="rm">Σ</span> (M|r| − λ τ<sub>cr</sub> − μ ℓ<sub>cr</sub>) x<sub>cr</sub></span><span class="st"><span class="pill bad">suma ponderada</span></span></div>
+      <div class="objrow" data-k="lat"><span class="nm">min_lateness</span><span class="ex"><span class="rm">Σ</span> (M|r| − ℓ<sub>cr</sub>) x<sub>cr</sub></span><span class="st"><span class="pill warn">truco M</span></span></div>
+      <div class="objrow" data-k="cost"><span class="nm">min_cost</span><span class="ex"><span class="rm">Σ</span> (M|r| − τ<sub>cr</sub>) x<sub>cr</sub></span><span class="st"><span class="pill warn">truco M</span></span></div>
+      <div class="objrow" data-k="eq"><span class="nm">max_equity</span><span class="ex"><span class="rm">Σ</span> |r| (M + 1/(1+e<sub>c</sub>)) x<sub>cr</sub></span><span class="st"><span class="pill warn">proxy</span></span></div>
+      <div class="objrow hdr"><span>heurísticas</span><span>regla, sin función objetivo</span><span></span></div>
+      <div class="objrow" data-k="gr"><span class="nm">greedy</span><span class="ex"><span class="rm">pregunta primero al que menos pedidos lleva; ruta factible más cercana</span></span><span class="st"><span class="pill no">regla</span></span></div>
+      <div class="objrow" data-k="fg"><span class="nm">fair_greedy</span><span class="ex"><span class="rm">pregunta primero al de menor ganancia/h; bono de pago si está bajo la media</span></span><span class="st"><span class="pill no">regla</span></span></div>
+      <div class="objrow hdr"><span>métricas</span><span>lo que mide el evaluador oficial y la tesis (metrics.py), no lo que se optimiza</span><span></span></div>
+      <div class="objrow" data-k="met"><span class="nm">coverage, c2d, overage, F_Gini, F_MaxMin, F_Orders, F_Deficit, F_Dist, total_payment</span><span class="ex"></span><span class="st"><span class="pill ok">salida</span></span></div>
+    </div>
+    <div class="objx" id="objx"></div>
+  </div>
+</section>
+
+<!-- ================= 3 · POR QUÉ JERARQUÍA ================= -->
+<section class="slide" id="s3" data-title="Jerarquía, no suma ponderada" data-time="150">
+  <div class="eyebrow"><span class="sec">03</span> Principio del marco</div>
+  <h2>Por qué una jerarquía y no una suma ponderada</h2>
+  <div class="wsum">
+    <div>
+      <div class="ctl">
+        <div class="row" style="justify-content:space-between"><h4>Con pesos: <span class="m">max − λ·atraso − minutos + equidad</span></h4><span class="small">sobre las 18 asignaciones del ejemplo que cubren los 4 pedidos</span></div>
+        <input type="range" id="lam" min="0" max="6" step="0.25" value="1">
+        <div class="ticks"><span>λ = 0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span></div>
+        <div class="row" style="margin-top:8px;gap:26px"><div class="big">λ = <span id="lamv">1,00</span></div><div class="small" id="lamnote">Un minuto de atraso pesa lo mismo que un minuto de repartidor.</div></div>
+        <div class="sols" id="wsols"></div>
+      </div>
+      <div class="flipnote" id="flipnote"></div>
+    </div>
+    <div>
+      <div class="lexi">
+        <h3>Lo que el negocio sí sabe decir</h3>
+        <p>«Primero cubrir todo lo que se pueda. Después, que llegue a tiempo. Después, que el reparto sea justo. Y con lo que sobre, ahorrar minutos.» Nadie sabe decir «el atraso pesa 0,7».</p>
+        <ol>
+          <li><b>Una pasada por objetivo.</b> Gurobi maximiza el primero, fija su valor con candado y maximiza el segundo bajo ese candado, y así (<span class="mono">setObjectiveN</span> con prioridades).</li>
+          <li><b>Progreso por objetivo = 100 − GAP.</b> Un certificado, no una sensación: se sabe qué pasada tarda y por qué.</li>
+          <li><b>Saltar, parar, acotar por pasada.</b> Un <i>skip</i> de la pasada 3 no pierde las pasadas 1 y 2; cada una admite <span class="mono">time_limit</span> y <span class="mono">mip_gap</span>.</li>
+          <li><b>El truco M desaparece.</b> Ya no hay que calibrar λ, μ ni M para que la cobertura «domine»: la jerarquía lo garantiza por construcción.</li>
+        </ol>
+      </div>
+      <div class="nphard" style="margin-top:14px"><div class="big">1e-4</div><div><b>El precio de la jerarquía:</b> el candado deja un hueco de tolerancia (<span class="mono">ObjNRelTol</span>). En XO, dos corridas con el mismo primer objetivo dieron segundos distintos. Se documenta y se controla por pasada: lo verán en el ejemplo (slide 06). <b>Decidido (4C):</b> 0 en cobertura, 1e-4 en el resto.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 4 · ORDEN PROPUESTO ================= -->
+<section class="slide" id="s4" data-title="El orden propuesto" data-time="150">
+  <div class="eyebrow"><span class="sec">04</span> Decisión D4 · propuesta</div>
+  <h2>El orden propuesto: cobertura, atraso, equidad, costo</h2>
+  <div class="passes4">
+    <div class="pcard" style="--c:var(--p1)"><div class="tp"><b>pasada 1 · prioridad 40</b><span>candado exacto</span></div><h4>Cobertura</h4><div class="ex"><span class="rm">max</span> <span class="sum"><span class="sig">∑</span><span class="lims"><span>o∈O</span></span></span> y<sub>o</sub></div><p>Pedidos pendientes que salen asignados en esta ronda. <span class="m">y<sub>o</sub></span> = 1 si alguna ruta elegida contiene al pedido.</p><div class="why"><b>Por qué primero.</b> Es lo que el negocio no negocia y lo que ya comparten las siete políticas. Candado con tolerancia 0: ninguna pasada posterior puede comprar un pedido sin cubrir (decisión 4C).</div><div class="meta"><span class="tag p1">MAX</span><span class="tag">siempre existe</span><span class="tag">candado 0</span></div></div>
+    <div class="pcard" style="--c:var(--p2)"><div class="tp"><b>pasada 2 · prioridad 30</b><span>min → −max</span></div><h4>Atraso</h4><div class="ex"><span class="rm">max</span> − <span class="sum"><span class="sig">∑</span><span class="lims"><span>(c,r)∈K</span></span></span> ℓ<sub>cr</sub> x<sub>cr</sub></div><p>Minutos de exceso sobre el <i>target click-to-door</i> (la métrica <span class="mono">overage</span> del evaluador oficial), sumados sobre las paradas de las rutas elegidas.</p><div class="why"><b>Por qué segundo.</b> Es la promesa al cliente. La equidad entre repartidores es política interna de la plataforma: no debería comprarse con minutos de atraso del cliente. Esta es la duda nº 1.</div><div class="meta"><span class="tag p2">MIN</span><span class="tag">siempre existe</span><span class="tag">candado 1e-4</span></div></div>
+    <div class="pcard" style="--c:var(--p3)"><div class="tp"><b>pasada 3 · prioridad 20</b><span>proxy lineal</span></div><h4>Equidad</h4><div class="ex"><span class="rm">max</span> <span class="sum"><span class="sig">∑</span><span class="lims"><span>(c,r)∈K</span></span></span> d<sub>c</sub> |r| x<sub>cr</sub></div><p>Pedidos entregados a repartidores con déficit <span class="m">d<sub>c</sub></span> = max(0, w̄ − w<sub>c</sub>): cuánto están por debajo de la media de ganancia <b>acumulada del día</b> entre los ociosos (decisión 3C). Es el <i>F_Deficit</i> de la tesis llevado a la decisión.</p><div class="why"><b>Por qué tercero.</b> La tesis es sobre equidad; va antes que el costo. Sólo existe cuando alguien está bajo la media (135 de 235 rondas en la instancia de prueba).</div><div class="meta"><span class="tag p3">MAX</span><span class="tag">existe si d<sub>c</sub> &gt; 0</span><span class="tag">candado 1e-4</span></div></div>
+    <div class="pcard" style="--c:var(--p4)"><div class="tp"><b>pasada 4 · prioridad 10</b><span>min → −max</span></div><h4>Costo</h4><div class="ex"><span class="rm">max</span> − <span class="sum"><span class="sig">∑</span><span class="lims"><span>(c,r)∈K</span></span></span> τ<sub>cr</sub> x<sub>cr</sub></div><p>Minutos de repartidor comprometidos por las rutas elegidas (viaje al restaurante, servicio, viajes a los clientes). Es lo que hoy mide <span class="mono">min_cost</span>.</p><div class="why"><b>Por qué último.</b> Es el residuo: con todo lo anterior fijo, ahorrar minutos también prefiere bundles (menos viajes) y deja repartidores libres para la ronda siguiente.</div><div class="meta"><span class="tag p4">MIN</span><span class="tag">siempre existe</span><span class="tag">candado 1e-4</span></div></div>
+  </div>
+  <div class="gone">
+    <div class="g"><div class="x">×</div><div><b>Desaparece <code>max_throughput</code>.</b> Es λ·costo + μ·atraso: una suma ponderada entre dos objetivos. En la jerarquía se descompone en las pasadas 2 y 4 y λ, μ dejan de existir.</div></div>
+    <div class="g"><div class="x">×</div><div><b>Desaparece el truco <code>M·|r|</code>.</b> El término dominante que hoy fuerza «cobertura primero» en cuatro de los cinco objetivos lo sustituye la prioridad de la pasada 1. Y <code>1/(1+e<sub>c</sub>)</code> se reemplaza por un déficit con unidades (pago acumulado del día). Ningún objetivo es protegido: toda pasada admite <code>mip_gap</code> (decisión 5C).</div></div>
+  </div>
+</section>
+
+<!-- ================= 5 · MODELO ================= -->
+<section class="slide" id="s5" data-title="El modelo, una restricción a la vez" data-time="180">
+  <div class="eyebrow"><span class="sec">05</span> Modelo exacto · hier/context.py</div>
+  <h2>El modelo de una ronda, una restricción a la vez</h2>
+  <div class="notation" id="notation">
+    <div class="grp"><span>conjuntos</span>
+      <button class="nchip" data-s="C" data-tip="<b>C</b> — repartidores ociosos en la ronda (alias C1, C2… en el LP)."><span class="rm">C</span></button>
+      <button class="nchip" data-s="O" data-tip="<b>O</b> — pedidos pendientes (alias O1, O2…)."><span class="rm">O</span></button>
+      <button class="nchip" data-s="R" data-tip="<b>R</b> — rutas enumeradas: un singleton por pedido y un bundle por restaurante con sus pedidos más urgentes (routing.generate_store_routes)."><span class="rm">R</span></button>
+      <button class="nchip" data-s="K" data-tip="<b>K</b> ⊂ C × R — candidatos que sobreviven al prefiltro anotado: K más cercanos (NOT_TOPK), no rechazados (REJECTED), SLA factible (SLA_INFEASIBLE)."><span class="rm">K</span></button>
+    </div>
+    <div class="grp"><span>parámetros</span>
+      <button class="nchip" data-s="n" data-tip="<b>|r|</b> — pedidos que contiene la ruta r (1 a max_bundle_size).">|r|</button>
+      <button class="nchip" data-s="l" data-tip="<b>ℓ<sub>cr</sub></b> — atraso: minutos sobre el target click-to-door acumulados en la secuencia de r si la toma c (routing.route_feasibility).">ℓ<sub>cr</sub></button>
+      <button class="nchip" data-s="t" data-tip="<b>τ<sub>cr</sub></b> — minutos de repartidor: viaje + servicio en restaurante + viajes y servicio en clientes.">τ<sub>cr</sub></button>
+      <button class="nchip" data-s="d" data-tip="<b>d<sub>c</sub></b> — déficit de equidad: max(0, media de ganancia acumulada del día entre los ociosos − la de c). Decisión 3C.">d<sub>c</sub></button>
+    </div>
+    <div class="grp"><span>variables</span>
+      <button class="nchip" data-s="x" data-tip="<b>x<sub>cr</sub></b> ∈ {0,1} — 1 si el repartidor c toma la ruta r. La única decisión real. Nombre en el LP: x[C2,R5].">x<sub>cr</sub></button>
+      <button class="nchip" data-s="y" data-tip="<b>y<sub>o</sub></b> ∈ {0,1} — 1 si el pedido o queda cubierto por alguna ruta elegida. Variable agregada para que la cobertura sea legible.">y<sub>o</sub></button>
+    </div>
+  </div>
+  <div class="model" id="model">
+    <div class="eqs" id="eqs">
+      <div class="eq st">objetivos · una pasada cada uno, prioridad descendente</div>
+      <div class="eq obj on" data-c="p1"><div class="m"><span class="rm">P1</span> <span class="rm">max</span> <span class="sum"><span class="sig">∑</span><span class="lims"><span>o∈O</span></span></span><span class="sym s-y">y</span><sub>o</sub></div><div class="cond">prioridad 40 · candado 0</div><div class="no">(1)</div></div>
+      <div class="eq obj" data-c="p2"><div class="m"><span class="rm">P2</span> <span class="rm">max</span> −<span class="sum"><span class="sig">∑</span><span class="lims"><span>(c,r)∈<span class="sym s-K">K</span></span></span></span><span class="sym s-l">ℓ</span><sub>cr</sub> <span class="sym s-x">x</span><sub>cr</sub></div><div class="cond">prioridad 30</div><div class="no">(2)</div></div>
+      <div class="eq obj" data-c="p3"><div class="m"><span class="rm">P3</span> <span class="rm">max</span> <span class="sum"><span class="sig">∑</span><span class="lims"><span>(c,r)∈<span class="sym s-K">K</span></span></span></span><span class="sym s-d">d</span><sub>c</sub> <span class="sym s-n">|r|</span> <span class="sym s-x">x</span><sub>cr</sub></div><div class="cond">prioridad 20 · si ∃ d<sub>c</sub> &gt; 0</div><div class="no">(3)</div></div>
+      <div class="eq obj" data-c="p4"><div class="m"><span class="rm">P4</span> <span class="rm">max</span> −<span class="sum"><span class="sig">∑</span><span class="lims"><span>(c,r)∈<span class="sym s-K">K</span></span></span></span><span class="sym s-t">τ</span><sub>cr</sub> <span class="sym s-x">x</span><sub>cr</sub></div><div class="cond">prioridad 10</div><div class="no">(4)</div></div>
+      <div class="eq st">sujeto a · una familia por bloque, filas con nombre estable</div>
+      <div class="eq" data-c="cover"><div class="m"><span class="sym s-y">y</span><sub>o</sub> = <span class="sum"><span class="sig">∑</span><span class="lims"><span>(c,r)∈<span class="sym s-K">K</span>: o∈r</span></span></span><span class="sym s-x">x</span><sub>cr</sub></div><div class="cond">∀ o ∈ O · <span class="rm">Cover[O]</span></div><div class="no">(5)</div></div>
+      <div class="eq" data-c="once"><div class="m"><span class="sum"><span class="sig">∑</span><span class="lims"><span>r: (c,r)∈<span class="sym s-K">K</span></span></span></span><span class="sym s-x">x</span><sub>cr</sub> ≤ 1</div><div class="cond">∀ c ∈ C · <span class="rm">CourierOnce[C]</span></div><div class="no">(6)</div></div>
+      <div class="eq" data-c="imp"><div class="m"><span class="sym s-y">y</span><sub>o</sub> = 0</div><div class="cond">∀ o sin candidato · <span class="rm">Impossible[O]</span></div><div class="no">(7)</div></div>
+      <div class="eq" data-c="prev"><div class="m"><span class="sym s-x">x</span><sub>cr</sub> = 1</div><div class="cond">∀ (c,r) ya decidido · <span class="rm">PrevSolution[C,R]</span></div><div class="no">(8)</div></div>
+      <div class="eq" data-c="dom"><div class="m"><span class="sym s-x">x</span><sub>cr</sub> ∈ {0,1}, &nbsp;<span class="sym s-y">y</span><sub>o</sub> ∈ {0,1}</div><div class="cond"></div><div class="no">(9)</div></div>
+    </div>
+    <div class="cxp" id="cxp"></div>
+  </div>
+</section>
+
+<!-- ================= 6 · EJEMPLO DIDÁCTICO ================= -->
+<section class="slide" id="s6" data-title="Ejemplo: una ronda pasada a pasada" data-time="300">
+  <div class="eyebrow"><span class="sec">06</span> Ejemplo didáctico · tests/fixtures/hier/toy.json</div>
+  <h2>Una ronda pasada a pasada: tres repartidores, cuatro pedidos</h2>
+  <div class="toy">
+    <div>
+      <div class="orderchips" id="ochips"></div>
+      <div class="ctrls">
+        <button class="btn primary" id="play6">▶ Correr pasadas</button>
+        <button class="btn" id="step6">Pasada →</button>
+        <button class="btn" id="reset6">↺ Reiniciar</button>
+        <span class="sep"></span>
+        <label class="small" for="tol6">candado</label>
+        <select id="tol6"><option value="0">exacto (tol 0)</option><option value="0.0001">1e-4 relativo (XO)</option><option value="0.05">5 % relativo</option><option value="0.25">25 % relativo</option></select>
+        <span class="sep"></span>
+        <button class="btn sm" id="cands6">tabla de candidatos</button>
+      </div>
+      <svg id="map" viewBox="0 0 640 400"></svg>
+      <div class="cap" id="cap6"></div>
+    </div>
+    <div>
+      <div class="readout">
+        <div class="ro"><span class="lbl">asignaciones factibles</span><div class="v num" id="ro_n">121</div></div>
+        <div class="ro"><span class="lbl">sobreviven</span><div class="v num" id="ro_s">121</div></div>
+        <div class="ro acc"><span class="lbl">pasada activa</span><div class="v" id="ro_p">—</div></div>
+        <div class="ro"><span class="lbl">resultado</span><div class="v" id="ro_r" style="font-size:20px;line-height:1.2">—</div></div>
+      </div>
+      <div class="passlog" id="plog"></div>
+      <div class="candtbl" id="candtbl"></div>
+      <div class="flipnote" id="toynote" style="margin-top:10px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 7 · CÓMO CORRE EN GUROBI ================= -->
+<section class="slide" id="s7" data-title="Cómo corre en Gurobi" data-time="150">
+  <div class="eyebrow"><span class="sec">07</span> Ejecución · hier/callback.py</div>
+  <h2>Cómo corre en Gurobi: pasadas, candados, callback y motivo de fin</h2>
+  <div class="algo">
+    <div>
+      <div class="pcode" id="pcode7"><div class="hd">hier/context.py · configure() + optimize()<span>esqueleto, sin ruido</span></div><ol>
+        <li><span class="txt"><span class="cm"># 1 candidatos con prefiltro anotado (NOT_TOPK · REJECTED · SLA_INFEASIBLE)</span></span></li>
+        <li><span class="txt"><span class="kw">for</span> route <span class="kw">in</span> generate_store_routes(orders, bundle):</span></li>
+        <li><span class="txt">    <span class="kw">for</span> c <span class="kw">in</span> nearest(couriers, route, K):</span></li>
+        <li><span class="txt">        res = route_feasibility(c, route, t, cfg)   <span class="cm"># None → discard('SLA_INFEASIBLE')</span></span></li>
+        <li><span class="txt">        cand[c, r] = {n: |r|, lateness, total_tt, deficit[c]}</span></li>
+        <li><span class="txt"><span class="cm"># 2 variables registradas en Python, filas con nombre estable</span></span></li>
+        <li><span class="txt">x[c,r] = m.addVar(BINARY, name=<span class="fn">"x[C2,R5]"</span>);  y[o] = m.addVar(BINARY, name=<span class="fn">"y[O3]"</span>)</span></li>
+        <li><span class="txt">m.addConstr(y[o] == quicksum(x[c,r] <span class="kw">for</span> r ∋ o), name=<span class="fn">"Cover[O3]"</span>)</span></li>
+        <li><span class="txt">m.addConstr(quicksum(x[c,r] <span class="kw">for</span> r) &lt;= 1,   name=<span class="fn">"CourierOnce[C2]"</span>)</span></li>
+        <li><span class="txt"><span class="cm"># 3 una pasada por objetivo, todos MAX, prioridad descendente, candado por pasada</span></span></li>
+        <li><span class="txt">m.ModelSense = MAXIMIZE</span></li>
+        <li><span class="txt"><span class="kw">for</span> i, spec <span class="kw">in</span> enumerate(order):        <span class="cm"># coverage, lateness, equity, cost</span></span></li>
+        <li><span class="txt">    m.setObjectiveN(expr(spec), index=i, priority=spec.priority,</span></li>
+        <li><span class="txt">                    abstol=1e-6, reltol=(0 <span class="kw">if</span> spec.name == <span class="fn">'coverage'</span> <span class="kw">else</span> 1e-4), name=spec.name)</span></li>
+        <li><span class="txt">    env_i = m.getMultiobjEnv(i)           <span class="cm"># time_limit / mip_gap por pasada</span></span></li>
+        <li><span class="txt">    <span class="kw">if</span> st.mip_gap: env_i.setParam(<span class="fn">'MIPGap'</span>, st.mip_gap)   <span class="cm"># toda pasada lo admite (5C)</span></span></li>
+        <li><span class="txt"><span class="cm"># 4 optimizar con callback: MULTIOBJ · MESSAGE · MIPSOL · MIP</span></span></li>
+        <li><span class="txt">m.optimize(HierCallback(ctx, order, x, settings, on_partial, stop_after))</span></li>
+        <li><span class="txt"><span class="cm">#   skip   → cbStopOneMultiObj(i)   stop → terminate()   prog = 100 − GAP</span></span></li>
+        <li><span class="txt"><span class="cm">#   cada fin de pasada deja end_reason: optimal | time_limit | mip_gap | skipped | stop_after</span></span></li>
+      </ol></div>
+    </div>
+    <div>
+      <div class="steps" id="steps7">
+        <div class="step on" data-l="1,2,3,4,5"><div class="n">1</div><div><h4>Candidatos anotados</h4><p>Cada descarte guarda un código: es el gancho para las explicaciones (épica §7). Media 19 candidatos por ronda, máximo 275; construcción en 3 ms.</p></div></div>
+        <div class="step" data-l="6,7,8,9"><div class="n">2</div><div><h4>Filas con nombre, registro por nombre</h4><p>Sin <span class="mono">getVarByName</span>. Un IIS se lee en un minuto: la única forma de infactibilidad es <span class="mono">PrevSolution</span> contra <span class="mono">Impossible</span>, y hay guardas en los dos sitios.</p></div></div>
+        <div class="step" data-l="10,11,12,13,14,15,16"><div class="n">3</div><div><h4>Jerarquía nativa de Gurobi</h4><p><span class="mono">setObjectiveN</span> + prioridades. El candado es <span class="mono">abstol/reltol</span> por objetivo; los parámetros de pasada van en su <span class="mono">MultiobjEnv</span>. Candado 0 en cobertura y 1e-4 en el resto (4C); ninguna pasada es protegida: todas admiten <span class="mono">mip_gap</span> (5C).</p></div></div>
+        <div class="step" data-l="17,18,19,20"><div class="n">4</div><div><h4>Callback: progreso, parciales, acciones</h4><p><span class="mono">MESSAGE</span> da las fronteras de pasada y el esfuerzo (nodos, work units); <span class="mono">MIPSOL</span> lee el incumbente con un solo <span class="mono">cbGetSolution</span>; <span class="mono">MIP</span> da cota y GAP. Parciales con <i>throttle</i> de 2 s y latido de 20 s.</p></div></div>
+      </div>
+      <div class="ends"><span class="small">seis formas de terminar antes del óptimo, cada una deja escrito su motivo:</span><span class="pill ok">skipped</span><span class="pill bad">user_stop</span><span class="pill warn">time_limit</span><span class="pill warn">mip_gap</span><span class="pill ok">external_bound</span><span class="pill warn">stop_after</span></div>
+      <div class="passtbl"><div class="ct"><b>Tabla de pasadas real</b><span>diag_hier_case.py --toy · Gurobi 11.0.3</span></div>
+        <table class="t"><thead><tr><th>pasada</th><th>objetivo</th><th class="n">valor</th><th class="n">cota</th><th class="n">prog</th><th>fin</th><th class="n">sols</th><th class="n">nodos</th></tr></thead>
+        <tbody><tr><td>1</td><td>coverage</td><td class="n">4</td><td class="n">4</td><td class="n">100</td><td><span class="pill ok">optimal</span></td><td class="n">3</td><td class="n">1</td></tr>
+        <tr><td>2</td><td>lateness</td><td class="n">8,0 min</td><td class="n">8,0</td><td class="n">100</td><td><span class="pill ok">optimal</span></td><td class="n">2</td><td class="n">1</td></tr>
+        <tr><td>3</td><td>equity</td><td class="n">22,0</td><td class="n">22,0</td><td class="n">100</td><td><span class="pill ok">optimal</span></td><td class="n">1</td><td class="n">0</td></tr>
+        <tr><td>4</td><td>cost</td><td class="n">44,0 min</td><td class="n">44,0</td><td class="n">100</td><td><span class="pill ok">optimal</span></td><td class="n">1</td><td class="n">0</td></tr></tbody></table>
+        <div class="small" style="margin-top:6px">22 variables · 7 filas · 46 no-ceros · 0,07 s · 123 eventos MESSAGE · fuerza bruta sobre 121 asignaciones: <b>coincide</b>.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 8 · RESULTADOS ================= -->
+<section class="slide" id="s8" data-title="Resultados en una instancia real" data-time="150">
+  <div class="eyebrow"><span class="sec">08</span> Evidencia · 0o100t100s1p100 · 505 pedidos · 113 repartidores</div>
+  <h2>En una instancia real: misma cobertura, atraso y Gini entre los mejores, 0,6 s por día</h2>
+  <div class="results">
+    <div>
+      <table class="t" id="restbl">
+        <thead><tr><th>política</th><th>objetivo</th><th class="n">cobertura</th><th class="n">c2d medio</th><th class="n">p90</th><th class="n">atraso medio</th><th class="n">pago total</th><th class="n">F_Gini</th><th class="n">F_Orders</th><th class="n">tiempo</th></tr></thead>
+        <tbody>
+          <tr><td>greedy</td><td class="mono">regla</td><td class="n">100 %</td><td class="n">35,9</td><td class="n">48,0</td><td class="n">2,2</td><td class="n">5 190,75</td><td class="n">0,0741</td><td class="n">0,0970</td><td class="n">0,03 s</td></tr>
+          <tr class="dim"><td>fair_greedy</td><td class="mono">regla + bono</td><td class="n">100 %</td><td class="n">46,6</td><td class="n">78,5</td><td class="n">—</td><td class="n">8 743,00</td><td class="n">0,2215</td><td class="n">—</td><td class="n">0,07 s</td></tr>
+          <tr><td>ilp</td><td class="mono">max_coverage</td><td class="n">100 %</td><td class="n">37,6</td><td class="n">50,3</td><td class="n">3,1</td><td class="n">5 310,50</td><td class="n">0,0809</td><td class="n">—</td><td class="n">4,3 s</td></tr>
+          <tr><td>ilp</td><td class="mono">min_lateness</td><td class="n">100 %</td><td class="n">36,1</td><td class="n">47,3</td><td class="n">2,3</td><td class="n">5 275,75</td><td class="n">0,0772</td><td class="n">—</td><td class="n">4,0 s</td></tr>
+          <tr><td>ilp</td><td class="mono">max_equity</td><td class="n">100 %</td><td class="n">37,3</td><td class="n">48,3</td><td class="n">2,7</td><td class="n">5 200,75</td><td class="n">0,0666</td><td class="n">—</td><td class="n">4,0 s</td></tr>
+          <tr><td>ilp</td><td class="mono">min_cost</td><td class="n">100 %</td><td class="n">35,0</td><td class="n">47,0</td><td class="n">2,1</td><td class="n">5 315,75</td><td class="n">0,0824</td><td class="n">—</td><td class="n">4,1 s</td></tr>
+          <tr class="hl"><td><b>hier</b></td><td class="mono">cov › lat › eq › cost</td><td class="n">100 %</td><td class="n">35,3</td><td class="n">47,6</td><td class="n">2,2</td><td class="n">5 213,25</td><td class="n">0,0684</td><td class="n">0,0979</td><td class="n">0,58 s</td></tr>
+          <tr><td><b>hier</b></td><td class="mono">cov › eq › lat › cost</td><td class="n">100 %</td><td class="n">35,4</td><td class="n">48,0</td><td class="n">2,3</td><td class="n">5 211,25</td><td class="n">0,0703</td><td class="n">0,1020</td><td class="n">0,57 s</td></tr>
+        </tbody>
+      </table>
+      <div class="charts2">
+        <div class="chart"><div class="ct">Atraso medio sobre el target <small>min · menos es mejor</small></div><svg id="ch_over" viewBox="0 0 440 190"></svg></div>
+        <div class="chart"><div class="ct">F_Gini de ganancias <small>menos es más equitativo</small></div><svg id="ch_gini" viewBox="0 0 440 190"></svg></div>
+      </div>
+    </div>
+    <div class="takeaways">
+      <div class="take"><div class="v">235<small> rondas</small></div><p>con decisión en el día; todas las pasadas terminaron en <b>optimal</b>. 2,3 ms de media por ronda, 10 ms la peor; presupuesto por ronda 120 s.</p></div>
+      <div class="take"><div class="v">135 / 235</div><p>rondas en las que existió la pasada de equidad (alguien bajo la media de ganancia acumulada). En las otras 100 el modelo corre con tres pasadas, sin tocar código: regla «¿cuándo existe?».</p></div>
+      <div class="take"><div class="v">2,2 → 2,3</div><p>minutos de atraso medio al poner equidad antes que atraso; el Gini pasa de 0,0684 a 0,0703. El orden <b>sí</b> cambia el resultado, poco en esta instancia (todos con holgura). El batch sobre las 240 instancias dice dónde importa (slide 12).</p></div>
+      <div class="take"><div class="v">0</div><p>infactibles, fallbacks a greedy o rondas con pendientes no resueltos al final del día. Cobertura 100 % en todas las variantes: la instancia es generosa; la comparación relevante vendrá con los clusters.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 9 · DUDAS ================= -->
+<section class="slide" id="s9" data-title="Dudas que necesito resolver" data-time="240">
+  <div class="eyebrow"><span class="sec">09</span> Cuestionario respondido el 20 de octubre de 2026 · 1A 2A 3C 4C 5C 6A 7A 8A 9A 10A</div>
+  <h2>Ocho dudas, ocho decisiones</h2>
+  <div class="dudas" id="dudas">
+    <div class="duda on"><div class="n">1</div><div><h4>¿Atraso antes que equidad, o equidad antes que atraso? <span class="goto" data-go="6">→ slide 06</span></h4><div class="q">Es la decisión D4 de la épica y la única que cambia la solución del ejemplo: 8 min de atraso con 3 repartidores, o 14 min con 2 y el pedido para el que menos gana.</div><div class="rec"><b>decisión 1A · como se recomendó</b>Atraso primero. La equidad se consigue sobre el día entero sin cobrarle minutos al cliente; además el evaluador oficial sólo mira <i>overage</i>.</div></div></div>
+    <div class="duda"><div class="n">2</div><div><h4>¿Atraso en minutos o en número de pedidos tarde?</h4><div class="q">Minutos es lineal y coincide con <i>overage</i>; «pedidos tarde» es un objetivo de conteo: cota floja, prueba cara (épica §3.3) y degenerado.</div><div class="rec"><b>decisión 2A · como se recomendó</b>Minutos. Si el negocio quiere un KPI de conteo, se publica como indicador de estructura, no como objetivo.</div></div></div>
+    <div class="duda"><div class="n">3</div><div><h4>¿Equidad como déficit ponderado o como max-min real?</h4><div class="q">Un max-min (maximizar la ganancia del peor) se puede escribir con <span class="mono">addGenConstrMin</span>, pero en una ronda el peor suele no tener candidato factible y el objetivo queda constante.</div><div class="rec"><b>decisión 3C · distinta a la recomendación</b>Déficit ponderado sobre la <i>ganancia acumulada del día</i>, no por hora: d<sub>c</sub> = max(0, media − ganancias<sub>c</sub>). Implementado; en la instancia de prueba mejora el Gini (0,0710 → 0,0684).</div></div></div>
+    <div class="duda"><div class="n">4</div><div><h4>¿Qué tolerancia de candado entre pasadas?</h4><div class="q">Con 0 la jerarquía es exacta pero rígida; XO corre con 1e-4 relativo y midió el hueco. En el ejemplo, un candado del 25 % deja que la pasada 2 sacrifique un pedido (cobertura 3) para bajar el atraso a 1 min.</div><div class="rec"><b>decisión 4C · distinta a la recomendación</b>0 en cobertura (nunca se compra un pedido sin cubrir) y 1e-4 relativo en atraso, equidad y costo, como XO. Implementado en <span class="mono">DEFAULT_LOCK_REL_TOL_BY_NAME</span>; configurable por pasada.</div></div></div>
+    <div class="duda"><div class="n">5</div><div><h4>¿Qué objetivos son «protegidos»?</h4><div class="q">Un objetivo protegido admite <span class="mono">time_limit</span> pero rechaza <span class="mono">mip_gap</span>. Hoy sólo cobertura.</div><div class="rec"><b>decisión 5C · distinta a la recomendación</b>Ningún objetivo protegido: toda pasada admite <span class="mono">mip_gap</span> y <span class="mono">time_limit</span>. El mecanismo de protección queda en el código por si se reactiva.</div></div></div>
+    <div class="duda"><div class="n">6</div><div><h4>¿Un objetivo de «repartidores usados» o de bundles?</h4><div class="q">Dejar repartidores libres para la siguiente ronda es valioso, pero es un objetivo de conteo (recursos gemelos: cota 100 % sin cerrar en XO).</div><div class="rec"><b>decisión 6A · como se recomendó</b>No por ahora: el costo en minutos ya prefiere bundles y deja gente libre. Se mide con el indicador <span class="mono">couriers_used</span>.</div></div></div>
+    <div class="duda"><div class="n">7</div><div><h4>¿Modelo por ronda o con mirada al futuro?</h4><div class="q">La ronda es miope: cubrir hoy un pedido con 15 min de atraso puede ser peor que esperar al repartidor que se libera en 2 min. D1/D5 de la épica.</div><div class="rec"><b>decisión 7A · como se recomendó</b>Por ronda en el S1 (es lo que hacen las siete políticas y lo que permite comparar). Un horizonte de dos rondas con pedidos «anticipados» como fase 2 del S4.</div></div></div>
+    <div class="duda"><div class="n">8</div><div><h4>¿Qué hacemos con el bono de pago de fair_greedy?</h4><div class="q">Fair_greedy paga un bono fuera de cualquier modelo. En la jerarquía el pago es plano (pay_per_order × |r|); el bono no entra en el MIP.</div><div class="rec"><b>decisión 8A · como se recomendó</b>Pago plano: la equidad se logra asignando, no pagando. Si algún día se quiere bono, es una regla posterior a la solución, no un objetivo.</div></div></div>
+  </div>
+</section>
+
+<!-- ================= 10 · DECISIONES ================= -->
+<section class="slide" id="s10" data-title="Decisiones D1–D9 rellenadas" data-time="90">
+  <div class="eyebrow"><span class="sec">10</span> Épica §3.6 y §11 · huecos ⟨MDRP⟩ rellenados</div>
+  <h2>Las nueve decisiones de la épica, con propuesta</h2>
+  <div class="dec" style="margin-top:14px">
+    <table class="t">
+      <thead><tr><th>#</th><th>decisión</th><th>lo que hace XO</th><th>propuesta para el MDRP</th><th>estado</th></tr></thead>
+      <tbody>
+        <tr><td class="d">D1</td><td>Modelo del tiempo</td><td>discretizado en periodos</td><td>La ronda de 2 min es el periodo; dentro de la ronda no hay tiempo en el MIP: las rutas llegan con tiempos ya calculados (<span class="mono">route_feasibility</span>). Sin big-M.</td><td><span class="pill ok">implementado</span></td></tr>
+        <tr><td class="d">D2</td><td>Unidad de decisión</td><td>binaria (unidad, recurso, periodo)</td><td><span class="m">x<sub>cr</sub></span> (repartidor, ruta enumerada). Columnas, no flujo: un singleton por pedido y un bundle por restaurante. Medido: 19 candidatos de media, 275 máximo.</td><td><span class="pill ok">implementado</span></td></tr>
+        <tr><td class="d">D3</td><td>Qué es «cubierto» y la salida con costo</td><td>plaza con recurso; <span class="mono">required:false</span></td><td>Pedido con ruta asignada en la ronda (<span class="m">y<sub>o</sub></span>). Lo no cubierto queda pendiente sin costo: nunca infactible por demanda. <span class="mono">Impossible[O]</span> anotado.</td><td><span class="pill ok">implementado</span></td></tr>
+        <tr><td class="d">D4</td><td>Orden, sentido, protegidos</td><td>PC › Profit › Balanced › LF › WL › FJA</td><td>Cobertura › atraso › equidad › costo; todo MAX; candado 0 en cobertura y 1e-4 en el resto; ningún objetivo protegido. <b>Decisiones 1A, 2A, 4C, 5C.</b></td><td><span class="pill ok">decidido</span></td></tr>
+        <tr><td class="d">D5</td><td>Fases</td><td>dos requests</td><td>Una sola fase por ronda. Un horizonte de dos rondas sería fase 2 del S4 (decisión 7A).</td><td><span class="pill ok">decidido</span></td></tr>
+        <tr><td class="d">D6</td><td>Factor del pct global y principal</td><td>F = 0,20</td><td>F = 0,20; principal = cobertura. <span class="mono">pct = 0,8·prog(cov) + 0,2/3·Σ otros</span>.</td><td><span class="pill ok">implementado</span></td></tr>
+        <tr><td class="d">D7</td><td>Canal de parciales y explicaciones</td><td>PATCH reply_url · POST aparte</td><td>En el simulador: consumidor <span class="mono">on_partial</span> en proceso con throttle 2 s y latido 20 s. El HTTP (FastAPI) queda para el S0 del servicio.</td><td><span class="pill no">S0 servicio</span></td></tr>
+        <tr><td class="d">D8</td><td>Historia fija en el reproceso</td><td>eventos con asignación</td><td>Pares (repartidor, ruta) ya aceptados entran como <span class="mono">PrevSolution[C,R] : x = 1</span>, con guardas contra <span class="mono">Impossible</span>. Posición y ganancias del repartidor son estado de entrada.</td><td><span class="pill ok">implementado</span></td></tr>
+        <tr><td class="d">D9</td><td>Determinismo</td><td>sin semilla</td><td>Semilla del simulador (42) pasada a Gurobi en las corridas; sin semilla en producción. Los tests comparan vectores de objetivo, no asignaciones (decisión 9A).</td><td><span class="pill ok">decidido</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+
+<!-- ================= 11c · RESULTADOS POR CLUSTER ================= -->
+<section class="slide" id="s11c" data-title="Resultados en las 240 instancias" data-time="150">
+  <div class="eyebrow"><span class="sec">11</span> Decisión 10A · batch_hier_clusters.py · greedy frente a hier · 240 instancias · un proceso por corrida</div>
+  <h2 id="clus_h2">En las 240 instancias: la jerarquía gana en atraso y equidad, y pierde cobertura</h2>
+  <div class="clus">
+    <div id="clus_left"></div>
+    <div class="takeaways" id="clus_right"></div>
+  </div>
+</section>
+
+
+<!-- ================= 11d · MDRP-SIM BAJO NUESTROS OBJETIVOS ================= -->
+<section class="slide" id="s11d" data-title="Las políticas de mdrp-sim con nuestros objetivos" data-time="150">
+  <div class="eyebrow"><span class="sec">12</span> sebastian-quintero/mdrp-sim · 4 políticas de matching portadas (simulator/mdrpsim_policies.py) · 240 instancias</div>
+  <h2>Las cuatro políticas de Sebastián Quintero, leídas con nuestros cuatro objetivos</h2>
+  <div class="msim">
+    <div id="msim_left"></div>
+    <div class="takeaways" id="msim_right"></div>
+  </div>
+</section>
+
+<!-- ================= 11 · QUÉ HAY Y QUÉ SIGUE ================= -->
+<section class="slide" id="s11" data-title="Qué hay en el repo y qué sigue" data-time="90">
+  <div class="eyebrow"><span class="sec">11</span> Entregado hoy · plan por sprints de la épica</div>
+  <h2>Qué hay en el repo y qué sigue</h2>
+  <div class="plan">
+    <div class="files"><b>simulator/hier/</b>   <span class="d">(desde el 20 oct el simulador vive en simulator/; public_instances/ y real_instancies/ van en el repo)</span>
+  objectives.py   <span class="d">catálogo: nombre › prioridad › sentido › protegido › ¿cuándo existe?; settings por pasada; gates DISABLE_HIER_&lt;OBJ&gt;</span>
+  context.py      <span class="d">HierContext: candidatos anotados › variables › familias › objetivos › optimize › indicadores › artefactos › huella</span>
+  callback.py     <span class="d">MULTIOBJ · MESSAGE · MIPSOL · MIP; prog = 100 − GAP; parciales; skip / stop / stop_after; end_reason</span>
+  flags.py        <span class="d">flag(): "0", "false", "no" apagan (la trampa de XO)</span>
+<b>hier_policy.py</b>    <span class="d">adaptador al simulador: python run.py --policy hier [--hier-order …] [--hier-write]</span>
+<b>diag_hier_case.py</b> <span class="d">una ronda offline: --toy | --input &lt;id&gt;_input.json | --instance … --time …; --skip, --mip-gap, --brute-force, --write-lp</span>
+<b>diag_hier_day.py</b>  <span class="d">un día: candidatos, tiempos, end_reason por pasada, cuántas rondas tuvo cada objetivo</span>
+<b>tests/</b>            <span class="d">test_hier.py (12 tests: unit › configure › e2e vs fuerza bruta) · fixtures/manifest.json · TC-HIER-01</span>
+<b>output/hier/&lt;id&gt;/</b> <span class="d">&lt;id&gt;_input.json · _mapping.json · _sol.json · _partialN.json · .lp (WRITE_LP=1)</span>
+    </div>
+    <div class="sprints">
+      <div class="sprint"><span class="s">S0</span><span class="t"><b>Esqueleto.</b> Runner offline, artefactos, gates con <span class="mono">flag()</span>, manifest</span><span class="pill ok">hecho (sin HTTP)</span></div>
+      <div class="sprint"><span class="s">S1</span><span class="t"><b>Modelo base.</b> Candidatos anotados, familias con nombre, fixture + TC-01, huella</span><span class="pill ok">hecho</span></div>
+      <div class="sprint"><span class="s">S2</span><span class="t"><b>Jerarquía.</b> setObjectiveN, settings por pasada, callback, progreso, skip/stop, end_reason</span><span class="pill ok">hecho</span></div>
+      <div class="sprint"><span class="s">S3</span><span class="t"><b>Observabilidad.</b> MESSAGE parseado, work units, versión del solver, perfil por familia</span><span class="pill warn">parcial</span></div>
+      <div class="sprint"><span class="s">S4</span><span class="t"><b>Reproceso e infactibilidad.</b> PrevSolution con guardas, IIS automático; horizonte de dos rondas</span><span class="pill warn">parcial</span></div>
+      <div class="sprint"><span class="s">S5</span><span class="t"><b>Explicaciones.</b> Códigos de descarte ya existen; falta el auditor y el contrato</span><span class="pill no">pendiente</span></div>
+      <div class="sprint"><span class="s">S6</span><span class="t"><b>Rendimiento.</b> Sólo con mediciones: correr los 240 × clusters y mirar las pasadas lentas</span><span class="pill no">pendiente</span></div>
+      <div class="nphard" style="margin-top:6px"><div class="big">→</div><div><b>Decisión 10A, ejecutada:</b> <span class="mono">batch_sensitivity --policies greedy hier</span> sobre las 240 instancias, leído por cluster (<span class="mono">instance_clusters.csv</span>). Resultados en la slide 12.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 13 · DECISIONES DE LA ETAPA 3 (paper CMDP) ================= -->
+<section class="slide" id="s11e" data-title="Decisiones de la Etapa 3" data-time="150">
+  <div class="eyebrow"><span class="sec">13</span> Paper CMDP · Etapa 3 cerrada el 20 oct · decisiones tomadas y justificadas</div>
+  <h2>Los cuatro métodos del paper ya corren; seis decisiones tomadas, con su porqué</h2>
+  <div class="dec" style="margin-top:14px">
+    <table class="t">
+      <thead><tr><th>#</th><th>decisión</th><th>opciones</th><th>decisión tomada</th><th>por qué</th><th>estado</th></tr></thead>
+      <tbody>
+        <tr><td class="d">E1</td><td>Puntaje del decodificador BRKGA</td><td><span class="mono">finish</span> (regla MIC 2026) · <span class="mono">finish_per_order</span></td><td><b><span class="mono">finish_per_order</span></b> como BRKGA-Coverage del paper; la regla original va al suplemento.</td><td>Con <span class="mono">finish</span> un lote nunca gana a un singleton del mismo repartidor: el MIC 2026 nunca agrupó y su <span class="mono">max_batch=3</span> fue inoperante. El ILP y la jerarquía sí agrupan; comparar contra un BRKGA sin lotes sería una comparación injusta a favor nuestro.</td><td><span class="pill ok">default</span></td></tr>
+        <tr><td class="d">E2</td><td>Base del déficit (BRKGA-Fair)</td><td>ingresos por hora · ingresos totales</td><td><b>Por hora activa</b> (<span class="mono">hourly</span>).</td><td>Es la base de <span class="m">F<sub>Gini</sub></span> (eq:gini) y de la restricción eq:fair_const: el método debe empujar la misma magnitud que luego se mide. «Total» castiga a quien se conectó tarde, no a quien fue mal servido.</td><td><span class="pill ok">default</span></td></tr>
+        <tr><td class="d">E3</td><td>Peso del déficit (BRKGA-Fair)</td><td>fijo · barrido</td><td><b>10 min por defecto; barrido {0, 5, 10, 20, 40} min</b> en la Etapa 4. Control myopic-fair = <span class="mono">brkga</span> liso.</td><td>Una ruta típica dura 15–25 min: 10 min de crédito pesa como media ruta, suficiente para redirigir sin anular la cercanía. El barrido es lo que pide la tesis (curva costo-de-la-equidad), no un número.</td><td><span class="pill ok">default + Etapa 4</span></td></tr>
+        <tr><td class="d">E4</td><td>Sobre quién se evalúa el Gini (MIP-Fair)</td><td>solo libres de la ronda · todos los conectados</td><td><b>Todos los conectados</b> (<span class="mono">mipfair_scope=all</span>): los libres se mueven, los ocupados entran con ingresos fijos. Nuevo <span class="mono">H_all</span> en el estado.</td><td>eq:fair_const es sobre <span class="m">C</span>, no sobre un subconjunto. Los libres de una ronda son, por construcción, los que menos pedidos llevan: su Gini aparte es sesgado y cambia de ronda en ronda.</td><td><span class="pill ok">implementado</span></td></tr>
+        <tr><td class="d">E5</td><td>Prioridad y restricciones extra (MIP-Fair)</td><td>equidad › cobertura · cobertura › equidad; añadir eq:minwage, eq:routebalance</td><td><b>Equidad › cobertura</b>; sin eq:minwage ni eq:routebalance en el paper.</td><td>Es la lectura literal de eq:fair_const como restricción dura, y la única que produce la curva Pareto al barrer <span class="m">α</span> (con cobertura primero la cobertura no se mueve). El salario mínimo lo ataca Pay-BRKGA y se reporta como <span class="m">F<sub>Deficit</sub></span>; el balance de rutas es extensión de tesis, no del paper.</td><td><span class="pill ok">default</span></td></tr>
+        <tr><td class="d">E6</td><td>Pay-BRKGA: forma y pesos</td><td>frente Pareto explícito · suma ponderada; rango de pago; λ</td><td><b>Suma ponderada</b>; rango ±30 % provisional; <span class="m">λ<sub>def</sub></span> = 0,5; barrido <span class="m">λ<sub>pay</sub></span> ∈ {0,1; 0,2; 0,5; 1}.</td><td>Cada ronda de 2 min debe despachar UNA acción: un frente por ronda no es accionable. La tesis pide el barrido de <span class="m">λ</span> (eq:cost_plus), que es exactamente lo que una suma ponderada traza. El ±30 % se ajustará con la dispersión de pago por pedido de la encuesta (V116) en la Etapa 4.</td><td><span class="pill warn">default · ajustar en Etapa 4</span></td></tr>
+      </tbody>
+    </table>
+    <div class="nphard" style="margin-top:10px"><div class="big">→</div><div><b>Qué sigue:</b> Etapa 4, diseño experimental (factores, niveles, semillas, 24 instancias en 6 ciudades) sin corridas; las corridas van a otra máquina. Quedan abiertas para el autor las decisiones de la Etapa 1 (tarifa plana o <span class="m">π<sub>0</sub>+π<sub>1</sub>d</span>, circuidad, velocidades, holgura SLA, seis ciudades, emisiones, semillas).</div></div>
+  </div>
+</section>
+
+<!-- ================= 12 · CIERRE ================= -->
+<section class="slide" id="s12" data-title="Preguntas" data-time="0">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow">Gracias</div>
+      <h2>Preguntas y decisiones</h2>
+      <div class="repo"><b>reproducir todo esto · desde simulator/</b>cd simulator<br>python diag_hier_case.py --toy --brute-force<br>python diag_hier_case.py --toy --order coverage equity lateness cost<br>python diag_hier_case.py --toy --skip lateness --mip-gap 0.05<br>python run.py --instance 0o100t100s1p100 --policy hier --save<br>python diag_hier_day.py --instance 0o100t100s1p100<br>python -m pytest tests/test_hier.py -q</div>
+    </div>
+    <div class="next"><h3>Decidido el 20 de octubre de 2026</h3><ul><li><b>D4</b>: cobertura › atraso › equidad › costo, atraso en minutos (1A, 2A).</li><li><b>Equidad</b>: déficit sobre la ganancia acumulada del día (3C).</li><li><b>Candado</b> 0 en cobertura y 1e-4 en el resto; <b>ningún protegido</b> (4C, 5C).</li><li>Sin objetivo de repartidores usados; modelo por ronda; pago plano; semilla sólo en corridas (6A, 7A, 8A, 9A).</li><li>Batch greedy + hier sobre las 240 instancias por cluster (10A): slide 12.</li></ul></div>
+  </div>
+</section>
+
+<!-- ================= chrome ================= -->
+<div id="footer">
+  <span class="ttl">MDRP · jerarquía de objetivos · Gurobi</span>
+  <span class="track">documento de decisión</span>
+  <div id="progress"><i></i></div>
+  <span id="counter">1 / 15</span>
+  <span id="timer" title="Clic o T para arrancar / pausar · Shift+T reinicia"><span class="el">00:00</span> <span class="tg">· meta 00:30</span></span>
+</div>
+<div id="notes"></div>
+<div id="menu"><h3>Diapositivas</h3><ol id="menulist"></ol>
+  <div class="keys"><span><span class="k">→</span> <span class="k">←</span> navegar</span><span><span class="k">1</span>–<span class="k">9</span> ir a</span><span><span class="k">N</span> notas</span><span><span class="k">T</span> cronómetro</span><span><span class="k">L</span> láser</span><span><span class="k">F</span> pantalla completa</span><span><span class="k">Esc</span> cerrar</span></div>
+</div>
+<div id="tip"></div>
+</div><!-- /stage -->
+<div id="laser"></div>
+
+<script>
+/* =====================================================================
+   DECK CORE — mismo esqueleto que el deck de ore hauling
+   ===================================================================== */
+(function(){
+'use strict';
+window.DECK = {};
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+DECK.$ = $; DECK.$$ = $$;
+
+/* ----- datos del ejemplo didáctico (tests/fixtures/hier/toy.json → diag_hier_case.py) ----- */
+DECK.TOY = {
+  stores: { A: [0, 0], B: [10000, 0] },
+  orders: { 1: { store: 'A', user: [0, 5000], placed: -20, ready: -2 }, 2: { store: 'A', user: [3000, 4000], placed: -8, ready: 0 },
+            3: { store: 'B', user: [10000, 6000], placed: -24, ready: -3 }, 4: { store: 'B', user: [14000, 3000], placed: -4, ready: 1 } },
+  couriers: { 1: { at: [0, -2000], earn: 8, hourly: 8 }, 2: { at: [5000, 0], earn: 30, hourly: 30 }, 3: { at: [10000, -3000], earn: 14, hourly: 14 } },
+  meanEarn: 17.333,
+  // (courier, route) candidates: n, lateness (min), total_tt (min), deficit, sequence
+  cands: [
+    { c: 1, r: [1], n: 1, late: 1, tt: 11, def: 9.333, seq: [1] },   { c: 1, r: [1, 2], n: 2, late: 1, tt: 17, def: 9.333, seq: [1, 2] },
+    { c: 1, r: [2], n: 1, late: 0, tt: 11, def: 9.333, seq: [2] },   { c: 1, r: [3], n: 1, late: 15, tt: 21, def: 9.333, seq: [3] },
+    { c: 1, r: [3, 4], n: 2, late: 21, tt: 27, def: 9.333, seq: [4, 3] }, { c: 1, r: [4], n: 1, late: 0, tt: 20, def: 9.333, seq: [4] },
+    { c: 2, r: [1], n: 1, late: 4, tt: 14, def: 0, seq: [1] },       { c: 2, r: [1, 2], n: 2, late: 4, tt: 20, def: 0, seq: [1, 2] },
+    { c: 2, r: [2], n: 1, late: 0, tt: 14, def: 0, seq: [2] },       { c: 2, r: [3], n: 1, late: 9, tt: 15, def: 0, seq: [3] },
+    { c: 2, r: [3, 4], n: 2, late: 15, tt: 21, def: 0, seq: [4, 3] }, { c: 2, r: [4], n: 1, late: 0, tt: 14, def: 0, seq: [4] },
+    { c: 3, r: [1], n: 1, late: 10, tt: 20, def: 3.333, seq: [1] },  { c: 3, r: [1, 2], n: 2, late: 14, tt: 26, def: 3.333, seq: [1, 2] },
+    { c: 3, r: [2], n: 1, late: 0, tt: 20, def: 3.333, seq: [2] },   { c: 3, r: [3], n: 1, late: 7, tt: 13, def: 3.333, seq: [3] },
+    { c: 3, r: [3, 4], n: 2, late: 13, tt: 19, def: 3.333, seq: [4, 3] }, { c: 3, r: [4], n: 1, late: 0, tt: 12, def: 3.333, seq: [4] }
+  ]
+};
+DECK.OBJ = {
+  coverage: { label: 'Cobertura', color: 'var(--p1)', hex: '#3B4252', sense: 'MAX', unit: 'pedidos',
+              f: sol => sol.covered },
+  lateness: { label: 'Atraso', color: 'var(--p2)', hex: '#A8431C', sense: 'MIN', unit: 'min',
+              f: sol => -sol.late },
+  equity:   { label: 'Equidad', color: 'var(--p3)', hex: '#1BAF7A', sense: 'MAX', unit: 'pts',
+              f: sol => sol.eq },
+  cost:     { label: 'Costo', color: 'var(--p4)', hex: '#2A78D6', sense: 'MIN', unit: 'min',
+              f: sol => -sol.tt }
+};
+// enumerate every feasible assignment once
+(function enumerate(){
+  const T = DECK.TOY, byC = {};
+  T.cands.forEach((k, i) => { (byC[k.c] = byC[k.c] || []).push(i); });
+  const cids = Object.keys(byC).map(Number).sort();
+  const out = [];
+  function rec(i, chosen, seen){
+    if (i === cids.length) {
+      const ks = chosen.map(j => T.cands[j]);
+      out.push({ keys: chosen.slice(), covered: seen.size, late: ks.reduce((s, k) => s + k.late, 0),
+                 tt: ks.reduce((s, k) => s + k.tt, 0), eq: +ks.reduce((s, k) => s + k.def * k.n, 0).toFixed(3) });
+      return;
+    }
+    rec(i + 1, chosen, seen);                       // courier idle
+    for (const j of byC[cids[i]]) {
+      const k = T.cands[j];
+      if (k.r.some(o => seen.has(o))) continue;
+      k.r.forEach(o => seen.add(o)); chosen.push(j);
+      rec(i + 1, chosen, seen);
+      chosen.pop(); k.r.forEach(o => seen.delete(o));
+    }
+  }
+  rec(0, [], new Set());
+  DECK.FEAS = out;
+})();
+DECK.lexi = function(order, relTol){
+  // returns [{name, best, survivorsBefore, survivorsAfter}], final survivors
+  let S = DECK.FEAS.slice();
+  const log = [];
+  for (const name of order) {
+    const f = DECK.OBJ[name].f;
+    const best = Math.max(...S.map(f));
+    const tol = relTol * Math.abs(best);
+    const before = S.length;
+    S = S.filter(s => f(s) >= best - tol - 1e-9);
+    log.push({ name, best, before, after: S.length });
+  }
+  return { log, survivors: S };
+};
+DECK.solLabel = function(sol){
+  return sol.keys.map(j => { const k = DECK.TOY.cands[j]; return 'C' + k.c + '→' + k.seq.map(o => 'O' + o).join('·'); }).join('  ');
+};
+DECK.fmt1 = v => (Math.round(v * 10) / 10).toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+/* =====================================================================
+   NOTAS DEL PRESENTADOR — N
+   ===================================================================== */
+DECK.NOTES = [
+  ['Versión 2: las ocho dudas ya están decididas (20 oct 2026); la sesión es para repasar el modelo y los resultados del batch.', 'Todo lo que se muestra corre hoy en el repo: hier/, hier_policy.py, diag_hier_case.py.'],
+  ['Explicar la ronda: cada 2 min, ociosos + pendientes → rutas. Lo no cubierto no es infactible, es pendiente.', 'Clic en candidatos: la factibilidad y los costos se calculan FUERA del MIP: por eso no hay big-M (D1).', 'Clic en política: el truco M·|r| es lo que la jerarquía reemplaza.'],
+  ['Recorrer las cinco filas. Mensaje: los cinco maximizan cobertura y difieren sólo en el desempate.', 'max_throughput es la suma ponderada λ·τ + μ·ℓ: en el marco no existe; se descompone.', 'max_equity usa 1/(1+e): sin unidades, decrece muy rápido; el déficit propuesto está en pago/hora.'],
+  ['Mover el slider: con λ < 2 gana la solución de 2 repartidores y 14 min de atraso; con λ ≥ 2 la de 3 repartidores y 8 min. El salto es brusco y nadie sabe justificar λ = 2.', 'Los cuatro puntos de la derecha son los principios 2, 4, 5 del marco.'],
+  ['Las cuatro tarjetas rellenan la tabla de §3.3 de la épica. Leer el «por qué» de cada una.', 'Atraso antes que equidad quedó decidido (1A).', 'Equidad sólo existe si alguien está bajo la media: la regla "¿cuándo existe?" está implementada.'],
+  ['Clic en cada fila: explicación y dibujo. ↑/↓ también funcionan.', 'Cover es igualdad con y: así la cobertura es Σy y el IIS se lee.', 'Impossible y PrevSolution son las dos familias del reproceso (S4).'],
+  ['Correr las pasadas con ▶. Ver cómo 121 asignaciones → 18 (cobertura 4) → 1 (atraso 8); las pasadas 3 y 4 sólo certifican.', 'Subir Equidad por encima de Atraso con ↑: cambia el resultado (14 min, 2 repartidores, C3 con bundle).', 'Cambiar el candado a 25 %: el candado de cobertura deja pasar soluciones con 3 pedidos y la pasada 2 sacrifica O3 para bajar el atraso a 1 min. Por eso cobertura debe ir con tolerancia 0.', 'Los números coinciden con Gurobi (diag_hier_case.py --toy --brute-force).'],
+  ['Clic en los pasos para resaltar el código.', 'MESSAGE necesita OutputFlag=1 con LogToConsole=0: 123 eventos en el toy.', 'Cada forma de terminar deja end_reason: en XO se añadió tarde y costó un caso sin diagnóstico.'],
+  ['Todas las políticas dan 100 % de cobertura en esta instancia: es generosa. Lo que cambia es atraso y Gini.', 'hier es 7× más rápido que el ILP con CBC y con certificado por pasada.', 'Equidad primero: atraso 2,2 → 2,3 y Gini 0,0684 → 0,0703. El orden importa, poco aquí; el batch de 240 dice dónde.'],
+  ['Clic en cada duda para ver la decisión. Tres se apartaron de la recomendación: 3C (déficit sobre ganancia acumulada), 4C (candado 0 sólo en cobertura), 5C (ningún protegido).'],
+  ['D1–D6, D8, D9 implementados y decididos; D7 es del servicio HTTP, no del simulador.'],
+  ['Leer la tabla por cluster: cobertura, atraso y Gini de greedy frente a hier, y el porcentaje de instancias donde hier mejora.', 'Cada corrida va en su propio proceso: gurobipy 11.0.3 mostró violaciones de acceso esporádicas en procesos largos.'],
+  ['Las cuatro políticas de mdrp-sim (greedy, mdrp MIP, mdrp_graph, mdrp_graph_prospects) corren sobre las mismas 240 instancias y se leen con nuestros cuatro objetivos.', 'mdrp-sim optimiza throughput − penalización de atraso: puede dejar pedidos sin cubrir si no «valen la pena»; por eso su cobertura cae.', 'La fila de ganadores lexicográficos dice quién ganaría bajo cada orden de pasadas.'],
+  ['Mapa de ficheros y sprints. S0–S2 hechos en el simulador (sin HTTP); S3–S4 parciales.'],
+  ['Cerrar con las cuatro decisiones.']
+];
+
+/* =====================================================================
+   ESCALADO DEL ESCENARIO
+   ===================================================================== */
+const stage = $('#stage');
+let scale = 1;
+function fit(){
+  scale = Math.min(innerWidth / 1600, innerHeight / 900);
+  stage.style.transform = 'scale(' + scale + ')';
+  stage.style.left = ((innerWidth - 1600 * scale) / 2) + 'px';
+  stage.style.top  = ((innerHeight - 900 * scale) / 2) + 'px';
+}
+addEventListener('resize', fit); fit();
+DECK.toStage = function(clientX, clientY){
+  const r = stage.getBoundingClientRect();
+  return { x: (clientX - r.left) / scale, y: (clientY - r.top) / scale };
+};
+
+/* =====================================================================
+   NAVEGACIÓN
+   ===================================================================== */
+const slides = $$('.slide');
+let cur = 0;
+const budgets = slides.map(s => +s.dataset.time || 0);
+const cumBudget = budgets.map((b, i) => budgets.slice(0, i + 1).reduce((a, x) => a + x, 0));
+const progress = $('#progress i'), counter = $('#counter');
+const visited = new Set();
+function go(i){
+  i = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.remove('active');
+  cur = i;
+  slides[cur].classList.add('active');
+  progress.style.width = (cur / (slides.length - 1) * 100) + '%';
+  counter.textContent = (cur + 1) + ' / ' + slides.length;
+  try { history.replaceState(null, '', '#' + (cur + 1)); } catch (e) {}
+  renderNotes(); refreshTimer(); markMenu();
+  slides[cur].dispatchEvent(new CustomEvent('slidevisible', { detail: { first: !visited.has(cur) } }));
+  visited.add(cur);
+}
+DECK.go = go;
+DECK.current = () => cur;
+
+/* ----- cronómetro ----- */
+const timerEl = $('#timer');
+let tAcc = 0, tStart = null, tTick = null;
+const fmt = s => { s = Math.max(0, Math.round(s)); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+function elapsed(){ return tAcc + (tStart ? (Date.now() - tStart) / 1000 : 0); }
+function refreshTimer(){
+  const e = elapsed(), tg = cumBudget[cur];
+  timerEl.querySelector('.el').textContent = fmt(e);
+  timerEl.querySelector('.tg').textContent = tg ? '· meta ' + fmt(tg) : '· fin';
+  timerEl.classList.toggle('run', !!tStart);
+  timerEl.classList.toggle('late', tg > 0 && e > tg + 30);
+}
+function toggleTimer(){
+  if (tStart) { tAcc += (Date.now() - tStart) / 1000; tStart = null; clearInterval(tTick); tTick = null; }
+  else { tStart = Date.now(); tTick = setInterval(refreshTimer, 500); }
+  refreshTimer();
+}
+function resetTimer(){ tAcc = 0; if (tStart) tStart = Date.now(); refreshTimer(); }
+timerEl.addEventListener('click', toggleTimer);
+
+/* ----- notas · menú · tip · láser ----- */
+const notesEl = $('#notes');
+function renderNotes(){
+  const n = DECK.NOTES[cur] || [];
+  const b = budgets[cur];
+  notesEl.innerHTML = '<div class="hd"><span>Slide ' + (cur + 1) + ' · ' + slides[cur].dataset.title + '</span><span>' + (b ? 'presupuesto ' + fmt(b) + ' · acumulado ' + fmt(cumBudget[cur]) : '') + '</span></div><ul>' + n.map(x => '<li>' + x + '</li>').join('') + '</ul>';
+}
+const menuEl = $('#menu'), menuList = $('#menulist');
+menuList.innerHTML = slides.map((s, i) => '<li><button data-i="' + i + '"><span class="n">' + String(i + 1).padStart(2, '0') + '</span><span>' + s.dataset.title + '</span><span class="t">' + (budgets[i] ? fmt(budgets[i]) : '') + '</span></button></li>').join('');
+menuList.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; menuEl.classList.remove('on'); go(+b.dataset.i); });
+function markMenu(){ $$('#menulist button').forEach(b => b.classList.toggle('cur', +b.dataset.i === cur)); }
+const tipEl = $('#tip');
+DECK.tip = {
+  show(html, clientX, clientY){
+    tipEl.innerHTML = html; tipEl.classList.add('on');
+    const p = DECK.toStage(clientX, clientY);
+    let x = p.x + 16, y = p.y + 18;
+    const w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+    if (x + w > 1580) x = p.x - w - 12;
+    if (y + h > 880) y = p.y - h - 12;
+    tipEl.style.left = x + 'px'; tipEl.style.top = y + 'px';
+  },
+  hide(){ tipEl.classList.remove('on'); }
+};
+const laser = $('#laser');
+addEventListener('mousemove', e => { if (document.body.classList.contains('laser')) { laser.style.left = e.clientX + 'px'; laser.style.top = e.clientY + 'px'; } });
+function toggleFs(){
+  try {
+    if (!document.fullscreenElement) (document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen).call(document.documentElement);
+    else (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  } catch (e) {}
+}
+addEventListener('keydown', e => {
+  const tag = (document.activeElement && document.activeElement.tagName) || '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  switch (e.key) {
+    case 'ArrowRight': case 'PageDown': case ' ': e.preventDefault(); go(cur + 1); break;
+    case 'ArrowLeft': case 'PageUp': e.preventDefault(); go(cur - 1); break;
+    case 'Home': go(0); break;
+    case 'End': go(slides.length - 1); break;
+    case 'f': case 'F': toggleFs(); break;
+    case 't': toggleTimer(); break;
+    case 'T': resetTimer(); break;
+    case 'n': case 'N': notesEl.classList.toggle('on'); break;
+    case 'm': case 'M': menuEl.classList.toggle('on'); break;
+    case 'l': case 'L': document.body.classList.toggle('laser'); break;
+    case 'Escape': menuEl.classList.remove('on'); notesEl.classList.remove('on'); DECK.tip.hide(); break;
+    default: if (/^[1-9]$/.test(e.key)) go(+e.key - 1);
+  }
+});
+stage.addEventListener('click', e => {
+  if (e.target.closest('button, .hot, .dcard, .eq, .nchip, .objrow, .duda, .step, .ochip, svg, input, select, label, a, #footer, #menu, #notes')) return;
+  const p = DECK.toStage(e.clientX, e.clientY);
+  if (p.x > 1520) go(cur + 1); else if (p.x < 80) go(cur - 1);
+});
+DECK.ready = [];
+document.addEventListener('DOMContentLoaded', () => {
+  DECK.ready.forEach(f => { try { f(); } catch (err) { console.error(err); } });
+  const h = parseInt((location.hash || '').replace('#', ''), 10);
+  slides[0].classList.add('active');
+  go(isNaN(h) ? 0 : h - 1);
+});
+})();
+</script>
+
+<script>
+/* =====================================================================
+   SLIDE 1 · flujo (clic en bloques ↔ tarjetas)
+   ===================================================================== */
+(function(){
+const { $, $$ } = DECK;
+DECK.ready.push(() => {
+  const cards = $$('#dc1 .dcard'), hots = $$('#flow .hot');
+  function sel(k){
+    cards.forEach(c => c.classList.toggle('on', c.dataset.k === k));
+    hots.forEach(h => h.querySelector('.box').classList.toggle('acc', h.dataset.k === k));
+  }
+  cards.forEach(c => c.addEventListener('click', () => sel(c.dataset.k)));
+  hots.forEach(h => { h.style.cursor = 'pointer'; h.addEventListener('click', () => sel(h.dataset.k)); });
+});
+})();
+
+/* =====================================================================
+   SLIDE 2 · inventario de objetivos
+   ===================================================================== */
+(function(){
+const { $, $$ } = DECK;
+const X = {
+  cov: { no: 'ilp_policy.py · max_coverage', title: 'Cobertura ponderada por tamaño de ruta',
+    formula: '<span class="rm">max</span> Σ<sub>(c,r)</sub> |r| · x<sub>cr</sub>',
+    text: 'Maximiza el número de pedidos asignados en la ronda. El peso |r| hace que un bundle de 2 cuente como 2; sin él, el solver nunca preferiría agrupar. Es el único de los cinco sin desempate: entre dos soluciones con la misma cobertura elige la que el solver encuentre primero.',
+    where: 'ilp_policy.py:_solve_routes · obj == max_coverage', verdict: 'Se conserva', vtext: 'Es exactamente la pasada 1 de la jerarquía, escrita como Σ y<sub>o</sub> para que sea legible.' },
+  thr: { no: 'ilp_policy.py · max_throughput', title: 'Cobertura + suma ponderada de viaje y atraso',
+    formula: '<span class="rm">max</span> Σ (M|r| − 0,01·τ<sub>cr</sub> − 0,02·ℓ<sub>cr</sub>) x<sub>cr</sub>',
+    text: 'λ = 0,01 por minuto de viaje y μ = 0,02 por minuto de atraso, recalibrados dos veces (de segundos a minutos, de la tesis a mdrplib). M = maximum click-to-door para que la cobertura domine. Antes del arreglo era el único que podía dejar un pedido sin cubrir cuando ninguna ruta «valía la pena».',
+    where: 'ilp_policy.py · _LAMBDA_COST = 0.01 · _MU_DELAY = 0.02', verdict: 'Desaparece', vtext: 'Es λ·costo + μ·atraso: una suma ponderada entre dos objetivos distintos. El marco la prohíbe (§1.2) y la jerarquía la descompone en las pasadas 2 y 4.' },
+  lat: { no: 'ilp_policy.py · min_lateness', title: 'Cobertura, desempate por atraso',
+    formula: '<span class="rm">max</span> Σ (M|r| − ℓ<sub>cr</sub>) x<sub>cr</sub>',
+    text: 'ℓ<sub>cr</sub> son los minutos sobre el target click-to-door acumulados en la secuencia de la ruta. Con M = 90 y ℓ ≤ 60 por parada el término dominante funciona, pero no hay certificado: el solver optimiza una sola expresión y no demuestra que el atraso sea mínimo bajo cobertura máxima.',
+    where: 'routing.route_feasibility → result["lateness"]', verdict: 'Se convierte en la pasada 2', vtext: 'Mismo ℓ<sub>cr</sub>, sin M, con su propio GAP, su propio time_limit y su propio motivo de fin.' },
+  cost: { no: 'ilp_policy.py · min_cost', title: 'Cobertura, desempate por minutos de repartidor',
+    formula: '<span class="rm">max</span> Σ (M|r| − τ<sub>cr</sub>) x<sub>cr</sub>',
+    text: 'τ<sub>cr</sub>: viaje al restaurante, servicio de recogida, viajes y servicio en cada cliente. En la instancia de prueba es el que mejor atraso obtiene (2,1 min) porque minutos y atraso van de la mano cuando hay holgura.',
+    where: 'routing.route_feasibility → result["total_tt"]', verdict: 'Se convierte en la pasada 4', vtext: 'El residuo: con cobertura, atraso y equidad fijos, ahorrar minutos deja repartidores libres para la siguiente ronda.' },
+  eq: { no: 'ilp_policy.py · max_equity', title: 'Cobertura, desempate por ganancia acumulada',
+    formula: '<span class="rm">max</span> Σ |r| (M + 1 / (1 + e<sub>c</sub>)) x<sub>cr</sub>',
+    text: 'e<sub>c</sub> = ganancias acumuladas del repartidor. El término 1/(1+e) no tiene unidades y se aplana enseguida: entre 30 y 40 unidades de pago la diferencia es 0,0008. Favorece al que menos ha ganado pero no mide cuánto le falta.',
+    where: 'ilp_policy.py · earnings_by_courier', verdict: 'Se reemplaza por un déficit', vtext: 'd<sub>c</sub> = max(0, w̄ − w<sub>c</sub>) sobre la ganancia acumulada del día (decisión 3C): tiene unidades de pago, es cero para quien está sobre la media, y es la versión decisional de F_Deficit.' },
+  gr: { no: 'policies.py · GreedyPolicy', title: 'Greedy: el que menos lleva pregunta primero',
+    formula: '<span class="rm">ordena por orders_delivered; ruta factible en el restaurante más cercano</span>',
+    text: 'Sin función objetivo. Cada repartidor, en orden de menos pedidos entregados, toma el bundle o el pedido más urgente del restaurante más cercano con ruta factible. Es la línea base corporativa y en la instancia de prueba lo hace sorprendentemente bien (atraso 2,2).',
+    where: 'routing.best_route_for_courier', verdict: 'Se conserva como línea base', vtext: 'La jerarquía debe ganarle o igualarlo en todo; si no, algo está mal en el modelo.' },
+  fg: { no: 'policies.py · FairGreedyPolicy', title: 'Fair greedy: el que menos gana por hora, con bono',
+    formula: '<span class="rm">ordena por hourly_earnings; bono de 0,3·pago si está bajo la media</span>',
+    text: 'Misma ruta que greedy, otro orden de pregunta y un bono de pago fuera de cualquier modelo. En la instancia de prueba dispara el pago total (8 743 frente a 5 190) y empeora el atraso (46,6 min): la equidad por bono sale cara.',
+    where: 'policies.py · equity_bonus', verdict: 'Fuente de la duda 8', vtext: '¿La equidad se consigue asignando o pagando? La jerarquía asigna; el bono quedaría como regla posterior.' },
+  met: { no: 'metrics.py', title: 'Lo que se mide, no lo que se optimiza',
+    formula: '<span class="rm">coverage_rate · c2d · overage · F_Gini · F_MaxMin · F_Orders · F_Deficit · F_Dist</span>',
+    text: 'El evaluador oficial de mdrplib mide click-to-door, ready-to-door y overage; la tesis añade el bloque de equidad sobre el pago post-garantía. Ninguna métrica de día entero es un objetivo de ronda: son resultados. Pero cada pasada de la jerarquía está alineada con una de ellas.',
+    where: 'metrics.compute_metrics', verdict: 'Alineación pasada ↔ métrica', vtext: 'P1 ↔ coverage_rate · P2 ↔ overage_mean · P3 ↔ F_Deficit / F_Gini · P4 ↔ minutos de repartidor (dist_per_hr).' }
+};
+DECK.ready.push(() => {
+  const rows = $$('#objrows .objrow[data-k]'), panel = $('#objx');
+  function paint(k){
+    const d = X[k];
+    rows.forEach(r => r.classList.toggle('on', r.dataset.k === k));
+    panel.innerHTML = '<h3><span class="no">' + d.no + '</span>' + d.title + '</h3><div class="formula">' + d.formula + '</div><p>' + d.text + '</p><span class="where">' + d.where + '</span><div class="verdict"><b>' + d.verdict + '</b>' + d.vtext + '</div>';
+  }
+  rows.forEach(r => r.addEventListener('click', () => paint(r.dataset.k)));
+  paint('cov');
+  addEventListener('keydown', e => {
+    if (DECK.current() !== 2) return;
+    const keys = rows.map(r => r.dataset.k);
+    const on = $('#objrows .objrow.on');
+    let i = keys.indexOf(on ? on.dataset.k : 'cov');
+    if (e.key === 'ArrowDown') { e.preventDefault(); paint(keys[Math.min(keys.length - 1, i + 1)]); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); paint(keys[Math.max(0, i - 1)]); }
+  });
+});
+})();
+
+/* =====================================================================
+   SLIDE 3 · suma ponderada vs jerarquía
+   ===================================================================== */
+(function(){
+const { $, $$ } = DECK;
+DECK.ready.push(() => {
+  const lam = $('#lam'), lamv = $('#lamv'), sols = $('#wsols'), note = $('#flipnote'), lamnote = $('#lamnote');
+  const S = DECK.FEAS.filter(s => s.covered === 4);
+  function render(){
+    const l = +lam.value;
+    lamv.textContent = l.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    lamnote.textContent = l < 2 ? 'Un minuto de atraso pesa menos de dos minutos de repartidor: gana ahorrar minutos.' : l === 2 ? 'Empate exacto entre las dos candidatas: el solver elige por azar.' : 'El atraso pesa más: gana la solución puntual con tres repartidores.';
+    const scored = S.map(s => ({ s, sc: -l * s.late - s.tt + s.eq })).sort((a, b) => b.sc - a.sc).slice(0, 5);
+    sols.innerHTML = scored.map((o, i) => '<div class="wsol' + (i === 0 ? ' win' : '') + '"><div class="rk">' + (i + 1) + '</div><div><div class="as">' + DECK.solLabel(o.s) + '</div><div class="small">atraso ' + DECK.fmt1(o.s.late) + ' min · minutos ' + o.s.tt + ' · equidad ' + DECK.fmt1(o.s.eq) + '</div></div><div class="sc">' + DECK.fmt1(o.sc) + '<br><small>puntaje</small></div></div>').join('');
+    const win = scored[0].s;
+    note.innerHTML = '<b>Con λ = ' + lamv.textContent + ' gana</b> ' + DECK.solLabel(win) + ': ' + DECK.fmt1(win.late) + ' min de atraso, ' + win.tt + ' minutos de repartidor, equidad ' + DECK.fmt1(win.eq) + '. La solución salta en λ = 2 de «dos repartidores, 14 min de atraso» a «tres repartidores, 8 min». <b>Con jerarquía no hay λ:</b> atraso primero da 8 min; equidad primero da 14 min. El negocio decide el orden, no el número.';
+  }
+  lam.addEventListener('input', render);
+  render();
+});
+})();
+
+/* =====================================================================
+   SLIDE 5 · explorador del modelo
+   ===================================================================== */
+(function(){
+const { $, $$ } = DECK;
+const grid = (title, cells) => '<svg viewBox="0 0 560 230">' + cells + '</svg>';
+const CX = {
+  p1: { no: 'P1 · prioridad 40 · candado exacto', title: 'Cobertura: Σ y<sub>o</sub>', text: 'Primera pasada: cuántos pedidos pendientes salen asignados. Escrita sobre y<sub>o</sub> (no sobre Σ|r|x) para que el valor sea el conteo que entiende el negocio y el GAP sea legible: cota 4, incumbente 4, progreso 100. Candado con tolerancia 0 (decisión 4C); admite mip_gap como todas (5C). En la instancia real, 235 pasadas de cobertura, todas «optimal» en menos de 2 ms.',
+    viz: () => '<svg viewBox="0 0 560 220"><g class="gl">' + [1, 2, 3, 4].map((o, i) => '<rect x="' + (40 + i * 125) + '" y="40" width="100" height="56" rx="8" fill="' + (i < 4 ? '#3B4252' : '#ECEAE3') + '"/><text x="' + (90 + i * 125) + '" y="74" text-anchor="middle" fill="#fff" font-size="16">y<tspan font-size="11" dy="4">O' + o + '</tspan><tspan dy="-4"> = 1</tspan></text>').join('') + '</g><text class="gtxt" x="40" y="140">valor = 4 de 4 pedidos · cota 4 → prog 100 · fin: optimal</text><text class="gtxt" x="40" y="165">los pedidos sin candidato ya son y = 0 por Impossible[O]: nunca hacen infactible el modelo</text></svg>', foot: 'toy: 121 asignaciones factibles → 18 cubren los 4 pedidos' },
+  p2: { no: 'P2 · prioridad 30 · MIN → −MAX', title: 'Atraso: −Σ ℓ<sub>cr</sub> x<sub>cr</sub>', text: 'Bajo el candado «cobertura = 4», minimiza los minutos sobre el target. ℓ<sub>cr</sub> viene calculado por route_feasibility: para cada parada de la secuencia, max(0, c2d − target). Entra con signo negativo para que todas las pasadas sean MAX y el GAP se lea igual.',
+    viz: () => '<svg viewBox="0 0 560 220"><g class="gl"><text x="40" y="36" font-size="13">18 soluciones con cobertura 4, ordenadas por atraso</text>' + [8, 10, 11, 14, 14, 16, 16, 17, 17, 19, 23, 25, 25, 25, 29, 29, 31, 35].map((v, i) => '<rect x="' + (40 + i * 27) + '" y="' + (190 - v * 4) + '" width="20" height="' + (v * 4) + '" rx="3" fill="' + (i < 1 ? '#A8431C' : '#D9D7CF') + '"/><text x="' + (50 + i * 27) + '" y="' + (184 - v * 4) + '" text-anchor="middle" class="gtxt">' + v + '</text>').join('') + '<text x="40" y="212" class="gtxt">mejor = 8 min, única → la pasada 3 y la 4 sólo certifican (con equidad primero: 18 → 2 → 1)</text></g></svg>', foot: 'toy: 18 → 1 solución sobrevive (atraso 8 = 1 de O1·O2 con C1 + 7 de O3 con C3)' },
+  p3: { no: 'P3 · prioridad 20 · existe si ∃ d_c > 0', title: 'Equidad: Σ d<sub>c</sub> |r| x<sub>cr</sub>', text: 'd<sub>c</sub> = max(0, w̄ − w<sub>c</sub>), con w la ganancia acumulada del día y w̄ la media entre los ociosos de la ronda (decisión 3C). Entregar un pedido a quien está 9,33 por debajo vale 9,33; a quien está sobre la media, 0. Si nadie está bajo la media el objetivo sería constante: la pasada no se crea («¿cuándo existe?»).',
+    viz: () => '<svg viewBox="0 0 560 220"><g class="gl">' + [['C1', 8, 9.33], ['C2', 30, 0], ['C3', 14, 3.33]].map((c, i) => '<text x="60" y="' + (60 + i * 50) + '" font-size="14">' + c[0] + '</text><rect x="100" y="' + (46 + i * 50) + '" width="' + (c[1] * 9) + '" height="20" rx="4" fill="#5C7EA6"/><text x="' + (108 + c[1] * 9) + '" y="' + (61 + i * 50) + '" class="gtxt">' + c[1] + ' ganados</text><text x="420" y="' + (61 + i * 50) + '" font-size="14" fill="' + (c[2] > 0 ? '#0E7A52' : '#7A7F88') + '">d = ' + c[2] + '</text>').join('') + '<line x1="' + (100 + 17.33 * 9) + '" y1="36" x2="' + (100 + 17.33 * 9) + '" y2="190" stroke="#A8431C" stroke-dasharray="5 4"/><text x="' + (104 + 17.33 * 9) + '" y="200" class="gtxt" fill="#A8431C">media 17,33</text></g></svg>', foot: 'toy: el bundle (O1,O2) para C1 vale 2 × 9,33 = 18,67' },
+  p4: { no: 'P4 · prioridad 10 · MIN → −MAX', title: 'Costo: −Σ τ<sub>cr</sub> x<sub>cr</sub>', text: 'Minutos de repartidor comprometidos: viaje al restaurante, espera si el pedido no está listo, servicio de recogida, y viajes + servicio en cada cliente. Es el residuo de la jerarquía: desempata lo que quede y, de paso, prefiere bundles.',
+    viz: () => '<svg viewBox="0 0 560 220"><g class="gl"><text x="40" y="40" font-size="14">τ<tspan font-size="10" dy="4">C1,(O1,O2)</tspan><tspan dy="-4"> = 17 min</tspan></text>' + [['viaje a A', 2, '#5C7EA6'], ['recogida', 2, '#B9B5AA'], ['A → O1', 5, '#2A78D6'], ['entrega', 2, '#B9B5AA'], ['O1 → O2', 4, '#2A78D6'], ['entrega', 2, '#B9B5AA']].reduce((acc, s) => { const x = acc.x; acc.h += '<rect x="' + x + '" y="70" width="' + (s[1] * 28) + '" height="34" fill="' + s[2] + '" stroke="#fff"/><text x="' + (x + s[1] * 14) + '" y="92" text-anchor="middle" fill="#fff" font-size="11">' + s[1] + '</text><text x="' + (x + s[1] * 14) + '" y="124" text-anchor="middle" class="gtxt">' + s[0] + '</text>'; acc.x += s[1] * 28; return acc; }, { x: 40, h: '' }).h + '<text x="40" y="170" class="gtxt">en la instancia real: media 53,7 min por ronda, 150 en la ronda de las 12:00 (7 pedidos)</text></g></svg>', foot: 'toy: 44 min en total con la jerarquía por defecto' },
+  cover: { no: '(5) · familia Cover · 4 filas en el toy', title: 'Qué significa «cubierto»', text: 'y<sub>o</sub> es igual a la suma de las x de los candidatos que contienen al pedido. Como las x de rutas con un mismo pedido se excluyen por esta igualdad (y ≤ 1), la familia también garantiza «cada pedido a lo sumo una vez». Fila con nombre: Cover[O3]. Es la decisión D3 de la épica.',
+    viz: () => '<svg viewBox="0 0 560 220"><g class="gl"><text x="40" y="40" font-size="15">Cover[O1]:  y<tspan font-size="10" dy="4">O1</tspan><tspan dy="-4"> = x[C1,R1] + x[C1,R2] + x[C2,R1] + x[C2,R2] + x[C3,R1] + x[C3,R2]</tspan></text><text x="40" y="80" class="gtxt">R1 = (O1) singleton · R2 = (O1,O2) bundle del restaurante A</text><text x="40" y="120" font-size="14">y binaria ⇒ a lo sumo una de esas seis x vale 1</text><text x="40" y="160" class="gtxt">en la instancia real una ronda típica tiene 7 filas Cover, 20 CourierOnce, 167 variables</text></g></svg>', foot: 'rows_by_family = {Cover: 4, CourierOnce: 3, Impossible: 0, PrevSolution: 0}' },
+  once: { no: '(6) · familia CourierOnce', title: 'Un repartidor toma a lo sumo una ruta por ronda', text: 'La capacidad del recurso. Un bundle ya empaqueta hasta max_bundle_size pedidos del mismo restaurante; la ruta es la unidad. Si el repartidor queda libre, vuelve a la siguiente ronda. Fila: CourierOnce[C2].',
+    viz: () => '<svg viewBox="0 0 560 220"><g class="gl">' + ['R1', 'R2', 'R3', 'R4', 'R5', 'R6'].map((r, i) => '<rect x="' + (40 + i * 85) + '" y="60" width="70" height="44" rx="6" fill="' + (i === 1 ? '#2E4A6B' : '#ECEAE3') + '"/><text x="' + (75 + i * 85) + '" y="87" text-anchor="middle" fill="' + (i === 1 ? '#fff' : '#464B54') + '" font-size="13">x[C2,' + r + ']</text>').join('') + '<text x="40" y="150" font-size="15">Σ ≤ 1   →   C2 toma R2 o nada</text></g></svg>', foot: '' },
+  imp: { no: '(7) · familia Impossible', title: 'Pedidos sin candidato: cero anotado', text: 'Si tras el prefiltro un pedido no tiene ningún (c, r) factible, y<sub>o</sub> = 0 con fila Impossible[O] y código NO_CANDIDATE en el reporte. Queda pendiente para la próxima ronda. Es lo que hace que la demanda nunca vuelva infactible el modelo.',
+    viz: () => '<svg viewBox="0 0 560 220"><g class="gl"><text x="40" y="44" font-size="14">códigos de descarte anotados por candidato</text>' + [['NOT_TOPK', 'fuera de los K=25 más cercanos'], ['REJECTED', 'el repartidor ya rechazó un pedido de la ruta'], ['SLA_INFEASIBLE', 'alguna parada supera su maximum click-to-door'], ['NO_CANDIDATE', 'el pedido no sobrevive en ningún candidato → Impossible']].map((c, i) => '<rect x="40" y="' + (62 + i * 36) + '" width="150" height="26" rx="4" fill="#ECEAE3"/><text x="48" y="' + (80 + i * 36) + '" font-family="JetBrains Mono" font-size="12" fill="#171A1F">' + c[0] + '</text><text x="205" y="' + (80 + i * 36) + '" font-size="13">' + c[1] + '</text>').join('') + '</g></svg>', foot: 'uncovered: {O: {reason: NO_CANDIDATE | NOT_SELECTED, discards: {…}}}' },
+  prev: { no: '(8) · familia PrevSolution · reproceso', title: 'Lo decidido es fijo, lo imposible es cero, el resto se decide', text: 'Principio 8 de la épica. Una asignación ya aceptada entra como igualdad, no como MIP start. Guardas: si el par ya no es candidato o choca con Impossible, se ignora y se registra; si aun así hubiera infactibilidad, el IIS son dos filas legibles.',
+    viz: () => '<svg viewBox="0 0 560 220"><g class="gl"><text x="40" y="50" font-size="15">PrevSolution[C2,R5]:  x[C2,R5] = 1</text><text x="40" y="90" class="gtxt">prev_solution = [(2, [3, 4])]  →  test_prev_solution_is_fixed ✓</text><text x="40" y="130" font-size="14">guarda 1: el par debe existir como candidato</text><text x="40" y="155" font-size="14">guarda 2: ningún pedido del par puede estar en Impossible</text><text x="40" y="195" class="gtxt">infactible ⇒ computeIIS → &lt;id&gt;_infeasible_model.ilp</text></g></svg>', foot: '' },
+  dom: { no: '(9) · dominios', title: 'Todo binario', text: 'x y y binarias. En el toy: 18 x + 4 y = 22 variables, 7 filas, 46 no-ceros. En una ronda real: 167 variables, 27 filas; la mayor del día tuvo 275 candidatos. Son modelos minúsculos para Gurobi: el valor de la jerarquía no está en el tamaño sino en el certificado por pasada y en el control.',
+    viz: () => '<svg viewBox="0 0 560 220"><g font-family="STIX Two Text" font-style="italic" font-size="26" fill="#171A1F"><text x="40" y="70">x<tspan font-size="15" dy="6">cr</tspan><tspan dy="-6" font-style="normal"> ∈ {0,1}</tspan></text><text x="300" y="70">y<tspan font-size="15" dy="6">o</tspan><tspan dy="-6" font-style="normal"> ∈ {0,1}</tspan></text></g><text class="gtxt" x="40" y="130">|K| + |O| variables · |O| + |C| + |Impossible| + |PrevSolution| filas</text><text class="gtxt" x="40" y="160">huella del modelo (sha1 de filas, columnas y coeficientes por objetivo) para los gates DISABLE_*</text></svg>', foot: 'fingerprint = 5cb3099e4a94… (toy)' }
+};
+DECK.ready.push(() => {
+  const eqs = $$('#eqs .eq[data-c]'), panel = $('#cxp');
+  function paint(k){
+    const d = CX[k];
+    eqs.forEach(e => e.classList.toggle('on', e.dataset.c === k));
+    panel.innerHTML = '<h3><span class="no">' + d.no + '</span>' + d.title + '</h3><p>' + d.text + '</p><div class="viz">' + d.viz() + '</div><div class="foot">' + d.foot + '</div>';
+  }
+  eqs.forEach(e => e.addEventListener('click', () => paint(e.dataset.c)));
+  paint('p1');
+  const model = $('#model');
+  $$('#notation .nchip').forEach(ch => {
+    ch.addEventListener('mouseenter', e => DECK.tip.show(ch.dataset.tip, e.clientX, e.clientY));
+    ch.addEventListener('mousemove', e => DECK.tip.show(ch.dataset.tip, e.clientX, e.clientY));
+    ch.addEventListener('mouseleave', () => DECK.tip.hide());
+    ch.addEventListener('click', () => {
+      const on = ch.classList.toggle('on');
+      $$('#notation .nchip').forEach(o => { if (o !== ch) { o.classList.remove('on'); model.classList.remove('hl-' + o.dataset.s); } });
+      model.classList.toggle('hl-' + ch.dataset.s, on);
+    });
+  });
+  addEventListener('keydown', e => {
+    if (DECK.current() !== 5) return;
+    const keys = eqs.map(x => x.dataset.c);
+    const on = $('#eqs .eq.on');
+    let i = keys.indexOf(on ? on.dataset.c : 'p1');
+    if (e.key === 'ArrowDown') { e.preventDefault(); paint(keys[Math.min(keys.length - 1, i + 1)]); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); paint(keys[Math.max(0, i - 1)]); }
+  });
+});
+})();
+
+/* =====================================================================
+   SLIDE 6 · ejemplo didáctico interactivo
+   ===================================================================== */
+(function(){
+const { $, $$ } = DECK;
+const T = DECK.TOY;
+let order = ['coverage', 'lateness', 'equity', 'cost'];
+let step = 0, timer = null;
+const sx = x => 20 + (x + 1500) / 17500 * 600, sy = y => 380 - (y + 3500) / 10500 * 360;
+function renderChips(){
+  $('#ochips').innerHTML = '<span>orden de pasadas (↑↓ para reordenar):</span>' + order.map((n, i) => '<span class="ochip"><i style="background:' + DECK.OBJ[n].hex + '"></i><span class="pn">P' + (i + 1) + '</span>' + DECK.OBJ[n].label + '<button data-i="' + i + '" data-d="-1" title="subir">↑</button><button data-i="' + i + '" data-d="1" title="bajar">↓</button></span>').join('');
+  $$('#ochips button').forEach(b => b.addEventListener('click', () => {
+    const i = +b.dataset.i, j = i + (+b.dataset.d);
+    if (j < 0 || j >= order.length) return;
+    [order[i], order[j]] = [order[j], order[i]];
+    reset(); renderChips();
+  }));
+}
+function drawMap(sol){
+  const g = [];
+  g.push('<rect x="0" y="0" width="640" height="400" fill="#fff"/>');
+  // ghost links store→user
+  for (const [o, d] of Object.entries(T.orders)) {
+    const s = T.stores[d.store];
+    g.push('<line class="ghost" x1="' + sx(s[0]) + '" y1="' + sy(s[1]) + '" x2="' + sx(d.user[0]) + '" y2="' + sy(d.user[1]) + '"/>');
+  }
+  if (sol) {
+    for (const j of sol.keys) {
+      const k = T.cands[j], c = T.couriers[k.c], s = T.stores[T.orders[k.seq[0]].store];
+      let pts = [[c.at[0], c.at[1]], s];
+      k.seq.forEach(o => pts.push(T.orders[o].user));
+      g.push('<polyline class="route c' + k.c + '" points="' + pts.map(p => sx(p[0]) + ',' + sy(p[1])).join(' ') + '"/>');
+    }
+  }
+  for (const [n, s] of Object.entries(T.stores)) {
+    g.push('<rect class="store" x="' + (sx(s[0]) - 9) + '" y="' + (sy(s[1]) - 9) + '" width="18" height="18" rx="3"/><text x="' + (sx(s[0]) + 14) + '" y="' + (sy(s[1]) + 5) + '" font-weight="600">restaurante ' + n + '</text>');
+  }
+  for (const [o, d] of Object.entries(T.orders)) {
+    const ux = sx(d.user[0]), uy = sy(d.user[1]), right = ux > 500, lx = right ? ux - 12 : ux + 12, an = right ? 'end' : 'start';
+    g.push('<circle class="user" cx="' + ux + '" cy="' + uy + '" r="8"/><text x="' + lx + '" y="' + (uy + 4) + '" text-anchor="' + an + '">O' + o + '</text><text class="mono" x="' + lx + '" y="' + (uy + 18) + '" text-anchor="' + an + '">pedido hace ' + (-d.placed) + ' min</text>');
+  }
+  const LPOS = { 1: 'right', 2: 'below', 3: 'left' };
+  for (const [c, d] of Object.entries(T.couriers)) {
+    const cx = sx(d.at[0]), cy = sy(d.at[1]), pos = LPOS[c] || 'right';
+    const lx = pos === 'right' ? cx + 15 : pos === 'left' ? cx - 15 : cx, ly = pos === 'below' ? cy + 24 : cy + 4;
+    const an = pos === 'right' ? 'start' : pos === 'left' ? 'end' : 'middle';
+    g.push('<circle class="cour" cx="' + cx + '" cy="' + cy + '" r="10"/><text x="' + cx + '" y="' + (cy + 4) + '" class="w" text-anchor="middle">C' + c + '</text><text class="mono" x="' + lx + '" y="' + ly + '" text-anchor="' + an + '">ganó ' + d.earn + (d.earn < T.meanEarn ? ' · bajo la media' : ' · sobre la media') + '</text>');
+  }
+  g.push('<text class="mono" x="12" y="392">1 km = 1 min · target 30 min · máximo 60 · servicio 2 + 2 min · bundles de 2 · ronda en t = 0</text>');
+  $('#map').innerHTML = g.join('');
+}
+function renderLog(res, k){
+  const rows = ['<div class="plrow hdr"><span>#</span><span>pasada</span><span>sobreviven</span><span>mejor valor</span><span>candado</span></div>'];
+  order.forEach((n, i) => {
+    const o = DECK.OBJ[n];
+    const l = res.log[i];
+    const done = i < k, curr = i === k - 1;
+    const val = done ? (o.sense === 'MIN' ? DECK.fmt1(-l.best) : DECK.fmt1(l.best)) + ' ' + o.unit : '—';
+    rows.push('<div class="plrow' + (done ? ' done' : '') + (curr ? ' cur' : '') + '"><span class="pn">P' + (i + 1) + '</span><span class="nm" style="color:' + (done ? o.hex : '') + '">' + o.label + '</span><span class="cnt">' + (done ? l.before + ' → ' + l.after : '') + '</span><span class="val">' + val + '</span><span class="lock">' + (done ? (o.sense === 'MIN' ? '≤ ' : '≥ ') + DECK.fmt1(Math.abs(l.best)) + (($('#tol6').value > 0) ? ' ± ' + ($('#tol6').value * 100) + ' %' : '') : '') + '</span></div>');
+  });
+  $('#plog').innerHTML = rows.join('');
+}
+function state(){
+  const tol = +$('#tol6').value;
+  return DECK.lexi(order.slice(0, step), tol);
+}
+function paint(){
+  const res = DECK.lexi(order, +$('#tol6').value);
+  const part = state();
+  const S = part.survivors;
+  $('#ro_n').textContent = DECK.FEAS.length;
+  $('#ro_s').textContent = S.length;
+  $('#ro_p').textContent = step === 0 ? '—' : 'P' + step;
+  renderLog(res, step);
+  const chosen = S[0];
+  drawMap(step > 0 ? chosen : null);
+  const cap = $('#cap6'), note = $('#toynote');
+  if (step === 0) {
+    cap.innerHTML = '<b>Antes de la primera pasada.</b> 3 repartidores ociosos, 4 pedidos pendientes, 6 rutas (4 singletons + 2 bundles), 18 candidatos factibles, <b>121 asignaciones</b> posibles. Pulsa «Pasada →» o reordena los objetivos con ↑↓.';
+    $('#ro_r').textContent = '—';
+  } else {
+    const o = DECK.OBJ[order[step - 1]];
+    const l = res.log[step - 1];
+    cap.innerHTML = '<b>Pasada ' + step + ' · ' + o.label + '.</b> ' + (l.before === 1 ? 'Sólo sobrevivía una asignación: ' : 'Entre las ' + l.before + ' asignaciones que sobrevivían, ') + (o.sense === 'MIN' ? 'el mínimo' : 'el máximo') + ' de ' + o.label.toLowerCase() + ' es <b>' + DECK.fmt1(Math.abs(l.best)) + ' ' + o.unit + '</b>; quedan ' + l.after + '. ' + (l.after > 1 ? 'Empate: la siguiente pasada desempata. (Si fuera la última, Gurobi elegiría una: óptimo degenerado.)' : 'Una sola solución: las pasadas siguientes sólo certifican.');
+    $('#ro_r').innerHTML = 'cob ' + chosen.covered + ' · atraso ' + DECK.fmt1(chosen.late) + ' · eq ' + DECK.fmt1(chosen.eq) + ' · ' + chosen.tt + ' min';
+  }
+  const full = res.survivors[0];
+  note.innerHTML = '<b>Resultado con este orden y este candado:</b> ' + DECK.solLabel(full) + ' → cobertura ' + full.covered + ', atraso ' + DECK.fmt1(full.late) + ' min, equidad ' + DECK.fmt1(full.eq) + ', ' + full.tt + ' minutos de repartidor' + (res.survivors.length > 1 ? ' (' + res.survivors.length + ' soluciones empatan al final)' : '') + '. ' + (+$('#tol6').value > 0 ? 'Con candado flojo las pasadas posteriores pueden degradar las anteriores: mira cuántas sobreviven en cada paso.' : order.indexOf('lateness') < order.indexOf('equity') ? 'Atraso antes que equidad: C2 (sobre la media) entrega O4 para que nadie espere más.' : 'Equidad antes que atraso: C3 (bajo la media) se lleva el bundle (O3,O4) y O3 espera 13 min en vez de 7.');
+  renderCands(full);
+}
+function renderCands(sol){
+  const pick = new Set(sol ? sol.keys : []);
+  $('#candtbl').innerHTML = '<table class="t"><thead><tr><th>repartidor</th><th>ruta</th><th class="n">|r|</th><th class="n">atraso</th><th class="n">minutos</th><th class="n">déficit</th><th>secuencia</th></tr></thead><tbody>' + T.cands.map((k, j) => '<tr' + (pick.has(j) ? ' class="pick"' : '') + '><td>C' + k.c + '</td><td>(' + k.r.map(o => 'O' + o).join(',') + ')</td><td class="n">' + k.n + '</td><td class="n">' + k.late + '</td><td class="n">' + k.tt + '</td><td class="n">' + k.def + '</td><td>' + k.seq.map(o => 'O' + o).join(' → ') + '</td></tr>').join('') + '</tbody></table>';
+}
+function reset(){ clearInterval(timer); timer = null; step = 0; $('#play6').textContent = '▶ Correr pasadas'; paint(); }
+function next(){ if (step < order.length) { step++; paint(); } if (step >= order.length) { clearInterval(timer); timer = null; $('#play6').textContent = '▶ Correr pasadas'; } }
+DECK.ready.push(() => {
+  renderChips();
+  const q = new URLSearchParams(location.search), st = +q.get('toystep');
+  if (st) step = Math.min(st, order.length);
+  paint();
+  $('#step6').addEventListener('click', next);
+  $('#reset6').addEventListener('click', reset);
+  $('#play6').addEventListener('click', () => {
+    if (timer) { clearInterval(timer); timer = null; $('#play6').textContent = '▶ Correr pasadas'; return; }
+    if (step >= order.length) step = 0;
+    next(); timer = setInterval(next, 1400); $('#play6').textContent = '⏸ Pausa';
+  });
+  $('#tol6').addEventListener('change', () => { paint(); });
+  $('#cands6').addEventListener('click', () => $('#candtbl').classList.toggle('on'));
+  addEventListener('keydown', e => { if (DECK.current() !== 6) return; if (e.key === 'Enter') { e.preventDefault(); next(); } });
+});
+})();
+
+/* =====================================================================
+   SLIDE 7 · código ↔ pasos
+   ===================================================================== */
+(function(){
+const { $, $$ } = DECK;
+DECK.ready.push(() => {
+  const lis = $$('#pcode7 li'), steps = $$('#steps7 .step');
+  function sel(st){
+    steps.forEach(s => s.classList.toggle('on', s === st));
+    const set = new Set(st.dataset.l.split(',').map(Number));
+    lis.forEach((li, i) => li.classList.toggle('hl', set.has(i + 1)));
+  }
+  steps.forEach(s => s.addEventListener('click', () => sel(s)));
+  sel(steps[0]);
+});
+})();
+
+/* =====================================================================
+   SLIDE 8 · barras
+   ===================================================================== */
+(function(){
+const { $, $$ } = DECK;
+function bars(id, data, max, fmtv){
+  const w = 440, left = 150, bw = 20, gap = 6;
+  const rows = data.map((d, i) => {
+    const y = 14 + i * (bw + gap), len = (d.v / max) * (w - left - 60);
+    return '<text class="bn' + (d.hi ? ' hi' : '') + '" x="' + (left - 8) + '" y="' + (y + 14) + '">' + d.n + '</text><rect x="' + left + '" y="' + y + '" width="' + len + '" height="' + bw + '" rx="3" fill="' + (d.hi ? '#A8431C' : (d.dim ? '#D9D7CF' : '#5C7EA6')) + '"/><text class="axt" x="' + (left + len + 6) + '" y="' + (y + 14) + '">' + fmtv(d.v) + '</text>';
+  });
+  $('#' + id).innerHTML = rows.join('');
+}
+DECK.ready.push(() => {
+  bars('ch_over', [{ n: 'greedy', v: 2.2 }, { n: 'ilp max_coverage', v: 3.1 }, { n: 'ilp min_lateness', v: 2.3 }, { n: 'ilp max_equity', v: 2.7 }, { n: 'ilp min_cost', v: 2.1 }, { n: 'hier cov›lat›eq›cost', v: 2.2, hi: true }, { n: 'hier cov›eq›lat›cost', v: 2.3 }], 3.4, v => DECK.fmt1(v) + ' min');
+  bars('ch_gini', [{ n: 'greedy', v: 0.0741 }, { n: 'ilp max_coverage', v: 0.0809 }, { n: 'ilp min_lateness', v: 0.0772 }, { n: 'ilp max_equity', v: 0.0666 }, { n: 'ilp min_cost', v: 0.0824 }, { n: 'hier cov›lat›eq›cost', v: 0.0684, hi: true }, { n: 'hier cov›eq›lat›cost', v: 0.0703 }], 0.09, v => v.toFixed(4).replace('.', ','));
+});
+})();
+
+
+/* =====================================================================
+   SLIDE 11c · resultados por cluster (datos de batch_hier_clusters.py)
+   ===================================================================== */
+(function(){
+const { $, $$ } = DECK;
+// filled by the batch: one row per cluster + 'all'
+DECK.CLUSTERS = {"rows": [{"key": "0", "label": "Cluster 0 · Dispersas, con holgura", "sub": "o100 8 · o50 8 · r50 8", "n": 24, "cov_g": 0.9949, "cov_h": 0.9957, "over_g": 5.9138, "over_h": 3.3125, "over_better": 1.0, "over_worse": 0.0, "cov_better": 0.4167, "cov_worse": 0.0833, "gini_g": 0.0381, "gini_h": 0.0459, "gini_better": 0.2083, "pay_d": 59.9583, "sec_h": 4.9564}, {"key": "1", "label": "Cluster 1 · Pequeñas y compactas", "sub": "o100 25 · o50 40 · r50 40", "n": 105, "cov_g": 0.9839, "cov_h": 0.97, "over_g": 4.3777, "over_h": 3.2901, "over_better": 0.8571, "over_worse": 0.1238, "cov_better": 0.0095, "cov_worse": 0.4762, "gini_g": 0.1049, "gini_h": 0.0953, "gini_better": 0.6952, "pay_d": -59.4738, "sec_h": 2.5838}, {"key": "2", "label": "Cluster 2 · Medianas y cargadas", "sub": "o100 23 · o50 32 · r50 32", "n": 87, "cov_g": 0.9624, "cov_h": 0.9377, "over_g": 6.5178, "over_h": 4.2162, "over_better": 1.0, "over_worse": 0.0, "cov_better": 0.0345, "cov_worse": 0.8736, "gini_g": 0.1132, "gini_h": 0.0982, "gini_better": 0.8736, "pay_d": -304.8075, "sec_h": 5.3749}, {"key": "3", "label": "Cluster 3 · Grandes y saturadas", "sub": "o100 24", "n": 24, "cov_g": 0.9536, "cov_h": 0.9316, "over_g": 7.1083, "over_h": 4.1488, "over_better": 1.0, "over_worse": 0.0, "cov_better": 0.0833, "cov_worse": 0.875, "gini_g": 0.1073, "gini_h": 0.0871, "gini_better": 0.7917, "pay_d": -607.7396, "sec_h": 9.8193}, {"key": "all", "label": "Las 240 instancias", "sub": "", "n": 240, "cov_g": 0.9742, "cov_h": 0.9571, "over_g": 5.5802, "over_h": 3.7139, "over_better": 0.9375, "over_worse": 0.0542, "cov_better": 0.0667, "cov_worse": 0.6208, "gini_g": 0.1015, "gini_h": 0.0906, "gini_better": 0.7208, "pay_d": -191.2906, "sec_h": 4.5564}], "note": "Medias por cluster; «hier mejor» = porcentaje de instancias donde hier mejora a greedy en esa métrica. Orden de hier: cobertura › atraso › equidad › costo (decisión 1A); equidad sobre ganancia acumulada (3C); candado 0 / 1e-4 (4C). Cada corrida en su propio proceso, 3 reintentos, 0 fallos. Variantes (240 instancias, frente a greedy): hier[cov,lat,cost,eq]: cobertura 95.8 %, atraso 3.73 min, Gini 0.0933; hier[cov,cost,lat,eq]: cobertura 96.8 %, atraso 4.76 min, Gini 0.1005", "takes": [{"v": "5,6 → 3,7", "small": "min", "p": "de atraso medio sobre el target. hier mejora el atraso en el 94 % de las instancias y lo empeora en el 5 %. En los clusters 0, 2 y 3 gana en todas."}, {"v": "97,4 → 95,7", "small": "% cobertura", "p": "<b>La cobertura del día baja</b> 1.7 puntos (peor en el 62 % de las instancias, igual en el 31 %). El modelo cubre el máximo en cada ronda, pero sus elecciones de equidad gastan minutos de repartidor y pedidos posteriores superan su SLA dura antes de que alguien quede libre."}, {"v": "0,1015 → 0,0906", "small": "F_Gini", "p": "hier es más equitativo en el 72 % de las instancias; en el cluster 0 (dispersas, con holgura) casi nunca hay nadie bajo la media y el Gini empeora un poco."}, {"v": "4,6 s", "small": "por día simulado", "p": "frente a 0,15 s de greedy; 9,8 s en las grandes y saturadas. Muy lejos del presupuesto de 120 s por ronda."}, {"v": "2", "small": "variantes de orden", "p": "Costo antes que equidad no cambia la cobertura. Costo antes que atraso recupera 1,1 puntos (los bundles vuelven) pero devuelve 1,3 min de atraso: la miopía por ronda es estructural, no del orden. <b>[cov,lat,cost,eq]</b>: cobertura 95,8 %, atraso 3,7 min, Gini 0,0933 · <b>[cov,cost,lat,eq]</b>: cobertura 96,8 %, atraso 4,8 min, Gini 0,1005"}], "variants": {"hier[cov,lat,cost,eq]": {"n": 240, "cov_g": 0.9742, "cov_h": 0.9581, "over_g": 5.5802, "over_h": 3.733, "over_better": 0.95, "over_worse": 0.0458, "cov_better": 0.0875, "cov_worse": 0.5833, "gini_g": 0.1015, "gini_h": 0.0933, "gini_better": 0.675, "pay_d": -134.0375, "sec_h": 4.676}, "hier[cov,cost,lat,eq]": {"n": 240, "cov_g": 0.9742, "cov_h": 0.9678, "over_g": 5.5802, "over_h": 4.7563, "over_better": 0.825, "over_worse": 0.1625, "cov_better": 0.1417, "cov_worse": 0.4958, "gini_g": 0.1015, "gini_h": 0.1005, "gini_better": 0.5375, "pay_d": -21.926, "sec_h": 4.602}}}; /*__CLUSTERS__*/
+DECK.ready.push(() => {
+  const L = $('#clus_left'), R = $('#clus_right');
+  const C = DECK.CLUSTERS;
+  if (!C) {
+    L.innerHTML = '<div class="pend">El batch sobre las 240 instancias está corriendo (output/hier_vs_greedy_240.csv). Esta tabla se rellena con <span class="mono">python docs/build_deck.py</span> al terminar.</div>';
+    return;
+  }
+  const f1 = v => DECK.fmt1(v), f4 = v => v.toFixed(4).replace('.', ','), pct = v => (v * 100).toFixed(1).replace('.', ',') + ' %';
+  const cls = (d, lowerBetter) => Math.abs(d) < 1e-9 ? 'same' : ((d < 0) === lowerBetter ? 'better' : 'worse');
+  const sgn = v => (v > 0 ? '+' : '') + v;
+  let h = '<table class="t"><thead><tr><th>cluster</th><th class="n">n</th><th class="n">cobertura<br>greedy · hier</th><th class="n">atraso medio (min)<br>greedy · hier</th><th class="n">hier mejor<br>atraso</th><th class="n">F_Gini<br>greedy · hier</th><th class="n">hier mejor<br>Gini</th><th class="n">pago hier − greedy</th><th class="n">s/día hier</th></tr></thead><tbody>';
+  for (const r of C.rows) {
+    h += '<tr' + (r.key === 'all' ? ' class="hl"' : '') + '><td><b>' + r.label + '</b>' + (r.sub ? '<br><span class="small">' + r.sub + '</span>' : '') + '</td><td class="n">' + r.n + '</td>'
+      + '<td class="n"><span class="g">' + pct(r.cov_g) + '</span> · <span class="h">' + pct(r.cov_h) + '</span></td>'
+      + '<td class="n"><span class="g">' + f1(r.over_g) + '</span> · <span class="h">' + f1(r.over_h) + '</span> <span class="' + cls(r.over_h - r.over_g, true) + '">' + sgn(f1(r.over_h - r.over_g)) + '</span></td>'
+      + '<td class="n">' + pct(r.over_better) + '<br><span class="small">peor ' + pct(r.over_worse) + '</span></td>'
+      + '<td class="n"><span class="g">' + f4(r.gini_g) + '</span> · <span class="h">' + f4(r.gini_h) + '</span></td>'
+      + '<td class="n">' + pct(r.gini_better) + '</td>'
+      + '<td class="n ' + cls(r.pay_d, true) + '">' + sgn(f1(r.pay_d)) + '</td>'
+      + '<td class="n">' + f1(r.sec_h) + '</td></tr>';
+  }
+  h += '</tbody></table><div class="small" style="margin-top:8px">' + C.note + '</div>';
+  L.innerHTML = h;
+  R.innerHTML = C.takes.map(t => '<div class="take"><div class="v">' + t.v + (t.small ? '<small> ' + t.small + '</small>' : '') + '</div><p>' + t.p + '</p></div>').join('');
+});
+})();
+
+
+/* =====================================================================
+   SLIDE 11d · mdrp-sim bajo nuestros objetivos (compare_objectives.json)
+   ===================================================================== */
+(function(){
+const { $, $$ } = DECK;
+DECK.MDRPSIM = {"n_instances": 238, "policies": ["greedy", "hier cov›lat›eq›cost", "hier cov›lat›cost›eq", "hier cov›cost›lat›eq", "mdrp-sim greedy", "mdrp-sim mdrp (MIP)", "mdrp-sim mdrp_graph", "mdrp-sim mdrp_graph_prospects"], "overall": {"greedy": {"coverage_rate": 0.9744, "overage_total_min": 6171.6682, "overage_mean": 5.5662, "F_Gini": 0.1013, "F_Deficit": 0.0005, "courier_active_min_total": 14554.0084, "bundle_size_mean": 1.1089, "total_payment": 10473.0504, "wall_clock_sec": 0.1523}, "hier cov›lat›eq›cost": {"coverage_rate": 0.9574, "overage_total_min": 3820.7723, "overage_mean": 3.7135, "F_Gini": 0.0906, "F_Deficit": 0.0001, "courier_active_min_total": 14303.3655, "bundle_size_mean": 1.0906, "total_payment": 10290.8876, "wall_clock_sec": 5.1192}, "hier cov›lat›cost›eq": {"coverage_rate": 0.9585, "overage_total_min": 3842.3518, "overage_mean": 3.7321, "F_Gini": 0.0933, "F_Deficit": 0.0003, "courier_active_min_total": 13507.9664, "bundle_size_mean": 1.0912, "total_payment": 10347.1303, "wall_clock_sec": 5.1126}, "hier cov›cost›lat›eq": {"coverage_rate": 0.968, "overage_total_min": 5092.8661, "overage_mean": 4.7458, "F_Gini": 0.1004, "F_Deficit": 0.0003, "courier_active_min_total": 12583.9328, "bundle_size_mean": 1.1208, "total_payment": 10454.7216, "wall_clock_sec": 4.8659}, "mdrp-sim greedy": {"coverage_rate": 0.976, "overage_total_min": 11856.4291, "overage_mean": 9.6848, "F_Gini": 0.0895, "F_Deficit": 0.0002, "courier_active_min_total": 16160.1975, "bundle_size_mean": 1.0, "total_payment": 10575.4485, "wall_clock_sec": 0.0989}, "mdrp-sim mdrp (MIP)": {"coverage_rate": 0.5906, "overage_total_min": 0.6536, "overage_mean": 0.0003, "F_Gini": 0.0579, "F_Deficit": 0.0003, "courier_active_min_total": 6582.0126, "bundle_size_mean": 1.0151, "total_payment": 7811.3792, "wall_clock_sec": 19.8288}, "mdrp-sim mdrp_graph": {"coverage_rate": 0.5906, "overage_total_min": 0.6536, "overage_mean": 0.0003, "F_Gini": 0.0579, "F_Deficit": 0.0003, "courier_active_min_total": 6582.1513, "bundle_size_mean": 1.0151, "total_payment": 7811.0452, "wall_clock_sec": 17.1662}, "mdrp-sim mdrp_graph_prospects": {"coverage_rate": 0.5423, "overage_total_min": 231.9827, "overage_mean": 0.1568, "F_Gini": 0.0745, "F_Deficit": 0.0004, "courier_active_min_total": 5661.1008, "bundle_size_mean": 1.0229, "total_payment": 7387.1292, "wall_clock_sec": 9.1892}}, "wins": {"cov›lat›eq›cost (1A)": {"greedy": 19.3, "hier cov›lat›eq›cost": 3.8, "hier cov›lat›cost›eq": 10.1, "hier cov›cost›lat›eq": 5.0, "mdrp-sim greedy": 61.8, "mdrp-sim mdrp (MIP)": 0.0, "mdrp-sim mdrp_graph": 0.0, "mdrp-sim mdrp_graph_prospects": 0.0}, "cov›lat›cost›eq": {"greedy": 19.3, "hier cov›lat›eq›cost": 3.8, "hier cov›lat›cost›eq": 10.9, "hier cov›cost›lat›eq": 5.0, "mdrp-sim greedy": 60.9, "mdrp-sim mdrp (MIP)": 0.0, "mdrp-sim mdrp_graph": 0.0, "mdrp-sim mdrp_graph_prospects": 0.0}, "cov›cost›lat›eq": {"greedy": 18.9, "hier cov›lat›eq›cost": 0.0, "hier cov›lat›cost›eq": 2.1, "hier cov›cost›lat›eq": 42.4, "mdrp-sim greedy": 36.6, "mdrp-sim mdrp (MIP)": 0.0, "mdrp-sim mdrp_graph": 0.0, "mdrp-sim mdrp_graph_prospects": 0.0}, "cov›eq›lat›cost": {"greedy": 27.3, "hier cov›lat›eq›cost": 8.0, "hier cov›lat›cost›eq": 4.2, "hier cov›cost›lat›eq": 7.1, "mdrp-sim greedy": 53.4, "mdrp-sim mdrp (MIP)": 0.0, "mdrp-sim mdrp_graph": 0.0, "mdrp-sim mdrp_graph_prospects": 0.0}}, "per_cluster": {"0": {"greedy": {"coverage_rate": 0.9949, "overage_total_min": 6784.6767, "overage_mean": 5.9138, "F_Gini": 0.0381, "F_Deficit": 0.0009, "courier_active_min_total": 26645.2917, "bundle_size_mean": 1.0254, "total_payment": 14559.0729, "wall_clock_sec": 0.1459}, "hier cov›lat›eq›cost": {"coverage_rate": 0.9957, "overage_total_min": 3752.6021, "overage_mean": 3.3125, "F_Gini": 0.0459, "F_Deficit": 0.0, "courier_active_min_total": 19868.25, "bundle_size_mean": 1.0042, "total_payment": 14619.0312, "wall_clock_sec": 4.7438}, "hier cov›lat›cost›eq": {"coverage_rate": 0.996, "overage_total_min": 3713.7275, "overage_mean": 3.2729, "F_Gini": 0.048, "F_Deficit": 0.0, "courier_active_min_total": 17117.5, "bundle_size_mean": 1.0038, "total_payment": 14402.0417, "wall_clock_sec": 4.6362}, "hier cov›cost›lat›eq": {"coverage_rate": 0.9961, "overage_total_min": 3987.4212, "overage_mean": 3.4913, "F_Gini": 0.0503, "F_Deficit": 0.0, "courier_active_min_total": 16716.0833, "bundle_size_mean": 1.0217, "total_payment": 14352.0208, "wall_clock_sec": 4.439}, "mdrp-sim greedy": {"coverage_rate": 0.996, "overage_total_min": 3880.4188, "overage_mean": 3.4425, "F_Gini": 0.046, "F_Deficit": 0.0004, "courier_active_min_total": 17754.7083, "bundle_size_mean": 1.0, "total_payment": 14428.5, "wall_clock_sec": 0.1478}, "mdrp-sim mdrp (MIP)": {"coverage_rate": 0.5843, "overage_total_min": 0.4938, "overage_mean": 0.0, "F_Gini": 0.0312, "F_Deficit": 0.0009, "courier_active_min_total": 7321.9167, "bundle_size_mean": 1.0025, "total_payment": 11717.5104, "wall_clock_sec": 30.8652}, "mdrp-sim mdrp_graph": {"coverage_rate": 0.5843, "overage_total_min": 0.4938, "overage_mean": 0.0, "F_Gini": 0.0312, "F_Deficit": 0.0009, "courier_active_min_total": 7323.0833, "bundle_size_mean": 1.0025, "total_payment": 11718.5208, "wall_clock_sec": 25.5309}, "mdrp-sim mdrp_graph_prospects": {"coverage_rate": 0.551, "overage_total_min": 48.1812, "overage_mean": 0.0379, "F_Gini": 0.0425, "F_Deficit": 0.001, "courier_active_min_total": 6553.25, "bundle_size_mean": 1.0038, "total_payment": 11161.0104, "wall_clock_sec": 9.1524}}, "1": {"greedy": {"coverage_rate": 0.9839, "overage_total_min": 1959.7361, "overage_mean": 4.3777, "F_Gini": 0.1049, "F_Deficit": 0.0007, "courier_active_min_total": 5914.8, "bundle_size_mean": 1.0889, "total_payment": 4615.7833, "wall_clock_sec": 0.0366}, "hier cov›lat›eq›cost": {"coverage_rate": 0.97, "overage_total_min": 1435.0267, "overage_mean": 3.2901, "F_Gini": 0.0953, "F_Deficit": 0.0003, "courier_active_min_total": 5810.6571, "bundle_size_mean": 1.0758, "total_payment": 4556.3095, "wall_clock_sec": 3.6248}, "hier cov›lat›cost›eq": {"coverage_rate": 0.9708, "overage_total_min": 1440.6637, "overage_mean": 3.307, "F_Gini": 0.0969, "F_Deficit": 0.0006, "courier_active_min_total": 5552.2095, "bundle_size_mean": 1.0765, "total_payment": 4573.3548, "wall_clock_sec": 3.6238}, "hier cov›cost›lat›eq": {"coverage_rate": 0.9781, "overage_total_min": 1783.483, "overage_mean": 4.0214, "F_Gini": 0.1023, "F_Deficit": 0.0006, "courier_active_min_total": 5345.7714, "bundle_size_mean": 1.099, "total_payment": 4615.6833, "wall_clock_sec": 3.2818}, "mdrp-sim greedy": {"coverage_rate": 0.9782, "overage_total_min": 2801.0098, "overage_mean": 6.1784, "F_Gini": 0.0922, "F_Deficit": 0.0003, "courier_active_min_total": 6164.4762, "bundle_size_mean": 1.0, "total_payment": 4599.8429, "wall_clock_sec": 0.0354}, "mdrp-sim mdrp (MIP)": {"coverage_rate": 0.6073, "overage_total_min": 0.2049, "overage_mean": 0.0001, "F_Gini": 0.0526, "F_Deficit": 0.0004, "courier_active_min_total": 3025.2667, "bundle_size_mean": 1.013, "total_payment": 3557.4333, "wall_clock_sec": 10.012}, "mdrp-sim mdrp_graph": {"coverage_rate": 0.6073, "overage_total_min": 0.2049, "overage_mean": 0.0001, "F_Gini": 0.0526, "F_Deficit": 0.0004, "courier_active_min_total": 3025.2, "bundle_size_mean": 1.013, "total_payment": 3557.4333, "wall_clock_sec": 9.4352}, "mdrp-sim mdrp_graph_prospects": {"coverage_rate": 0.5397, "overage_total_min": 0.1955, "overage_mean": 0.0002, "F_Gini": 0.0699, "F_Deficit": 0.0003, "courier_active_min_total": 2434.6476, "bundle_size_mean": 1.0182, "total_payment": 3219.2905, "wall_clock_sec": 8.3649}}, "2": {"greedy": {"coverage_rate": 0.9624, "overage_total_min": 7933.1775, "overage_mean": 6.5178, "F_Gini": 0.1132, "F_Deficit": 0.0002, "courier_active_min_total": 16526.7701, "bundle_size_mean": 1.1432, "total_payment": 12313.0718, "wall_clock_sec": 0.1742}, "hier cov›lat›eq›cost": {"coverage_rate": 0.9377, "overage_total_min": 4972.3875, "overage_mean": 4.2162, "F_Gini": 0.0982, "F_Deficit": 0.0, "courier_active_min_total": 17464.6552, "bundle_size_mean": 1.1217, "total_payment": 12008.2644, "wall_clock_sec": 5.6101}, "hier cov›lat›cost›eq": {"coverage_rate": 0.9394, "overage_total_min": 5047.4439, "overage_mean": 4.2641, "F_Gini": 0.1014, "F_Deficit": 0.0, "courier_active_min_total": 16817.1149, "bundle_size_mean": 1.1229, "total_payment": 12126.8937, "wall_clock_sec": 5.6151}, "hier cov›cost›lat›eq": {"coverage_rate": 0.954, "overage_total_min": 6876.6928, "overage_mean": 5.7089, "F_Gini": 0.1117, "F_Deficit": 0.0001, "courier_active_min_total": 15465.0345, "bundle_size_mean": 1.1599, "total_payment": 12312.75, "wall_clock_sec": 5.4774}, "mdrp-sim greedy": {"coverage_rate": 0.9682, "overage_total_min": 17914.6328, "overage_mean": 14.414, "F_Gini": 0.098, "F_Deficit": 0.0, "courier_active_min_total": 20835.9425, "bundle_size_mean": 1.0, "total_payment": 12448.1638, "wall_clock_sec": 0.1012}, "mdrp-sim mdrp (MIP)": {"coverage_rate": 0.5804, "overage_total_min": 1.104, "overage_mean": 0.0007, "F_Gini": 0.069, "F_Deficit": 0.0002, "courier_active_min_total": 8295.2414, "bundle_size_mean": 1.0192, "total_payment": 9005.2644, "wall_clock_sec": 19.5995}, "mdrp-sim mdrp_graph": {"coverage_rate": 0.5804, "overage_total_min": 1.104, "overage_mean": 0.0007, "F_Gini": 0.069, "F_Deficit": 0.0002, "courier_active_min_total": 8295.2414, "bundle_size_mean": 1.0192, "total_payment": 9005.2644, "wall_clock_sec": 16.8738}, "mdrp-sim mdrp_graph_prospects": {"coverage_rate": 0.5392, "overage_total_min": 219.18, "overage_mean": 0.2544, "F_Gini": 0.087, "F_Deficit": 0.0004, "courier_active_min_total": 6861.7011, "bundle_size_mean": 1.0308, "total_payment": 8475.7529, "wall_clock_sec": 8.9573}}, "3": {"greedy": {"coverage_rate": 0.9535, "overage_total_min": 18639.3668, "overage_mean": 7.0964, "F_Gini": 0.1062, "F_Deficit": 0.0004, "courier_active_min_total": 34794.7273, "bundle_size_mean": 1.16, "total_payment": 26694.2614, "wall_clock_sec": 0.6247}, "hier cov›lat›eq›cost": {"coverage_rate": 0.9331, "overage_total_min": 10727.5386, "overage_mean": 4.1841, "F_Gini": 0.0866, "F_Deficit": 0.0, "courier_active_min_total": 36264.5, "bundle_size_mean": 1.1327, "total_payment": 26147.4091, "wall_clock_sec": 10.7191}, "hier cov›lat›cost›eq": {"coverage_rate": 0.9343, "overage_total_min": 10679.68, "overage_mean": 4.1582, "F_Gini": 0.0931, "F_Deficit": 0.0, "courier_active_min_total": 34454.7727, "bundle_size_mean": 1.1318, "total_payment": 26442.0909, "wall_clock_sec": 10.7502}, "hier cov›cost›lat›eq": {"coverage_rate": 0.9451, "overage_total_min": 15039.3655, "overage_mean": 5.7632, "F_Gini": 0.1018, "F_Deficit": 0.0, "courier_active_min_total": 31228.4545, "bundle_size_mean": 1.1786, "total_payment": 26723.6023, "wall_clock_sec": 10.4735}, "mdrp-sim greedy": {"coverage_rate": 0.9747, "overage_total_min": 39819.1359, "overage_mean": 14.5282, "F_Gini": 0.0906, "F_Deficit": 0.0, "courier_active_min_total": 43637.1364, "bundle_size_mean": 1.0, "total_payment": 27486.3182, "wall_clock_sec": 0.3393}, "mdrp-sim mdrp (MIP)": {"coverage_rate": 0.5583, "overage_total_min": 1.1886, "overage_mean": 0.0, "F_Gini": 0.0686, "F_Deficit": 0.0, "courier_active_min_total": 15975.1818, "bundle_size_mean": 1.0223, "total_payment": 19131.7955, "wall_clock_sec": 55.5486}, "mdrp-sim mdrp_graph": {"coverage_rate": 0.5583, "overage_total_min": 1.1886, "overage_mean": 0.0, "F_Gini": 0.0684, "F_Deficit": 0.0, "courier_active_min_total": 15975.7273, "bundle_size_mean": 1.0223, "total_payment": 19127.0795, "wall_clock_sec": 46.0959}, "mdrp-sim mdrp_graph_prospects": {"coverage_rate": 0.5574, "overage_total_min": 1589.3791, "overage_mean": 0.6486, "F_Gini": 0.0814, "F_Deficit": 0.0, "courier_active_min_total": 15339.0, "bundle_size_mean": 1.0355, "total_payment": 18857.1136, "wall_clock_sec": 14.0805}}}, "paired_vs": {"greedy": {"hier cov›lat›eq›cost": {"Δ coverage": -0.017, "mejor coverage %": 6.7, "Δ lateness": -2350.8959, "mejor lateness %": 94.1, "Δ equity": -0.0107, "mejor equity %": 71.8, "Δ cost": -250.6429, "mejor cost %": 47.1}, "hier cov›lat›cost›eq": {"Δ coverage": -0.0159, "mejor coverage %": 8.8, "Δ lateness": -2329.3164, "mejor lateness %": 95.4, "Δ equity": -0.008, "mejor equity %": 67.2, "Δ cost": -1046.042, "mejor cost %": 57.6}, "hier cov›cost›lat›eq": {"Δ coverage": -0.0063, "mejor coverage %": 14.3, "Δ lateness": -1078.8021, "mejor lateness %": 82.8, "Δ equity": -0.0009, "mejor equity %": 53.4, "Δ cost": -1970.0756, "mejor cost %": 87.0}, "mdrp-sim greedy": {"Δ coverage": 0.0016, "mejor coverage %": 41.6, "Δ lateness": 5684.7608, "mejor lateness %": 48.3, "Δ equity": -0.0118, "mejor equity %": 77.3, "Δ cost": 1606.1891, "mejor cost %": 33.2}, "mdrp-sim mdrp (MIP)": {"Δ coverage": -0.3837, "mejor coverage %": 0.0, "Δ lateness": -6171.0146, "mejor lateness %": 100.0, "Δ equity": -0.0434, "mejor equity %": 92.9, "Δ cost": -7971.9958, "mejor cost %": 100.0}, "mdrp-sim mdrp_graph": {"Δ coverage": -0.3837, "mejor coverage %": 0.0, "Δ lateness": -6171.0146, "mejor lateness %": 100.0, "Δ equity": -0.0434, "mejor equity %": 92.9, "Δ cost": -7971.8571, "mejor cost %": 100.0}, "mdrp-sim mdrp_graph_prospects": {"Δ coverage": -0.4321, "mejor coverage %": 0.0, "Δ lateness": -5939.6855, "mejor lateness %": 100.0, "Δ equity": -0.0268, "mejor equity %": 79.8, "Δ cost": -8892.9076, "mejor cost %": 100.0}}}, "inside": {"greedy": "regla: menos pedidos primero, ruta factible más cercana", "hier cov›lat›eq›cost": "jerarquía (decisión 1A)", "hier cov›lat›cost›eq": "jerarquía, costo antes que equidad", "hier cov›cost›lat›eq": "jerarquía, costo antes que atraso", "mdrp-sim greedy": "ETA mínimo por repartidor, sin bundles", "mdrp-sim mdrp (MIP)": "MIP: throughput − 0,4·atraso, cruce completo", "mdrp-sim mdrp_graph": "relajación LP del mismo MIP", "mdrp-sim mdrp_graph_prospects": "LP con prospectos a 3 km"}, "takes": [{"v": "ms·greedy", "small": "mejor cobertura", "p": "Media 97,6 %, Las variantes de mdrp-sim con objetivo throughput − 0,4·atraso dejan pedidos sin cubrir cuando ninguna ruta «vale la pena»: greedy 97,6 %, mdrp (MIP) 59,1 %, mdrp_graph 59,1 %, mdrp_graph_prospects 54,2 %."}, {"v": "hier cov›lat›eq›cost", "small": "menos atraso (cubriendo > 90 %)", "p": "3821 minutos de atraso totales de media por instancia. Las que cubren la mitad de los pedidos acumulan menos atraso, Gini y costo sólo porque entregan menos: por eso la cobertura va primero en la lectura lexicográfica."}, {"v": "ms·greedy", "small": "más equitativa (cubriendo > 90 %)", "p": "F_Gini 0,0895; menor costo en minutos de repartidor entre las que cubren: hier cov›cost›lat›eq (12584 min)."}, {"v": "ms·greedy", "small": "gana con el orden 1A", "p": "en el 62 % de las 238 instancias cuando se leen los resultados con cobertura › atraso › equidad › costo. La tabla de abajo repite la lectura con cada orden de pasadas."}]}; /*__MDRPSIM__*/
+DECK.ready.push(() => {
+  const L = $('#msim_left'), R = $('#msim_right');
+  const D = DECK.MDRPSIM;
+  if (!D) { L.innerHTML = '<div class="pend">El lote de las cuatro políticas de mdrp-sim está corriendo. Esta tabla se rellena con <span class="mono">python docs/fill_clusters.py … --mdrpsim simulator/output/compare_objectives.json</span>.</div>'; return; }
+  const f = (v, d) => (+v).toFixed(d).replace('.', ',');
+  const SHORT = { 'greedy': 'greedy', 'hier cov›lat›eq›cost': 'hier 1A', 'hier cov›lat›cost›eq': 'hier lat›cost', 'hier cov›cost›lat›eq': 'hier cost›lat', 'mdrp-sim greedy': 'ms greedy', 'mdrp-sim mdrp (MIP)': 'ms mdrp', 'mdrp-sim mdrp_graph': 'ms graph', 'mdrp-sim mdrp_graph_prospects': 'ms prospects' };
+  const pols = D.policies;
+  const O = D.overall;
+  const bestOf = (col, hib) => { let b = null; for (const p of pols) { const v = O[p][col]; if (b === null || (hib ? v > b : v < b)) b = v; } return b; };
+  const cols = [['coverage_rate', true, v => f(v * 100, 1) + ' %'], ['overage_total_min', false, v => f(v, 0)], ['F_Gini', false, v => f(v, 4)], ['courier_active_min_total', false, v => f(v, 0)], ['wall_clock_sec', false, v => f(v, 1)]];
+  const best = cols.map(c => bestOf(c[0], c[1]));
+  let h = '<table class="t"><thead><tr><th>política</th><th>optimiza por dentro</th><th class="n">P1 cobertura</th><th class="n">P2 atraso<br>min totales</th><th class="n">P3 F_Gini</th><th class="n">P4 minutos<br>de repartidor</th><th class="n">s/día</th></tr></thead><tbody>';
+  for (const p of pols) {
+    const ours = /^hier|^greedy/.test(p);
+    h += '<tr' + (ours ? ' class="ours"' : '') + '><td><b>' + p + '</b></td><td class="small">' + (D.inside[p] || '') + '</td>';
+    cols.forEach((c, i) => { const v = O[p][c[0]]; h += '<td class="n' + (Math.abs(v - best[i]) < 1e-9 ? ' best' : '') + '">' + c[2](v) + '</td>'; });
+    h += '</tr>';
+  }
+  h += '</tbody></table>';
+  h += '<div class="wins"><div class="small" style="margin-bottom:4px"><b>Ganador lexicográfico por instancia</b> (% de las ' + D.n_instances + ' instancias; cada orden de pasadas es una forma de leer los mismos resultados):</div><table class="t"><thead><tr><th>orden de lectura</th>' + pols.map(p => '<th class="n">' + (SHORT[p] || p) + '</th>').join('') + '</tr></thead><tbody>';
+  for (const [o, row] of Object.entries(D.wins)) { h += '<tr><td>' + o + '</td>' + pols.map(p => { const v = row[p] || 0; return '<td class="n' + (v >= 40 ? ' best' : '') + '">' + f(v, 0) + '</td>'; }).join('') + '</tr>'; }
+  h += '</tbody></table></div>';
+  L.innerHTML = h;
+  R.innerHTML = D.takes.map(t => '<div class="take"><div class="v">' + t.v + (t.small ? '<small> ' + t.small + '</small>' : '') + '</div><p>' + t.p + '</p></div>').join('');
+});
+})();
+
+/* =====================================================================
+   SLIDE 9 · dudas
+   ===================================================================== */
+(function(){
+const { $, $$ } = DECK;
+DECK.ready.push(() => {
+  const ds = $$('#dudas .duda');
+  ds.forEach(d => d.addEventListener('click', e => {
+    const g = e.target.closest('.goto');
+    if (g) { DECK.go(+g.dataset.go); return; }
+    ds.forEach(o => o.classList.toggle('on', o === d));
+  }));
+});
+})();
+</script>
+</body></html>

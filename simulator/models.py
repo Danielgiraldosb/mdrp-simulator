@@ -129,6 +129,11 @@ class Courier:
     off_time: float   # min, from sim start when courier logs off
     home_loc: Location
     acceptance_rate: float = 0.8    # used by the uniform acceptance policy
+    # Real Colombian instances only (loader_real.py): vehicle type and its own
+    # travel speed. None = use the instance-wide cfg.meters_per_minute
+    # (mdrplib behaviour, unchanged). See distance.speed_of().
+    vehicle: Optional[str] = None
+    speed_m_per_min: Optional[float] = None
 
     # -- Runtime state --------------------------------------------------------
     location: Optional[Location] = None

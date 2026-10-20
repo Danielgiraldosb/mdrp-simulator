@@ -1,0 +1,78 @@
+Contexto sobre mí
+Soy Daniel Sebastián Giraldo Herrera, estudiante de doctorado en la Universidad de los Andes (Bogotá, Colombia), grupo PyLO. Mi tesis aplica optimización a las plataformas de domicilios bajo demanda (MDRP: Meal Delivery Routing Problem, tipo Rappi o Uber Eats) para diseñar políticas que mejoren el bienestar de los domiciliarios y de los demás actores.
+
+Mi modelo actual:
+- Un proceso de decisión de Markov con restricciones (CMDP), con una restricción de equidad tipo Gini (alpha) y un estado de equidad acumulada H_t.
+- Aceptación endógena de los domiciliarios, con una función logística.
+- Tarifa pi = pi0 + pi1·distancia.
+- Restricción de balance de rutas.
+- Un proxy de emisiones E(a_t).
+- Función de costo con pesos w1 y w2.
+- Un enfoque biobjetivo con Pay-BRKGA (parámetro lambda).
+Métodos: BRKGA-Fair, MIP-Fair, GRASP y horizonte rodante. Simulador de eventos discretos en SimPy y 24 instancias reales latinoamericanas.
+Dato nuevo: ya estudié el comportamiento de aceptación de los domiciliarios mediante una encuesta de participación aplicada a ellos.
+
+Correo que recibí (traducido del inglés)
+Remitente original: Rafael García-Cáceres, Ph.D., Profesor de Ingeniería Industrial, Universidad Pedagógica y Tecnológica de Colombia (UPTC), Topic Editor de Frontiers in Sustainability. Me llegó a través del grupo ASOCIO (asociocolombia@googlegroups.com), reenviado por Elena Valentina Gutiérrez Gutiérrez el 19 de octubre de 2026, 2:16 p.m. COT. El correo está dirigido a la comunidad ALIO.
+
+"Estimada comunidad ALIO:
+
+Les escribo en mi calidad de Topic Editor del Research Topic 'Modeling and Multi-Objective Optimization for Resilient, Sustainable, and Circular Supply Chains' (Modelación y optimización multiobjetivo para cadenas de suministro resilientes, sostenibles y circulares), alojado en Frontiers in Sustainability.
+
+Junto con los profesores Diana Ramírez-Ríos (University at Buffalo, EE. UU.) y José Arturo Garza-Reyes (University of Derby, Reino Unido), coordinamos esta iniciativa internacional para promover la investigación en modelación matemática, optimización multiobjetivo, sostenibilidad, resiliencia y cadenas de suministro circulares.
+
+Dada la estrecha alineación entre estas áreas de investigación y los intereses de su comunidad científica, comparto la convocatoria (Call for Papers) adjunta.
+
+Nos interesa especialmente fomentar una mayor participación de investigadores latinoamericanos e iberoamericanos y fortalecer su visibilidad en foros científicos internacionales.
+
+La fecha límite para el envío de manuscritos es el 14 de marzo de 2027.
+
+Research Topic: https://fro.ntiers.in/RT85407
+
+Adjunto el flyer promocional oficial proporcionado por Frontiers para su comodidad.
+
+Muchas gracias por considerar esta solicitud y por su apoyo a la colaboración científica.
+
+Cordialmente,
+Rafael García-Cáceres, Ph.D."
+
+Contenido del flyer adjunto (traducido del inglés)
+
+Research Topic: "Modeling and Multi-Objective Optimization for Resilient, Sustainable, and Circular Supply Chains". Código RT85407, Frontiers in Sustainability.
+
+Se reciben artículos de Investigación Original, Métodos, Revisión, Revisión Sistemática y Perspectiva cuya contribución central sea la modelación cuantitativa, la optimización multiobjetivo o el apoyo a la decisión basado en optimización para cadenas de suministro. Los temas relevantes incluyen:
+- Optimización de Pareto y análisis de trade-offs.
+- Programación matemática multiobjetivo.
+- Optimización robusta, estocástica, difusa (fuzzy) y consciente del riesgo.
+- Diseño de redes circulares y de lazo cerrado.
+- Logística inversa, recuperación, remanufactura y asignación de recursos.
+- Inversión en resiliencia y optimización de la respuesta a disrupciones.
+- Objetivos económicos, ambientales y sociales integrados.
+- Simulación-optimización.
+- Métodos de solución por descomposición, exactos o híbridos.
+- Metaheurísticas evolutivas y otras metaheurísticas multiobjetivo.
+- Optimización asistida por IA o por datos.
+
+Las aplicaciones pueden incluir agroalimentario, bioenergía, manufactura, salud, energía y otros sectores. Los estudios puramente descriptivos sobre resiliencia o sostenibilidad, sin una contribución cuantitativa sustancial de apoyo a la decisión, quedan fuera del foco previsto.
+
+Editores del tema:
+- Rafael García-Cáceres, Universidad Pedagógica y Tecnológica de Colombia.
+- Diana Ramirez-Rios, University at Buffalo.
+- Jose Arturo Garza-Reyes, University of Derby.
+
+Fecha límite de envío del manuscrito: 14 de marzo de 2027.
+Más información: sustainability@frontiersin.org y fro.ntiers.in/RT85407.
+
+Datos que ya verifiqué sobre la convocatoria y la revista (solo como información, sin conclusiones)
+- La página del Research Topic indica además un resumen opcional hasta el 24 de noviembre de 2026 (este dato no aparece en el flyer ni en el correo).
+- Frontiers in Sustainability: factor de impacto 4,2 y CiteScore 6,3; indexada en Scopus, ESCI de Web of Science y DOAJ.
+- SJR 2025 en SCImago: 0,826. Cuartiles por categoría: Environmental Science (miscellaneous) Q2; Management, Monitoring, Policy and Law Q2; Nature and Landscape Conservation Q1. El cuartil JCR no está verificado en la fuente oficial.
+- Los cargos de procesamiento (APC) de Frontiers van de 1.495 a 3.150 francos suizos según el tipo de artículo. No encontré la cifra específica de esta revista ni un convenio con Uniandes.
+
+Lo que quiero que analices
+Quiero evaluar si vale la pena enviar a este llamado un modelo multiobjetivo jerárquico de mi problemática, con cuatro objetivos (cobertura, atraso, costo y equidad), en el que se analicen todas las variantes (por ejemplo, los distintos órdenes de prioridad). Por favor analiza:
+1. La revista y el llamado.
+2. Mi problemática (domicilios bajo demanda y bienestar de los domiciliarios).
+3. Mi técnica (BRKGA con decodificador, MIP, simulación, calibración con la encuesta de aceptación) dentro de los temas del llamado.
+
+Presenta el análisis de forma completa y deja la decisión final para mí.

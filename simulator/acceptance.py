@@ -28,6 +28,13 @@ Modes (cfg.acceptance_mode)
   'logistic' -- p = sigma(beta0 + beta1*pay + beta2*dist_km + beta3*active_min),
                 a probability that depends on the SPECIFIC offer (pay,
                 distance, accumulated fatigue), not a fixed per-courier rate.
+  'logit_ppk' -- p = sigma(b * (ln(pay/km) - ln(theta))), the model estimated
+                from the Bogota interviews (32 declared decisions, 11
+                couriers, 2020 manual regime): theta = 903 COP/km is the pay
+                per km at which P = 0.5, b = 2.89 the slope on ln(pay/km).
+                Under cfg.accept_regime == 'autoaccept' (2021 regime, 64 %
+                of surveyed couriers) every offer is accepted: the courier's
+                decision is about being online, not about each order.
 """
 from __future__ import annotations
 import math
@@ -36,6 +43,7 @@ from typing import List
 from config import Config
 from models import Order, Courier
 from distance import dist_km
+from routing import sequence_stops
 
 
 class AcceptanceModel:
@@ -83,10 +91,48 @@ class LogisticAcceptance(AcceptanceModel):
         return 1.0 / (1.0 + math.exp(-z))
 
 
+def route_km(courier: Courier, orders: List[Order]) -> float:
+    """Courier -> store -> drop-offs in nearest-neighbour order (same
+    sequencing as routing.route_feasibility), in km."""
+    if not orders:
+        return 0.0
+    store = orders[0].store_loc
+    km = dist_km(courier.location, store)
+    cursor = store
+    for o in sequence_stops(tuple(orders)):
+        km += dist_km(cursor, o.user_loc)
+        cursor = o.user_loc
+    return km
+
+
+class LogitPayPerKm(AcceptanceModel):
+    """
+    p = sigma(b * (ln(pay/km) - ln(theta)))  ==  sigma(a + b*ln(pay/km)) with
+    a = -b*ln(theta). Parameters cfg.accept_ppk_threshold (theta, COP/km)
+    and cfg.accept_ppk_slope (b); regime cfg.accept_regime.
+
+    Check against the interview sheet (Parametros_modelo): at 1,000 / 1,500 /
+    2,000 COP/km the model predicts 0.57 / 0.81 / 0.91.
+    """
+
+    def prob(self, courier: Courier, orders: List[Order],
+             pay_offer: float, cfg: Config) -> float:
+        if cfg.accept_regime == 'autoaccept':
+            return 1.0
+        if cfg.accept_regime != 'manual':
+            raise ValueError(f"Unknown accept_regime '{cfg.accept_regime}'. Choices: manual, autoaccept")
+        km = max(route_km(courier, orders), cfg.accept_ppk_min_km)
+        if pay_offer <= 0:
+            return 0.0
+        z = cfg.accept_ppk_slope * (math.log(pay_offer / km) - math.log(cfg.accept_ppk_threshold))
+        return 1.0 / (1.0 + math.exp(-z))
+
+
 _MODELS = {
     'auto': AutoAccept,
     'fixed': FixedProbability,
     'logistic': LogisticAcceptance,
+    'logit_ppk': LogitPayPerKm,
 }
 
 

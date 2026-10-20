@@ -170,6 +170,15 @@ def compute_metrics(results: Dict[str, Any], cfg: Config,
     proportion_trueup = (sum(1 for cid in payment if order_earnings[cid] < guaranteed[cid])
                          / len(payment))
 
+    # Day-level totals of the hierarchical model's objectives (hier/): minutes
+    # of courier time committed (objective 'cost') and total overage minutes
+    # (objective 'lateness'), so every policy can be read on the same four
+    # objectives -- coverage_rate, overage_total_min, F_Gini/F_Deficit,
+    # courier_active_min_total -- whatever it optimised internally.
+    m['overage_total_min'] = round(sum(overage), 2)
+    m['courier_active_min_total'] = round(sum(c.history.active_time for c in active_couriers), 2)
+    m['courier_dist_km_total'] = round(sum(c.history.dist_traveled for c in active_couriers), 2)
+
     m.update({
         'n_couriers_active':  len(active_couriers),
         'total_payment':      round(sum(payment.values()), 2),

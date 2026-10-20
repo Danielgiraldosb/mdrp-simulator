@@ -27,6 +27,16 @@ def dist_km(a: Location, b: Location) -> float:
     return dist_m(a, b) / 1000.0
 
 
+def speed_of(courier, cfg) -> float:
+    """
+    Travel speed (m/min) for one courier: the courier's own speed when the
+    loader set one (real instances carry a vehicle type), else the
+    instance-wide cfg.meters_per_minute (mdrplib: no per-vehicle speed).
+    """
+    s = getattr(courier, 'speed_m_per_min', None)
+    return s if s else cfg.meters_per_minute
+
+
 def travel_time_min(a: Location, b: Location, meters_per_minute: float) -> float:
     """Travel time in minutes, rounded up -- identical formula to the official evaluator."""
     if meters_per_minute <= 0:

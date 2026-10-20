@@ -1,3 +1,8 @@
+# Core simulator (run.py, simulator.py, policies.py, ilp_policy.py)
 simpy>=4.0
 pandas>=2.0
 pulp>=2.7
+
+# Instance clustering (cluster_instances.py)
+numpy>=1.24
+scikit-learn>=1.3

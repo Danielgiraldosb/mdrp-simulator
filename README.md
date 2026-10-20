@@ -31,13 +31,20 @@ en este archivo.
   simulador replica en varios puntos (ver "Qué cambia respecto al
   simulador original" más abajo).
 - **[`real_instancies/`](real_instancies)** — las 24 instancias originales
-  (datos reales de Bogotá, coordenadas lat/lng) del simulador de la tesis
-  previo a esta adaptación a mdrplib (`mdrp-sim-master`, ver la comparación
-  detallada más abajo), una carpeta `Instancia_0`..`Instancia_23` por
-  instancia con `couriers.csv` (domiciliario, vehículo, turno),
-  `orders.csv` (pedido, tienda, recogida/entrega) y `stores.csv`
-  (ubicación de cada tienda) — no las usa ningún script de este repo todavía, se
-  dejan aquí para trabajo futuro.
+  (datos reales, coordenadas lat/lng) del simulador de la tesis previo a esta
+  adaptación a mdrplib (`mdrp-sim-master`, ver la comparación detallada más
+  abajo), una carpeta `Instancia_0`..`Instancia_23` por instancia con
+  `couriers.csv` (domiciliario, vehículo, turno), `orders.csv` (pedido,
+  tienda, recogida/entrega) y `stores.csv` (ubicación de cada tienda).
+  Aunque el material de la tesis las llama "Bogotá", cubren seis ciudades
+  (Bogotá, Medellín, Barranquilla, Cali, Bucaramanga, Pereira; tabla en
+  `docs/paper-cmdp/instancias_reales.csv`). Las lee
+  [`simulator/loader_real.py`](simulator/loader_real.py): `run.py` las detecta
+  solo al pasar `--instances-dir real_instancies --instance Instancia_k`
+  (proyección plana por instancia, velocidad por vehículo, SLA por pedido,
+  pago en COP; aceptación calibrada con `--acceptance-mode logit_ppk
+  --regime manual|autoaccept`). Tests: `simulator/tests/test_loader_real.py`,
+  `simulator/tests/test_acceptance_ppk.py`.
 
 ## El simulador (`simulator/`)
 
@@ -469,3 +476,35 @@ y correr ANOVA, regresión o un diseño factorial formal.
   por encima de lo típico se descartan — preservando el propósito de
   `max_throughput` (una función objetivo genuinamente sensible al costo, a
   diferencia de `min_lateness`/`min_cost`, que priorizan cobertura primero).
+
+## Política jerárquica con Gurobi (`simulator/hier/`, `--policy hier`)
+
+Modelo multiobjetivo **lexicográfico** por ronda (paquete `simulator/hier/`, adaptador
+`simulator/hier_policy.py`), montado según el marco de `Epicas/mdrp-marco-de-optimizacion.md`: una pasada por
+objetivo con `setObjectiveN`, candado entre pasadas, parámetros por pasada, callback con progreso = 100 − GAP,
+`end_reason` por pasada y artefactos por ronda. Orden decidido el 2026-10-20 (épica §14): cobertura › atraso ›
+equidad › costo; atraso en minutos; equidad como déficit sobre la ganancia acumulada del día; candado 0 en
+cobertura y 1e-4 en el resto; ningún objetivo protegido. Requiere `gurobipy` con licencia; sin él cae a `greedy`.
+
+```bash
+cd simulator
+python run.py --instance 0o100t100s1p100 --policy hier --save
+python run.py --instance 0o100t100s1p100 --policy hier --hier-order coverage equity lateness cost
+python diag_hier_case.py --toy --brute-force          # una ronda didáctica, verificada por fuerza bruta
+python diag_hier_case.py --instance 0o100t100s1p100 --time 720 --window 10
+python diag_hier_day.py --instance 0o100t100s1p100    # resumen de las rondas de un día
+python batch_hier_clusters.py --policies greedy hier  # 240 instancias, un proceso por corrida, resumen por cluster
+python -m pytest tests/test_hier.py -q
+```
+
+Para lotes largos usar `batch_hier_clusters.py` (una corrida por proceso): gurobipy 11.0.3 mostró violaciones de
+acceso esporádicas en procesos que encadenan muchos días simulados. Resultados sobre las 240 instancias
+(hier gana en atraso y equidad, pierde 1,7 puntos de cobertura del día) en `docs/mdrp-jerarquia-objetivos.md` §9.
+
+Documento de decisión (orden de objetivos, modelo, ejemplo interactivo, dudas y decisiones):
+`docs/mdrp-jerarquia-objetivos.html` (fuente `.src.html`; construir con `python docs/build_deck.py`; rellenar la
+tabla por cluster con `python docs/fill_clusters.py simulator/output/<csv>`; copia revisable en `.md`).
+
+Las 24 instancias reales de Bogotá (`real_instancies/`) son los mismos datos de `sebastian-quintero/mdrp-sim`
+(`instances/0..23`), normalizados con `stores.csv`; el simulador aún no las lee (formato lat/lon, horas del día,
+cuatro vehículos y un solo SLA).

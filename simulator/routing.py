@@ -14,7 +14,7 @@ from typing import List, Tuple, Dict, Any, Optional
 
 from config import Config
 from models import Order, Courier
-from distance import dist_km, travel_time_min
+from distance import dist_km, travel_time_min, speed_of
 
 
 def store_key(order: Order) -> Tuple[float, float]:
@@ -46,7 +46,7 @@ def route_feasibility(courier: Courier, route: Tuple[Order, ...], t: float,
     sequence. Returns None if infeasible, else
     {'lateness', 'total_tt', 'sequence'}.
     """
-    mpm = cfg.meters_per_minute
+    mpm = speed_of(courier, cfg)
     store_loc = route[0].store_loc
 
     tt_to_store = travel_time_min(courier.location, store_loc, mpm)

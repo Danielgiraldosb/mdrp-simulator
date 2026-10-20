@@ -6,3 +6,10 @@ __pycache__/
 # build_all_route_bundles.py, no need to duplicate it in git.
 simulator/build_all_route_bundles_out/
 simulator/build_new_route_bundles_out/
+
+# Local Python 3.14 venv (Python 3.10.0 segfaults on the simulator)
+.venv314/
+
+# Generated run artifacts
+simulator/output/
+simulator/gurobi.log

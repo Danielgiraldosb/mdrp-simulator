@@ -34,7 +34,7 @@ import simpy
 
 from config import Config
 from models import Order, Courier, Location
-from distance import travel_time_min, dist_km
+from distance import travel_time_min, dist_km, speed_of
 from policies import Policy
 
 logger = logging.getLogger(__name__)
@@ -154,7 +154,7 @@ class CourierActor(Actor):
 
         self.courier.condition = 'repositioning'
         self.dispatcher.courier_repositioning_event(self)
-        tt = travel_time_min(self.courier.location, target, self.cfg.meters_per_minute) \
+        tt = travel_time_min(self.courier.location, target, speed_of(self.courier, self.cfg)) \
              / self.cfg.reposition_speed_factor
         t0 = self.env.now
         yield self.env.timeout(tt)
@@ -286,7 +286,7 @@ class CourierActor(Actor):
 
     def _move(self, dest: Location):
         d = dist_km(self.courier.location, dest)
-        tt = travel_time_min(self.courier.location, dest, self.cfg.meters_per_minute)
+        tt = travel_time_min(self.courier.location, dest, speed_of(self.courier, self.cfg))
 
         self.courier.condition = 'moving'
         t0 = self.env.now
@@ -379,6 +379,10 @@ class Dispatcher(Actor):
             'L_t':  available,
             'O_t':  dict(self.pending_orders),
             'H_t':  {cid: c.history for cid, c in available.items()},
+            # every courier currently logged on (idle or busy): fairness policies that
+            # evaluate the Gini over the whole fleet (MIP-Fair, mipfair_scope=all) read this
+            'H_all': {cid: ca.courier.history for cid, ca in self.all_couriers.items()
+                      if ca.courier.condition not in ('offline', 'logged_off')},
             'time': self.env.now,
         }
 
