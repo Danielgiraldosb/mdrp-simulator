@@ -230,7 +230,7 @@ suma ponderada con barrido de λ_pay. Siguen abiertas solo las de la Etapa 1 (`m
 |---|---|---|
 | Diseño experimental: zona de 3 km, factores, 18 configuraciones, X0–X3 (11.922 corridas), métricas, análisis pareado, T1–T8 / F1–F8, presupuesto | hecho | `docs/paper-cmdp/diseno-experimental.md` |
 | `batch_paper.py`: malla por experimento, un proceso por corrida, reintentos, timeout, reanudable, tablas por repartidor, `--dry-run`, `--estimate` | hecho y probado en local | `simulator/batch_paper.py` |
-| Piloto local (la máquina quedó estable con el turbo del CPU apagado): Pereira día completo con los 7 métodos; Bogotá 12:00–14:00 con 6 configuraciones | hecho; números en §8 del diseño | — |
+| Piloto local: Pereira día completo con los 7 métodos; Bogotá 12:00–14:00 con 6 configuraciones; **X0 completo** (42 corridas, 0 fallos, 2 h 50 min): cobertura plana entre métodos, Gini corporativo medio 0,419 (malla de α se mantiene), greedy el más lento (H7, 35 min en Bogotá) | hecho; números en §8 del diseño | `simulator/output/paper/pilot.csv` |
 | Presupuesto: ≈ 615 h de CPU en total (cota superior) = 1,6 días con 16 procesos | estimado | diseño §9 |
 
 Hallazgos que cambiaron código (detalle en diseño §10 y `porte-brkga.md`, "E5 revisada"): MIP-Fair era

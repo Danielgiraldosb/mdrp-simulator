@@ -200,6 +200,33 @@ Bogotá, instancia 0, ventana 12:00–14:00 (2.995 pedidos, 2.266 repartidores),
 Pereira tras el arreglo del decodificador: brkga 0,734 (10 s), brkga_fair_w10 0,734 (10 s), paybrkga_l02
 0,731 (14 s); sustituyen a las filas BRKGA de la primera tabla.
 
+### X0 (2026-10-20, 23:30): 42 corridas, 6 ciudades × 7 métodos, día completo, manual, semilla 1, circuidad 1,0
+
+2 h 50 min con 3 procesos, 0 fallos (`output/paper/pilot.csv`, resumen con `analyze_paper.py`).
+
+| Método | Cobertura (media 6 zonas) | Gini fin de día | min / corrida media (máx, Bogotá) |
+|---|---|---|---|
+| greedy | 0,752 | 0,418 | 11,6 (34,8) |
+| ilp | 0,741 | 0,389 | 2,1 (6,1) |
+| hier | 0,754 | 0,466 | 3,8 (11,1) |
+| brkga | 0,754 | 0,431 | 2,8 (7,5) |
+| brkga_fair_w10 | 0,755 | 0,444 | 2,8 (7,6) |
+| mipfair_a030 | 0,753 | 0,406 | 4,9 (15,4) |
+| paybrkga_l02 | 0,751 | 0,414 | 3,2 (8,3); pago total 8–18 % menor |
+
+Gini corporativo (greedy) por ciudad: Barranquilla 0,468, Bogotá 0,372, Bucaramanga 0,361, Cali 0,528,
+Medellín 0,394, Pereira 0,387; media **0,419**, dentro de [0,35; 0,55]: **la malla de α se mantiene**.
+Lecturas con una semilla: (i) la cobertura es plana entre métodos (±0,5 pt; el ILP pierde 1 pt); (ii) el
+jerárquico **sube** el Gini de fin de día frente al greedy en 5 de 6 ciudades (la equidad por ventana no
+produce la de fin de día: argumento de la contribución 1); (iii) MIP-Fair α = 0,30 baja el Gini 0,01 de
+media y no alcanza 0,30 en ninguna zona; (iv) Pay-BRKGA mantiene la cobertura con 8–18 % menos pago porque
+el pago/km sigue por encima del umbral; (v) F_Deficit 0,98–1,00 en todos (coherente con el 91,9 % bajo el
+SMMLV de la encuesta). **Regla de radio:** el método más lento es el greedy (34,8 min en Bogotá), por un
+defecto de implementación (H7, recorre los 2.650 repartidores por pedido) y no por el tamaño del problema;
+MIP-Fair tarda 15,4 min, bajo el límite de 20. Decisión: se arregla H7 (rejilla espacial) antes de X1 y
+**el radio se mantiene en 3 km**. Pendiente: repetir las seis corridas greedy con circuidad 1,3 (D2) para
+confirmar la regla de α.
+
 ## 9. Presupuesto de cómputo y plan de corridas
 
 Con los segundos por pedido de Bogotá (el peor caso, porque el costo por ronda crece con los repartidores
@@ -215,7 +242,13 @@ conectados) aplicados a las 24 zonas (media 3.612 pedidos; 480 corridas por conf
 | **X1 total (cota superior)** | | **≈ 350 h** |
 
 X2 y X3 añaden ≈ 35 % (3.240 corridas): **≈ 475 h de CPU en total**, es decir 1,2 días con 16 procesos o
-0,6 días con 32. MIP-Fair es tres cuartos del presupuesto. La cota es holgada: las zonas medianas cuestan menos por pedido que Bogotá. Salvaguardas
+0,6 días con 32. MIP-Fair es tres cuartos del presupuesto.
+
+**Con los tiempos medidos en X0** (`--estimate output/paper/pilot.csv`, s/pedido medianos: greedy 0,097,
+mip_fair 0,039, hier 0,035, pay_brkga 0,031, brkga 0,026, ilp 0,019): X1 = **308 h de CPU** (19 h con 16
+procesos); el greedy pesa 93 h por H7 y bajará a ≈ 20 h con la rejilla espacial, con lo que X1 queda en
+≈ 235 h y el total X1–X3 en ≈ 320 h. En la máquina del autor (3–4 procesos con el turbo apagado) X1 son
+≈ 3 días de pared; en una máquina de 16 núcleos, menos de un día. La cota es holgada: las zonas medianas cuestan menos por pedido que Bogotá. Salvaguardas
 en el script: límite de 10 s por ronda para los MIP (`--ilp-time-limit`), timeout por corrida
 (`--timeout-min 60`), reintento ×2, reanudación por `run_id`, fallos a `<out>.failed.jsonl`.
 

@@ -274,3 +274,25 @@ por ronda en Bogotá (no bloquea). X0 (42 corridas) en curso.
 | E6 Escritura | 35 páginas + suplemento | pendiente |
 
 Pendiente del autor: visto bueno a E5' y D1–D7; verificar las instancias 16 y 17 (una tienda por pedido).
+
+### X0 completado (2026-10-20, 23:30; slide 15)
+
+42 corridas (6 ciudades × 7 métodos, día completo, manual, semilla 1, circuidad 1,0), 2 h 50 min con 3
+procesos, 0 fallos. Media de las seis zonas:
+
+| Método | Cobertura | Gini fin de día | min por corrida (máx, Bogotá) |
+|---|---|---|---|
+| greedy | 0,752 | 0,418 | 11,6 (34,8) |
+| ilp | 0,741 | 0,389 | 2,1 (6,1) |
+| hier | 0,754 | 0,466 | 3,8 (11,1) |
+| brkga | 0,754 | 0,431 | 2,8 (7,5) |
+| brkga_fair_w10 | 0,755 | 0,444 | 2,8 (7,6) |
+| mipfair_a030 | 0,753 | 0,406 | 4,9 (15,4) |
+| paybrkga_l02 | 0,751 | 0,414 | 3,2 (8,3); pago 8–18 % menor |
+
+Gini corporativo por ciudad: Barranquilla 0,468, Bogotá 0,372, Bucaramanga 0,361, Cali 0,528, Medellín
+0,394, Pereira 0,387 (media 0,419): la malla de α se mantiene. Lecturas: cobertura plana entre métodos; el
+jerárquico empeora el Gini de fin de día; F_Deficit ≈ 0,98–1,00. El greedy es el método más lento (35 min
+en Bogotá) por recorrer todos los repartidores por pedido: se arregla con rejilla espacial antes de X1; el
+radio de 3 km se mantiene (MIP-Fair 15 min < 20). Estimación de X1 con estos tiempos: 308 h de CPU (≈ 235 h
+con el greedy arreglado).
