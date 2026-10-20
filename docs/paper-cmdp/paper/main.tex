@@ -20,7 +20,6 @@
 \usepackage{csquotes}
 \usepackage{graphicx}
 \usepackage{subfig}
-\usepackage{xcolor}
 \usepackage{comment}
 \usepackage{lscape}
 \usepackage[noend]{algorithmic}
@@ -67,8 +66,9 @@
  \def\newblock{\ }%
  \def\BIBand{and}%
 
-\usepackage[]{multibib}
-\newcites{Appx}{Appendix references}
+%% Enable when the appendix switches to \citeAppx (otherwise BibTeX reports an empty Appx.aux):
+%% \usepackage[]{multibib}
+%% \newcites{Appx}{Appendix references}
 %% The director keeps a separate reference list for the appendix (\citeAppx, ReferencesAppx.bib) so that
 %% it does not count against the 35-page limit. The appendix of this draft still uses \cite; switch to
 %% \citeAppx and add ReferencesAppx.bib once the detailed review is final.
@@ -97,9 +97,10 @@
 
 \title{Fair dispatching with price-responsive couriers: an end-of-day earnings guarantee for the meal delivery routing problem}
 
-\author[1]{Daniel Giraldo-Herrera\corref{cor1}} \ead{\todo{email}} \cortext[cor1]{Corresponding Author}
-
-\author[1]{\todo{Co-author(s) and thesis director}}
+\author[1]{Daniel Giraldo-Herrera\corref{cor1}} \ead{d.giraldoh@uniandes.edu.co} \cortext[cor1]{Corresponding Author}
+%% TODO: confirm the e-mail and add the co-author(s) / thesis director (\todo cannot be used inside
+%% \author or \ead: elsarticle writes them to the .aux file and the colour macro breaks there).
+\author[1]{Co-author(s) and thesis director}
 
 \affiliation[1]{organization={Universidad de Los Andes}, addressline={Cra. 1 No 18a-12}, postcode={111711}, city={Bogot\'a}, country={Colombia}}
 
@@ -244,7 +245,7 @@ h_c(t) = \bigl(\earn_c(t),\; \ord_c(t),\; \act_c(t)\bigr), \qquad c \in C,
 \end{equation}
 the earnings, orders delivered and active (connected) time accumulated by courier $c$ up to $t$. In summary, $S_t = (\mathcal{L}_t, \mathcal{O}_t, \mathcal{P}_t, \Hist_t)$. In the initial state $S_0$ no order has been placed and $h_c(0) = (0, 0, 0)$ for all couriers. The equity history is the component that enables dynamic fairness control: a policy that reads $\Hist_t$ can prevent inequities from compounding across windows. It is absent from existing MDRP formulations, where the state contains the positions and plans of couriers but not what they have earned \citep{ulmer2020modeling}.
 
-Courier $c$ has on-time $e_c$, off-time $l_c > e_c$, initial location $\ell_c$ and vehicle type $v_c \in \{\text{walking, bicycle, motorcycle, car}\}$. Travel times are deterministic, $\tau(\ell, \ell') = \kappa\, \|\ell - \ell'\| / \nu(v_c)$, with a circuity factor $\kappa$ and a vehicle-dependent speed $\nu(v_c)$; service times $s_r$ at the store and $s_u$ at the user are included in the duration of a route. A route $s$ collects at most $Q$ orders from a single store and is served by a single courier; $\dist(s)$ is its length, $\tau_s$ its duration and $|s|$ the number of orders it contains.
+Courier $c$ has on-time $e_c$, off-time $l_c > e_c$, initial location $\ell_c$ and vehicle type $v_c \in V$, $V = \{$walking, bicycle, motorcycle, car$\}$. Travel times are deterministic, $\tau(\ell, \ell') = \kappa\, \|\ell - \ell'\| / \nu(v_c)$, with a circuity factor $\kappa$ and a vehicle-dependent speed $\nu(v_c)$; service times $s_r$ at the store and $s_u$ at the user are included in the duration of a route. A route $s$ collects at most $Q$ orders from a single store and is served by a single courier; $\dist(s)$ is its length, $\tau_s$ its duration and $|s|$ the number of orders it contains.
 
 \paragraph{Decisions}
 
@@ -790,7 +791,7 @@ In this Appendix, we present a more detailed literature review, an illustrative 
 \section{Detailed literature review}
 \label{sec:App_literature_review}
 
-This section reviews the literature related to the three components of the problem: the operational MDRP, fairness and compensation in delivery platforms, and courier behaviour. Table~\ref{tab:Litclass} in the main body provides a systematic summary of their similarities and differences relative to our work. \todo{Move the fuller review of the thesis here (operational, economic and behavioural blocks), one subsection each, closing with the gap; switch citations to \citeAppx and add ReferencesAppx.bib so that the appendix references do not count against the page limit, as in the director's manuscripts.}
+This section reviews the literature related to the three components of the problem: the operational MDRP, fairness and compensation in delivery platforms, and courier behaviour. Table~\ref{tab:Litclass} in the main body provides a systematic summary of their similarities and differences relative to our work. \todo{Move the fuller review of the thesis here (operational, economic and behavioural blocks), one subsection each, closing with the gap; switch citations to \texttt{citeAppx} (multibib, commented out in the preamble) and add ReferencesAppx.bib so that the appendix references do not count against the page limit, as in the director's manuscripts.}
 
 \subsection{Operational block}
 \label{sec:App_lit_operational}
