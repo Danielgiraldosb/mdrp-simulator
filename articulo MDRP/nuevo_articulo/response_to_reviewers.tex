@@ -1,0 +1,324 @@
+%% ============================================================
+%%  Response to Reviewers
+%%  Article: "A Biased Random-Key Genetic Algorithm with
+%%            Rolling Horizon for the Meal Delivery Routing Problem"
+%%  MIC 2026 Submission
+%% ============================================================
+\documentclass[12pt]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\definecolor{revcolor}{RGB}{0,70,140}
+\newcommand{\rev}[1]{\textcolor{revcolor}{\textit{Reviewer: #1}}}
+\newcommand{\resp}{\noindent\textbf{Response:}\ }
+\newcommand{\change}{\noindent\textbf{Change in manuscript:}\ }
+
+\begin{document}
+
+\noindent
+\textbf{Response to Reviewers}\\
+\textit{A Biased Random-Key Genetic Algorithm with Rolling Horizon
+for the Meal Delivery Routing Problem}\\[6pt]
+
+We thank the reviewers for their careful reading and constructive
+comments. Below we address each point in turn.
+Manuscript changes are described immediately after each response
+and are highlighted in the revised version.
+
+\bigskip
+\hrule
+\bigskip
+
+% -------------------------------------------------------------------
+\noindent\textbf{Comment 1.}
+\rev{A relevant modeling doubt concerns the treatment of order
+coverage exclusively as an objective function rather than as a
+constraint. In practical meal delivery systems, service-level
+requirements often impose that all (or a very high percentage of)
+orders must be fulfilled within the planning horizon. Please discuss
+this choice in the manuscript.}
+
+\resp
+We agree that service-level agreements (SLAs) are common in practice
+and that a coverage \emph{constraint} (e.g., $\rho \geq 0.95$) would
+be a natural formulation. However, imposing such a constraint
+directly on the rolling-horizon problem creates two fundamental
+difficulties in a real-time setting.
+First, whether a target coverage can be achieved depends on future
+orders and courier availability that are unknown at dispatch time;
+a constraint that is feasible at the end of the day may be locally
+infeasible at every intermediate window, making the sub-problem
+unsolvable and preventing any assignment from being dispatched.
+Second, the real instances used in this study contain large,
+high-volume days (up to 59,167 orders) in which even the best
+deterministic and evolutionary methods achieve $\rho \approx
+34$--$46\%$ — values that reflect structural limitations of the
+available courier fleet rather than algorithmic shortcomings.
+Imposing an SLA constraint above this ceiling would again render
+the problem infeasible.
+Treating coverage as an \emph{objective} avoids these pitfalls:
+it always yields a feasible dispatch, and the algorithms
+maximize it subject to the hard operational constraints
+(capacity, time windows, eligibility) of Section~3.2.
+This choice is consistent with the benchmark literature
+(Reyes et al.\ 2018; Ulmer et al.\ 2021), where coverage or
+delivery rate is reported as the primary outcome metric, not
+a constraint.
+
+\change
+A paragraph discussing this modeling choice has been added at the
+end of Section~3.3 (Performance Metric).
+
+\bigskip
+
+% -------------------------------------------------------------------
+\noindent\textbf{Comment 2.}
+\rev{Is the coverage rate considered as an objective function
+computed for each time window or for the entire instance?}
+
+\resp
+The coverage rate $\rho$ plays two distinct roles in the paper,
+and we recognise that the manuscript was not sufficiently clear
+about this distinction.
+
+\begin{itemize}
+  \item \textbf{Per-window fitness (BRKGA only).}
+  Inside the BRKGA decoder, $\rho$ is computed for the
+  assignments produced in the current window $w$
+  ($\rho^w = |\mathcal{A}^w| / |O^w|$) and is used as
+  the primary component of the fitness functions $f_{\text{cov}}$
+  and $f_{\text{trav}}$.
+  This per-window value guides the evolutionary search within
+  each 2-minute budget.
+
+  \item \textbf{End-of-day metric (all methods, Table~2).}
+  The $\rho$ values reported in Table~2 and discussed throughout
+  Section~5 are computed \emph{over the entire planning day}:
+  $\rho = |\bar{O}|/|O|$, where $\bar{O}$ is the set of
+  all orders successfully delivered by the end of the 1,440-minute
+  horizon. This is the primary performance metric for comparing
+  methods.
+\end{itemize}
+
+\change
+The end of Section~3.3 and the opening of Section~5 have been
+clarified to distinguish the per-window fitness use from the
+end-of-day reporting metric.
+
+\bigskip
+
+% -------------------------------------------------------------------
+\noindent\textbf{Comment 3.}
+\rev{Please explain better the structure of the chromosome.}
+
+\resp
+The chromosome is a real-valued vector of length
+$n_{O^w} + n_{C^w}$ partitioned into two segments:
+(i)~\emph{order keys} ($x_1, \ldots, x_{n_{O^w}}$): one
+real value in $[0,1]$ per pending order; the decoder sorts
+orders by these keys in descending order, so an order with
+a higher key is attempted for assignment before orders with
+lower keys.
+(ii)~\emph{courier keys} ($x_{n_{O^w}+1}, \ldots,
+x_{n_{O^w}+n_{C^w}}$): one real value per available courier;
+the decoder tries couriers for each batch in descending key
+order, so higher-key couriers are preferred.
+The combined ranking induced by the two segments fully
+determines the greedy assignment produced by the decoder
+(Algorithm~2), without requiring any repair operator to
+restore feasibility.
+
+\change
+Section~4.2.1 (Chromosome Encoding) has been expanded with a
+concrete example tracing the decoding of a small chromosome to
+illustrate how order and courier keys jointly determine the
+assignment outcome.
+
+\bigskip
+
+% -------------------------------------------------------------------
+\noindent\textbf{Comment 4.}
+\rev{One of my main doubts concerns the definition of the
+parameters (individual, probability, population size, delta,
+etc). How are they selected?}
+
+\resp
+The parameters fall into two categories:
+
+\textbf{Operational parameters} ($\Delta$, $K$, $D_{\max}$)
+are dictated by the platform's operating rules rather than
+algorithmic choices: $\Delta = 2$ min matches the platform's
+dispatch cycle; $K = 3$ is the vehicle capacity limit; and
+$D_{\max} = 10$ km is the platform's maximum courier-to-store
+eligibility radius.
+
+\textbf{BRKGA hyper-parameters} ($N_p$, $G_{\max}$, $N_e$,
+$N_m$, $p_e$) were set by a two-step process.
+First, canonical BRKGA defaults from
+Gon\c{c}alves and Resende~(2011) were used as a starting
+point: $p_e = 0.7$, $N_e / N_p \approx 0.15$--$0.20$,
+$N_m / N_p \approx 0.10$--$0.15$.
+Second, the values were tightened jointly so that the
+worst-case per-window runtime on our largest instances
+(up to 59,167 orders and 16,782 couriers) remains strictly
+below $\Delta = 120$ seconds on the test hardware
+(Intel Core i7, 16 GB RAM).
+The binding constraint is the decoder cost, which is
+$O(N_p \cdot G_{\max} \cdot |O^w| \cdot K)$ per window;
+reducing $N_p$ or $G_{\max}$ below 10 produced noticeably
+worse coverage on medium instances in pilot runs, while
+increasing them caused occasional budget overruns on large
+instances.
+The final values ($N_p = 10$, $G_{\max} = 10$,
+$N_e = 2$, $N_m = 2$, $p_e = 0.7$) represent the
+Pareto-optimal trade-off between solution quality and
+runtime safety observed in those pilot runs.
+
+\change
+A new paragraph ``Hyper-parameter calibration'' has been added
+in Section~4.2, before the chromosome encoding, explaining the
+rationale above.
+
+\bigskip
+
+% -------------------------------------------------------------------
+\noindent\textbf{Comment 5.}
+\rev{Why does the time remaining after the end of the genetic loop
+remain unused? Why don't you also use a maximum number of
+generations as a stop criterion?}
+
+\resp
+Two points of clarification:
+
+First, $G_{\max} = 10$ \emph{is} the primary stopping criterion:
+the genetic loop runs for exactly 10 generations and then stops,
+regardless of how much wall-clock time has elapsed.
+The 2-minute wall-clock budget ($\Delta$) is a \emph{safety
+ceiling}, not the loop termination condition;
+Algorithm~3 in the manuscript notes that the best solution
+available at deadline $\Delta$ would be dispatched if the
+loop were to overrun — but our parameterisation ensures
+this never happens in practice.
+
+Second, we deliberately do not reuse the remaining wall-clock
+time for additional generations once $G_{\max}$ is reached.
+The primary reason is \emph{predictability}: variable-length
+runs would produce non-deterministic solution quality and
+make the system harder to validate and maintain in production.
+A fixed $G_{\max}$ also makes the per-window runtime
+analytically bounded (independent of random convergence),
+which is important for a real-time guarantee.
+That said, adaptive stopping (e.g., early termination on
+fitness stagnation, or additional generations when time
+permits) is a natural direction for future work.
+
+\change
+Algorithm~3 and its surrounding text have been revised to
+clearly state that $G_{\max}$ is the stopping criterion and
+that the wall-clock budget serves only as a hard safety
+ceiling. A sentence on why remaining time is not reused
+has been added.
+
+\bigskip
+
+% -------------------------------------------------------------------
+\noindent\textbf{Comment 6.}
+\rev{In Table 2, the execution times in several cases are far
+superior to the window size of 2 seconds. Please clarify this point.}
+
+\resp
+The execution times $T_{\text{BC}}$, $T_{\text{BT}}$, and
+$T_{\text{BML}}$ reported in Table~2 are \emph{total daily
+execution times} (in seconds), accumulated over all rolling-horizon
+windows of a full 24-hour operating day — not per-window times.
+A planning day of 1,440 minutes with $\Delta = 2$ minutes
+contains up to 720 windows; summing the per-window runtimes
+(each $\leq 120$ s) naturally yields totals in the range of
+hundreds to thousands of seconds for large instances.
+For example, Instance~0 (56,420 orders) has $T_{\text{BC}} =
+3{,}143$ s, which corresponds to an average of $3{,}143 / 720
+\approx 4.4$ seconds per window — well within the 120-second
+per-window budget.
+The 2-minute wall-clock constraint is therefore respected on
+every window; Table~2 simply aggregates these times over
+the day for efficiency comparison.
+
+\change
+The caption of Table~2 and the paragraph introducing it in
+Section~5.1 have been updated to explicitly state that
+$T$ values are \emph{total daily} execution times and to
+note the per-window average for clarity.
+
+\bigskip
+
+% -------------------------------------------------------------------
+\noindent\textbf{Comment 7.}
+\rev{In the abstract, you state that our approach outperforms the
+Business Model Lookahead and the Business Model by eight and fifteen
+points; while at the end of the introduction, you state that the
+percentage is ``eleven to thirteen''. Please check these sentences.}
+
+\resp
+Thank you for catching this inconsistency.
+The figures are not contradictory — they refer to different
+reference methods and instance scopes — but the introduction
+text contained an error in the method name:
+
+\begin{itemize}
+  \item \textbf{Abstract}: ``eight and fifteen points'' refers to
+  the \emph{overall} average advantage of the BRKGA variants over
+  the Business Model Lookahead ($59.2\% - 51.4\% = 7.8 \approx 8$
+  pp) and the plain Business Model ($59.2\% - 44.1\% = 15.1 \approx
+  15$ pp), computed across all 24 instances.
+
+  \item \textbf{Introduction}: ``eleven to thirteen percentage
+  points'' correctly refers to the advantage over the
+  \emph{Business Model Lookahead} on Small and Medium instances
+  only (Small: $64.8\% - 53.6\% = 11.2$ pp;
+  Medium: $59.1\% - 46.0\% = 13.1$ pp).
+  The original text mistakenly wrote ``Business Model'' instead
+  of ``Business Model Lookahead''.
+\end{itemize}
+
+\change
+The last bullet of the contributions list in Section~1 has been
+corrected to read ``Business Model Lookahead'' instead of
+``Business Model'' for the eleven-to-thirteen percentage points
+figure.
+
+\bigskip
+
+% -------------------------------------------------------------------
+\noindent\textbf{Comment 8.}
+\rev{Please clarify the definition of ghost kitchens used in the
+literature review.}
+
+\resp
+Ghost kitchens (also called dark kitchens or virtual restaurants)
+are food-preparation facilities that operate exclusively for
+delivery orders, with no dine-in service and no fixed storefront
+visible to the public.
+Because their physical location can be chosen freely and updated
+dynamically, they introduce an additional layer of spatial
+flexibility to the MDRP: the platform must decide not only which
+courier serves an order, but also from which kitchen that order
+should be prepared and picked up.
+The reference cited (Neria et al., \textit{Transportation Science}
+2025) formalises this extension and shows that jointly optimising
+kitchen and courier assignments improves coverage substantially.
+
+\change
+A brief parenthetical definition of ghost kitchens has been added
+in Section~2.1 immediately after the citation of Neria et al.
+
+\bigskip
+\hrule
+\bigskip
+
+\noindent
+We hope that the above responses and the corresponding manuscript
+revisions satisfactorily address the reviewers' concerns.
+We remain available for further clarification.
+
+\end{document}

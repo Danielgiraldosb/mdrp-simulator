@@ -1,0 +1,183 @@
+   %% ============================================================
+%%  Section 3 — Problem Definition
+%%  Article: BRKGA with Rolling Horizon for the MDRP
+%%  Citation style: LNCS (numeric \cite{})
+%% ============================================================
+
+\section{Problem Definition}\label{sec:problem}
+
+We study a single-platform, multi-courier meal delivery operation
+in a dense urban environment.
+Each day the platform receives a stream of customer orders that
+must be collected from restaurants and delivered to customers,
+while respecting courier working schedules, vehicle capacities,
+and time-window commitments.
+Following the formulation of Reyes et al.~\cite{reyes2018mdrp},
+we model this as an online combinatorial optimisation problem
+in which decisions are made sequentially as new information
+becomes available.
+
+%% ------------------------------------------------------------------
+\subsection{Sets and Parameters}\label{subsec:notation}
+%% ------------------------------------------------------------------
+
+Table~\ref{tab:notation} summarises the sets and parameters used
+throughout the paper.
+
+\begin{table}[ht]
+\centering
+\caption{Sets and parameters of the MDRP.}
+\label{tab:notation}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lp{9.5cm}}
+\toprule
+\textbf{Symbol} & \textbf{Definition} \\
+\midrule
+\multicolumn{2}{l}{\textit{Sets}} \\
+$U$   & Set of customers; each $u \in U$ has delivery location $\ell_u$ \\
+$R$   & Set of restaurants; each $r \in R$ has location $\ell_r$ \\
+$O$   & Set of orders; each $o \in O$ is associated with restaurant $r_o \in R$,
+        customer $u_o \in U$, preparation time $e_o$, ready time $s^r_o$,
+        and deadline $s^u_o$ \\
+$C$   & Set of couriers; each $c \in C$ has location $\ell_c$,
+        log-in time $\alpha_c$, and log-out time $\delta_c$ \\
+$S$   & Set of feasible routes; each $s \in S$ has one pickup node
+        $r_s \in R$ and an ordered sequence of delivery nodes
+        $U_s \subseteq U$ \\
+$T$   & Set of vehicle types
+        (motorcycle, bicycle, car, pedestrian) \\
+\midrule
+\multicolumn{2}{l}{\textit{Parameters}} \\
+$v_c$             & Speed of courier $c$ (km/min), determined by vehicle type \\
+$d_{ij}$          & Haversine distance between locations $i$ and $j$ (km) \\
+$t_{ij}$          & Travel time between $i$ and $j$: $t_{ij} = d_{ij}/v_c$ \\
+$p_o$             & Compensation paid to the courier for delivering order $o$ \\
+$K$               & Maximum number of orders per route \\
+$D_{\max}$        & Maximum distance from a courier to a pickup location for
+                    eligibility (km) \\
+$\Delta$          & Rolling-horizon window length (min) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%% ------------------------------------------------------------------
+\subsection{Decision Structure and Rolling Horizon}\label{subsec:decisions}
+%% ------------------------------------------------------------------
+
+The planning day is divided into consecutive, non-overlapping
+windows of length $\Delta$ minutes.
+At the beginning of each window $w$, the platform observes:
+
+\begin{itemize}
+    \item the set of \emph{pending orders} $O^w \subseteq O$—orders
+    that are ready or will be ready within the current window and
+    have not yet been assigned;
+    \item the set of \emph{available couriers} $C^w \subseteq C$—
+    couriers that are idle or completing their current route before
+    the window ends.
+\end{itemize}
+
+\noindent
+The platform then selects a set of \emph{assignments}
+$\mathcal{A}^w = \{(c, s) : c \in C^w,\; s \in S^w\}$,
+where $S^w$ is the set of routes constructed from $O^w$,
+subject to the constraints detailed in
+Section~\ref{subsec:constraints}.
+Each assignment is communicated to the corresponding courier
+at the start of window $w$; no reassignment is possible once
+a courier departs for the pickup location.
+The plan is then \emph{rolled forward}: unassigned orders
+and couriers whose routes finish before the next window
+re-enter the eligible pools at window $w+1$.
+
+This structure decouples the global planning problem into a
+sequence of short-horizon sub-problems, each of which is
+solved by one of the four methods compared in this paper
+(Section~\ref{sec:methodology}).
+
+%% ------------------------------------------------------------------
+\subsection{Operational Constraints}\label{subsec:constraints}
+%% ------------------------------------------------------------------
+
+The following constraints apply uniformly to all three methods:
+
+\begin{enumerate}
+    \item \textbf{Route capacity.}
+    Each route $s$ contains at most $K$ orders, all originating
+    from the same restaurant: $|U_s| \leq K$.
+
+    \item \textbf{Courier eligibility.}
+    A courier $c$ is eligible for route $s$ only if
+    $d_{\ell_c, \ell_{r_s}} \leq D_{\max}$ and the courier's
+    log-out time satisfies $\delta_c \geq s^r_{o}$
+    for all $o \in U_s$.
+
+    \item \textbf{Time-window feasibility.}
+    For a route assigned to courier $c$, the courier must arrive
+    at each customer node $u_i \in U_s$ no later than the
+    deadline $s^u_{o_i}$.
+    Arrival times are propagated sequentially:
+    \begin{equation}
+        a_{u_1} = \alpha_{r_s} + t_{\ell_{r_s}, \ell_{u_1}},
+        \qquad
+        a_{u_{i+1}} = a_{u_i} + s_{u_i} + t_{\ell_{u_i}, \ell_{u_{i+1}}},
+    \end{equation}
+    where $\alpha_{r_s}$ is the courier's arrival time at the
+    pickup restaurant and $s_{u_i}$ is the service time at node $u_i$.
+
+    \item \textbf{Single assignment.}
+    Each order is assigned to at most one courier,
+    and each courier executes at most one route per window:
+    \begin{equation}
+        \sum_{s \in S^w} \mathbf{1}[(c,s) \in \mathcal{A}^w] \leq 1
+        \quad \forall c \in C^w.
+    \end{equation}
+
+    \item \textbf{Notification rules.}
+    A courier can only be notified of a new assignment when
+    idle or en route to a pickup location.
+    Couriers in transit to a customer node are not interrupted.
+
+    \item \textbf{Cancellations.}
+    Once an order is cancelled by the platform or the customer,
+    it is permanently removed from $O$ and cannot be reassigned.
+\end{enumerate}
+
+%% ------------------------------------------------------------------
+\subsection{Performance Metric}\label{subsec:objectives}
+%% ------------------------------------------------------------------
+
+The primary performance metric throughout this paper is the
+\emph{coverage rate}: let $\bar{O} \subseteq O$ denote the set
+of orders successfully delivered by the end of the planning day;
+then
+
+\begin{equation}\label{eq:coverage}
+    \rho = \frac{|\bar{O}|}{|O|}.
+\end{equation}
+
+\noindent
+A higher $\rho$ reflects greater platform reliability and
+customer satisfaction.
+The four methods evaluated in Section~\ref{sec:results} all
+target the maximisation of $\rho$, subject to the operational
+constraints of Section~\ref{subsec:constraints}.
+
+\paragraph{Remark on coverage as an objective rather than a constraint.}
+One might alternatively impose a service-level constraint of the
+form $\rho \geq \rho^{\min}$ (e.g., $\rho^{\min} = 0.95$).
+We treat coverage as an \emph{objective} for two reasons.
+First, in a rolling-horizon setting the platform cannot know at
+dispatch time whether a target end-of-day coverage is achievable:
+a constraint that is satisfiable over the full horizon may be
+locally infeasible at every intermediate window, preventing any
+assignment from being dispatched.
+Second, the real instances used here contain high-volume days on
+which even the best methods reach $\rho \approx 34$--$47\%$,
+reflecting structural fleet-capacity limitations rather than
+algorithmic shortcomings; imposing an SLA above this ceiling
+would render the sub-problem infeasible.
+Treating coverage as an objective is consistent with the
+established MDRP literature~\cite{reyes2018mdrp,ulmer2021restaurant}
+and always yields a feasible dispatch.

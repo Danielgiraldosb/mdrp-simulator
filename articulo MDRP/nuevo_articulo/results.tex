@@ -1,0 +1,289 @@
+%% ============================================================
+%%  Section 5 — Computational Experiments and Results
+%%  Article: BRKGA with Rolling Horizon for the MDRP
+%%  Citation style: LNCS (numeric \cite{})
+%% ============================================================
+
+\section{Computational Experiments and Results}\label{sec:results}
+
+%% ------------------------------------------------------------------
+\subsection{Experimental Setup}\label{subsec:setup}
+%% ------------------------------------------------------------------
+
+\paragraph{Instances.}
+We evaluate the four methods on 24 real-world instances
+drawn from a Latin American food-delivery platform.
+Each instance corresponds to a full operating day and
+contains orders, couriers, and restaurant locations
+from one or more urban zones.
+Following the classification used in related work, instances are
+grouped by total order volume into three tiers:
+\emph{Small} ($|O| < 5{,}000$, 13 instances),
+\emph{Medium} ($5{,}000 \leq |O| \leq 20{,}000$, 5 instances), and
+\emph{Large} ($|O| > 20{,}000$, 6 instances).
+Instance sizes range from 538 to 59{,}167 orders and from
+396 to 16{,}782 active couriers.
+
+\paragraph{Methods compared.}
+We compare four algorithms under identical rolling-horizon
+conditions ($\Delta = 2$ min, horizon 0--1\,440 min):
+\begin{enumerate}
+    \item \textbf{BRKGA-Coverage} — BRKGA-RH with coverage-maximising
+          fitness $f_{\text{cov}}$ (Section~\ref{subsec:brkga_cov}).
+    \item \textbf{BRKGA-Travel} — BRKGA-RH with travel-minimising
+          fitness $f_{\text{trav}}$ (Section~\ref{subsec:brkga_trav}).
+    \item \textbf{Business Model} — deterministic rolling-horizon
+          greedy without lookahead (Section~\ref{subsubsec:maxcover_base}).
+    \item \textbf{Business Model Lookahead} — Business Model extended
+          with demand-forecast deferral (Section~\ref{subsubsec:maxcover_la}).
+\end{enumerate}
+
+\paragraph{Evaluation metrics.}
+We report two primary metrics for solution quality:
+(i) the \emph{coverage rate} $\rho = |\bar{O}|/|O|$ (higher is better),
+where $\bar{O}$ is the set of orders successfully delivered by the
+\emph{end of the full planning day} (not per window), and
+(ii) the \emph{average travel time per delivered order} $\bar{\tau}$
+in minutes (lower is better).
+Note that inside the BRKGA decoder a \emph{per-window} coverage
+$\rho^w = |\mathcal{A}^w|/|O^w|$ is used as part of the fitness
+functions $f_{\text{cov}}$ and $f_{\text{trav}}$ to guide search
+within each 2-minute window; the end-of-day $\rho$ accumulates these
+decisions over the full 1,440-minute horizon.
+We also report \emph{total daily execution time} (sum over all
+windows) in seconds as the primary efficiency metric;
+see Table~\ref{tab:results_all} caption for per-window context.
+All experiments were run on commodity hardware
+(Intel Core i7, 16 GB RAM, Windows 11).
+
+%% ------------------------------------------------------------------
+\subsection{Results by Instance}\label{subsec:results_table}
+%% ------------------------------------------------------------------
+
+Table~\ref{tab:results_all} reports, for each instance, the coverage
+rate $\rho$ (\%) and average travel time $\bar{\tau}$ (min/order)
+for BRKGA-Coverage and BRKGA-Travel, the coverage rate for both
+Business Model variants, and the total execution time (s) for all
+methods except the plain Business Model (which completes in under
+60 s on every instance).
+Size codes: Small (S), Medium (M), Large (L).
+Bold marks the best $\rho$ per instance.
+
+\begin{table}[ht]
+\centering
+\caption{Per-instance results for all four methods.
+$\rho$ = coverage rate (\%) computed over the full planning day,
+$\bar{\tau}$ = avg travel time (min/order),
+$T$ = \textbf{total daily} execution time (s), i.e., summed over all
+rolling-horizon windows of the 24-hour day.
+The per-window budget is $\Delta = 120$\,s; daily totals can exceed
+this because up to 720 windows are solved per instance.
+Best $\rho$ per row in bold.}
+\label{tab:results_all}
+\scriptsize
+\setlength{\tabcolsep}{2.8pt}
+\begin{tabular}{rrlr|cc|cc|c|c|rrr}
+\toprule
+ & & & &
+\multicolumn{2}{c|}{\textbf{BRKGA-Cov}} &
+\multicolumn{2}{c|}{\textbf{BRKGA-Trav}} &
+\textbf{BM} &
+\textbf{BML} &
+\multicolumn{3}{c}{\textbf{Exec.\ time (s)}} \\
+\textbf{Inst} & \textbf{Sz} & $|O|$ & $|C|$ &
+$\rho$ & $\bar{\tau}$ & $\rho$ & $\bar{\tau}$ &
+$\rho$ & $\rho$ &
+$T_{\text{BC}}$ & $T_{\text{BT}}$ & $T_{\text{BML}}$ \\
+\midrule
+0  & L & 56{,}420 & 16{,}710 & 37.1 & 34.5 & 37.4 & 34.5 & 41.0 & \textbf{46.3} & 1{,}143 &    571 & 2{,}916 \\
+1  & S &  2{,}959 &  1{,}185 & \textbf{57.7} & 22.8 & \textbf{57.7} & 22.8 & 33.7 & 40.4 &      20 &     19 &    38 \\
+2  & L & 24{,}720 &  6{,}570 & \textbf{59.0} & 29.4 & 59.0 & 29.4 & 38.5 & 44.2 &     458 &    356 &   458 \\
+3  & S &  2{,}959 &  1{,}185 & \textbf{57.3} & 22.6 & 57.1 & 22.5 & 33.7 & 40.4 &      23 &     23 &    37 \\
+4  & S &    844   &    415   & \textbf{54.1} & 24.7 & \textbf{54.1} & 24.8 & 37.7 & 44.1 &       6 &      6 &    11 \\
+5  & M &  9{,}115 &  2{,}803 & 48.8 & 22.2 & \textbf{48.9} & 22.2 & 26.0 & 33.0 &      80 &     80 &    98 \\
+6  & L & 59{,}167 & 16{,}782 & 34.4 & 34.4 & 34.0 & 34.5 & 42.8 & \textbf{48.7} &     490 &    477 & 6{,}738 \\
+7  & M &  7{,}357 &  2{,}643 & \textbf{58.2} & 31.1 & 57.9 & 31.1 & 36.1 & 44.9 &     116 &     12 &   103 \\
+8  & L & 23{,}155 &  6{,}851 & \textbf{56.3} & 31.3 & 56.2 & 31.3 & 38.2 & 46.0 &      79 &     82 &   436 \\
+9  & S &  2{,}407 &  1{,}156 & \textbf{60.7} & 24.2 & \textbf{60.7} & 24.0 & 39.1 & 46.4 &       2 &      3 &    29 \\
+10 & S &    735   &    455   & \textbf{62.0} & 23.7 & \textbf{62.0} & 23.8 & 46.3 & 53.6 &       5 &      5 &     8 \\
+11 & M &  8{,}451 &  3{,}023 & 50.4 & 27.4 & \textbf{50.6} & 27.8 & 28.1 & 34.6 &     110 &     16 &   109 \\
+12 & L & 31{,}199 & 13{,}152 & 51.6 & 34.3 & 51.4 & 34.0 & 51.9 & \textbf{59.2} &     199 &    304 & 1{,}201 \\
+13 & S &  4{,}516 &  1{,}876 & 70.1 & 30.5 & \textbf{70.1} & 30.8 & 51.2 & 62.0 &      56 &      6 &    79 \\
+14 & M & 13{,}051 &  4{,}824 & 68.2 & 32.1 & \textbf{68.4} & 32.3 & 50.0 & 57.9 &      32 &     36 &   360 \\
+15 & S &  1{,}462 &    941   & \textbf{66.4} & 23.2 & \textbf{66.4} & 23.1 & 48.2 & 57.1 &      17 &      2 &    32 \\
+16 & S &    538   &    430   & \textbf{70.8} & 23.6 & \textbf{70.8} & 23.7 & 63.0 & 66.7 &       4 &      4 &     8 \\
+17 & S &  4{,}390 &  2{,}368 & \textbf{66.4} & 27.1 & 66.4 & 27.0 & 44.3 & 51.4 &       6 &      6 &    73 \\
+18 & L & 30{,}448 & 12{,}218 & 45.1 & 33.8 & 46.2 & 34.0 & 56.0 & \textbf{62.4} &     295 &    459 &   966 \\
+19 & S &  4{,}389 &  1{,}908 & \textbf{72.0} & 30.6 & 72.0 & 30.8 & 53.5 & 63.5 &      57 &      6 &    69 \\
+20 & M & 13{,}076 &  4{,}905 & 69.7 & 31.1 & \textbf{69.8} & 31.2 & 51.5 & 59.5 &      31 &     34 &   266 \\
+21 & S &  1{,}376 &    959   & \textbf{64.8} & 23.0 & \textbf{64.8} & 22.8 & 43.9 & 52.8 &      15 &      1 &    22 \\
+22 & S &    539   &    396   & \textbf{74.0} & 23.6 & \textbf{74.0} & 23.7 & 61.0 & 68.7 &       3 &      3 &     6 \\
+23 & S &  4{,}387 &  2{,}111 & 65.7 & 27.5 & \textbf{65.9} & 27.5 & 42.5 & 50.3 &      53 &      4 &    69 \\
+\midrule
+\multicolumn{4}{r|}{\textbf{Average}} &
+59.2 & 27.9 & \textbf{59.2} & 27.9 & 44.1 & 51.4 & 138 & 105 & 589 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%% ------------------------------------------------------------------
+\subsection{Coverage Rate Analysis}\label{subsec:coverage_analysis}
+%% ------------------------------------------------------------------
+
+\paragraph{Overall rankings.}
+Averaged over all 24 instances, BRKGA-Coverage and BRKGA-Travel
+achieve virtually identical coverage rates of \textbf{59.2\%},
+followed by Business Model Lookahead at \textbf{51.4\%} and
+Business Model at \textbf{44.1\%}.
+The two BRKGA variants thus outperform the Business Model Lookahead
+by 7.8 percentage points on average, and the Business Model by
+15.1 percentage points.
+
+\paragraph{Effect of instance size.}
+The relative performance of the methods varies substantially with
+instance size, as summarised in Table~\ref{tab:results_by_size}.
+
+\begin{table}[ht]
+\centering
+\caption{Average coverage rate $\rho$ (\%) by instance size tier.}
+\label{tab:results_by_size}
+\small
+\begin{tabular}{lrrrrrr}
+\toprule
+\textbf{Size} & \textbf{Count} & \textbf{Avg $|O|$} &
+\textbf{BRKGA-Cov} & \textbf{BRKGA-Trav} &
+\textbf{BML} & \textbf{BM} \\
+\midrule
+Small  & 13 & 2{,}423 & 64.8\% & 64.8\% & 53.6\% & 46.0\% \\
+Medium &  5 & 10{,}210 & 59.1\% & 59.1\% & 46.0\% & 38.4\% \\
+Large  &  6 & 37{,}518 & 47.2\% & 47.3\% & 51.1\% & 44.8\% \\
+\midrule
+\textbf{All} & \textbf{24} & \textbf{11{,}688} & \textbf{59.2\%} & \textbf{59.2\%} & \textbf{51.4\%} & \textbf{44.1\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+On \emph{Small} and \emph{Medium} instances the BRKGA variants
+maintain a consistent advantage of 11--20 percentage points over
+the Business Model Lookahead, which in turn outperforms the
+Business Model by 7--8 percentage points.
+However, the picture reverses on \emph{Large} instances:
+the Business Model Lookahead achieves an average of \textbf{51.1\%},
+surpassing BRKGA-Coverage (47.2\%) by 3.9 percentage points
+and the Business Model (44.8\%) by 6.3 percentage points.
+This reversal occurs on all six large instances and is most
+pronounced on Instances 0 and 6
+(56{,}420 and 59{,}167 orders, respectively),
+where BRKGA-Coverage drops to 37.1\% and 34.4\% while
+Business Model Lookahead reaches 46.3\% and 48.7\%.
+
+The explanation lies in scalability:
+on large instances the BRKGA's $G_{\max} = 10$ generations and
+$N_p = 10$ population are insufficient to explore the solution
+space effectively within the 2-minute window budget,
+whereas the Business Model Lookahead's deterministic two-phase
+approach scales gracefully and benefits from the deferral
+mechanism to consolidate larger, higher-quality batches.
+
+\paragraph{Lookahead benefit.}
+Across all 24 instances the Business Model Lookahead improves
+upon the Business Model by an average of \textbf{7.3 percentage
+points} (range: 3.7--10.8 pp), confirming that demand-forecast
+deferral consistently yields better batch utilisation at the
+cost of slightly delayed dispatch.
+
+%% ------------------------------------------------------------------
+\subsection{Travel Time Analysis}\label{subsec:travel_analysis}
+%% ------------------------------------------------------------------
+
+The average travel time per delivered order is remarkably similar
+between BRKGA-Coverage and BRKGA-Travel: \textbf{27.86 vs
+27.90 min/order} overall, with differences below 0.5 min/order
+on every instance.
+This near-parity reveals an important structural property
+of the problem: the nearest-neighbour decoder produces routes
+whose travel efficiency is largely determined by geographic
+density and time-window constraints rather than by the
+fitness-function penalty weights.
+In other words, once a feasible batch is assembled, its
+travel time is almost entirely dictated by the delivery
+sequence heuristic, leaving little room for the fitness function
+to differentiate between the two BRKGA variants.
+
+Travel times are systematically shorter on Small instances
+($\bar{\tau} \approx 25.0$ min/order) than on Large ones
+($\bar{\tau} \approx 32.9$ min/order), reflecting the wider
+geographic spread of deliveries in high-volume urban zones.
+
+%% ------------------------------------------------------------------
+\subsection{Computational Efficiency}\label{subsec:time_analysis}
+%% ------------------------------------------------------------------
+
+Table~\ref{tab:results_all} shows substantial differences in
+total execution time across the methods.
+BRKGA-Coverage averages \textbf{138 s} per instance
+(range: 2--1{,}143 s) and BRKGA-Travel \textbf{105 s}
+(range: 1--571 s), while Business Model Lookahead requires
+on average \textbf{589 s} (range: 6--6{,}738 s).
+The plain Business Model completes in under 60 s on every instance.
+
+Contrary to what might be expected, the two BRKGA variants are
+faster in total execution time than the Business Model Lookahead.
+BRKGA-Travel is the fastest method overall, running
+\textbf{4.3$\times$ faster} than BML on average (105 s vs 589 s),
+and BRKGA-Coverage is \textbf{4.3$\times$ faster} as well (138 s vs 589 s).
+This occurs because each BRKGA window runs at most $G_{\max}=10$
+generations over a population of $N_p=10$, producing a compact
+per-window footprint, whereas the Business Model Lookahead's
+forecast computations and simulation-level bookkeeping accumulate
+over the full operating day.
+BRKGA-Travel is also on average \textbf{24\% faster} than
+BRKGA-Coverage (105 s vs 138 s), suggesting that the
+travel-minimising fitness induces a slightly simpler search
+landscape without sacrificing coverage quality.
+
+The BML overhead grows sharply with instance size:
+on Instance~6 (59{,}167 orders) it reaches 6{,}738 s (1.87 h),
+versus 490 s for BRKGA-Coverage and 477 s for BRKGA-Travel.
+On small instances the difference is also notable
+(e.g., Instance~9: BML 29 s vs BC 2 s).
+All methods respect the per-window $\Delta = 2$-min dispatch
+budget, so real-time delivery dispatch is guaranteed regardless
+of total run time.
+
+%% ------------------------------------------------------------------
+\subsection{Discussion}\label{subsec:discussion}
+%% ------------------------------------------------------------------
+
+The results reveal a clear trade-off between solution quality and
+computational cost that is strongly mediated by instance scale.
+
+For \emph{Small and Medium} instances ($|O| \leq 20{,}000$),
+the BRKGA variants are the preferred choice when execution time
+is not a binding constraint: they consistently outperform both
+Business Model variants by 11--20 percentage points on coverage
+while producing comparable travel times.
+The two BRKGA fitness functions yield nearly identical outcomes,
+suggesting that the coverage-maximising objective ($f_{\text{cov}}$)
+and the travel-minimising objective ($f_{\text{trav}}$) converge
+to similar solutions under the tight 10-generation window budget.
+
+For \emph{Large} instances ($|O| > 20{,}000$), the Business Model
+Lookahead is the superior method in terms of \emph{coverage quality}:
+it achieves higher coverage than both BRKGA variants on all six
+large instances, and consistently satisfies the 2-minute per-window
+budget.
+However, the BRKGA variants remain faster in total run time even
+on large instances (e.g., Instance~6: 490 s for BC vs 6{,}738 s for BML),
+so the choice between methods involves a trade-off between
+coverage quality and computational overhead.
+The demand-forecast component is the key differentiator over the
+plain Business Model, providing a 6--11 pp coverage improvement
+by enabling larger, more efficient batches.
+
+These findings suggest a \emph{hybrid deployment strategy}:
+use BRKGA-Coverage for small-to-medium instances where the
+evolutionary search has sufficient time to explore the solution
+space, and switch to Business Model Lookahead for large instances
+where the combinatorial complexity exceeds the BRKGA's effective
+search budget.

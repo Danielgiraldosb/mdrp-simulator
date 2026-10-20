@@ -1,0 +1,128 @@
+%% ============================================================
+%%  Section 1 — Introduction
+%%  Article: BRKGA with Rolling Horizon for the MDRP
+%%  Citation style: LNCS (numeric \cite{})
+%% ============================================================
+
+\section{Introduction}\label{sec:intro}
+
+The rapid growth of on-demand food delivery platforms has fundamentally
+reshaped urban logistics, transforming the way consumers access restaurant
+meals and creating a new class of operational challenges for platform
+operators~\cite{savelsbergh2022challenges}.
+Services such as Uber Eats\textsuperscript{\textregistered},
+DoorDash\textsuperscript{\textregistered},
+Rappi\textsuperscript{\textregistered},
+Just Eat\textsuperscript{\textregistered}, and
+Glovo\textsuperscript{\textregistered}
+act as digital intermediaries that simultaneously coordinate
+customers, restaurants, and crowdsourced couriers across dense
+urban environments~\cite{reyes2018mdrp}.
+The core operational challenge—assigning couriers to orders and
+computing delivery routes in real time—is formally known as the
+\emph{Meal Delivery Routing Problem} (MDRP)~\cite{reyes2018mdrp}.
+
+The MDRP belongs to the family of Dynamic Vehicle Routing Problems
+(DVRPs) and inherits its NP-hardness from the classical
+Vehicle Routing Problem (VRP)~\cite{wen2010dynamic}.
+What distinguishes the MDRP from standard VRP variants is the
+combination of: (i)~orders that arrive continuously and unpredictably
+throughout the day; (ii)~tight customer time windows driven by
+freshness expectations; (iii)~heterogeneous courier fleets
+with vehicle-dependent speeds; and (iv)~the need to make
+assignment and routing decisions within seconds to maintain
+operational viability~\cite{ulmer2021restaurant,reyes2018mdrp}.
+These characteristics make it impractical to solve the MDRP to
+optimality in real time, motivating the development of effective
+heuristic and metaheuristic approaches.
+
+Two broad families of solution methods have been explored in
+the literature.
+\emph{Greedy rolling-horizon heuristics} decompose the planning
+horizon into short time windows and apply fast constructive
+rules within each window, enabling near-real-time
+decision-making at the cost of solution quality~\cite{auad2023courier}.
+\emph{Population-based metaheuristics}, such as genetic algorithms
+and evolutionary strategies, search a richer solution space and
+typically yield higher-quality solutions, but require substantially
+more computation time, which can be a limiting factor in dynamic
+settings~\cite{liao2020multiobjective}.
+Bridging these two paradigms—high solution quality within a
+computationally tractable rolling-horizon framework—remains
+an open research challenge.
+
+This paper addresses that challenge by proposing a
+\emph{Biased Random-Key Genetic Algorithm with Rolling Horizon}
+(BRKGA-RH) for the MDRP.
+The BRKGA~\cite{goncalves2011brkga} encodes candidate solutions
+as vectors of random keys in $[0,1]$ and evolves a population
+through biased crossover, so that elite solutions are
+preferentially inherited by offspring, providing a principled
+balance between intensification and diversification.
+The rolling-horizon wrapper re-invokes the BRKGA at every
+planning window, allowing the algorithm to react to new orders
+and updated courier availability without global
+re-optimisation~\cite{reyes2018mdrp}.
+We instantiate the framework with two competing objective
+functions: (i)~\textbf{BRKGA-Coverage}, which prioritises
+maximising the number of orders fulfilled, and
+(ii)~\textbf{BRKGA-Travel}, which minimises average travel time
+per order while maintaining an acceptable coverage level.
+
+To contextualise the performance of both variants we compare them
+against \textbf{MaxCover}, a deterministic greedy rolling-horizon
+heuristic that generates all feasible courier--order candidate
+assignments within each time window and selects a non-conflicting
+subset that maximises coverage.
+MaxCover is designed to be a strong fast baseline: it produces
+solutions in a fraction of the time required by the BRKGA but
+applies no population-level search.
+The comparison between the two paradigms on the same set of
+instances allows us to quantify the quality--speed trade-off
+and to identify the instance characteristics under which
+metaheuristic search provides the greatest benefit.
+
+Experiments are conducted on 24 real-world instances derived from
+a Latin American food delivery application, spanning small
+($<$5{,}000 orders), medium (5{,}000--20{,}000 orders), and
+large ($>$20{,}000 orders) operational scenarios.
+The dataset includes geo-referenced locations of customers,
+restaurants, and couriers, as well as courier working-hour
+schedules and vehicle type profiles.
+
+The main contributions of this work are:
+
+\begin{enumerate}
+    \item A BRKGA metaheuristic integrated with a rolling-horizon
+    framework for the MDRP, with a chromosome encoding that
+    guarantees solution feasibility without repair operators.
+
+    \item Two fitness function variants that target, respectively,
+    order coverage and travel-time efficiency, enabling
+    practitioners to select the objective that best aligns with
+    their platform's priorities.
+
+    \item An extensive computational study on 24 heterogeneous
+    real-world instances comparing BRKGA-Coverage, BRKGA-Travel,
+    and MaxCover across solution quality, travel efficiency,
+    and computational cost metrics.
+
+    \item Empirical evidence that the BRKGA variants outperform
+    the Business Model Lookahead on small and medium instances
+    by an average of 11--13 percentage points in coverage rate,
+    while the Business Model Lookahead remains competitive on
+    large instances where the bounded generation budget limits
+    the metaheuristic's search.
+\end{enumerate}
+
+The remainder of the paper is organised as follows.
+Section~\ref{sec:litreview} surveys the relevant literature on
+the MDRP, rolling-horizon methods, and metaheuristics for
+dynamic routing.
+Section~\ref{sec:problem} formally defines the problem.
+Section~\ref{sec:methodology} describes the MaxCover heuristic
+and the proposed BRKGA-RH framework in detail.
+Section~\ref{sec:experiments} presents the experimental setup
+and the computational results.
+Finally, Section~\ref{sec:conclusions} summarises the findings
+and outlines directions for future research.

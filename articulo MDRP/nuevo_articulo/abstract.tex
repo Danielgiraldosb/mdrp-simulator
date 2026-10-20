@@ -1,0 +1,41 @@
+%% ============================================================
+%%  Abstract
+%%  Article: BRKGA with Rolling Horizon for the MDRP
+%%  Citation style: LNCS (numeric \cite{})
+%%  Word count: 248
+%% ============================================================
+
+\begin{abstract}
+The Meal Delivery Routing Problem (MDRP) requires assigning couriers
+to orders and computing delivery routes under stochastic demand,
+tight customer time windows, and heterogeneous courier fleets.
+We propose a Biased Random-Key Genetic Algorithm with Rolling Horizon
+(BRKGA-RH) for the MDRP and evaluate two fitness variants ---
+BRKGA-Coverage (maximising orders delivered) and BRKGA-Travel
+(minimising average travel time) --- against two greedy baselines:
+a Business Model heuristic and a Business Model Lookahead that
+defers low-volume stores via demand forecasting.
+All four methods share the same rolling-horizon architecture,
+re-solving at each 2-minute window.
+Experiments use 24 real-world instances from a Latin American
+food-delivery platform (538--59{,}167 orders).
+On small and medium instances, both BRKGA variants achieve an average
+coverage rate of 59.2\%, outperforming the Business Model Lookahead
+(51.4\%) and the Business Model (44.1\%) by 8 and 15 percentage
+points, respectively.
+On large instances the ranking reverses: the Business Model Lookahead
+reaches 51.1\% versus 47.2\% for BRKGA-Coverage, as the bounded
+generation budget limits metaheuristic search on high-volume days.
+Both BRKGA variants are computationally faster than the Business
+Model Lookahead (138\,s and 105\,s versus 589\,s on average).
+BRKGA-Travel delivers equivalent coverage while running 24\% faster
+than BRKGA-Coverage, making it the preferred choice for
+small-to-medium deployments; the Business Model Lookahead is
+recommended for large instances.
+A hybrid strategy switching between methods based on daily order
+volume captures the best of both approaches.
+
+\keywords{Meal Delivery Routing Problem \and Biased Random-Key
+Genetic Algorithm \and Rolling Horizon \and Dynamic Vehicle Routing
+\and Food Delivery Platforms}
+\end{abstract}

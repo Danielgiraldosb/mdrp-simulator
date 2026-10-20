@@ -1,0 +1,54 @@
+%% ============================================================
+%%  Section 6 — Conclusions
+%%  Article: BRKGA with Rolling Horizon for the MDRP
+%%  Citation style: LNCS (numeric \cite{})
+%% ============================================================
+
+\section{Conclusions}\label{sec:conclusions}
+
+This paper compared four rolling-horizon algorithms for the
+Meal Delivery Routing Problem on 24 real-world instances from
+a Latin American food-delivery platform.
+The key findings are as follows.
+
+\textbf{Coverage quality.}
+BRKGA-Coverage and BRKGA-Travel achieve nearly identical
+average coverage rates (59.2\%), outperforming the Business Model
+Lookahead (51.4\%) and the plain Business Model (44.1\%) on
+Small and Medium instances.
+On Large instances ($|O|>20{,}000$) the ranking reverses:
+the Business Model Lookahead reaches 51.1\% versus 47.2\% for
+BRKGA-Coverage, demonstrating that deterministic greedy methods
+with demand-forecast deferral scale more gracefully when the
+search budget per window is insufficient for effective
+evolutionary exploration.
+
+\textbf{Travel efficiency.}
+Average travel time per delivered order is virtually identical
+across both BRKGA variants (27.9 min/order), confirming that
+the nearest-neighbour decoder dominates route quality regardless
+of the fitness function used.
+
+\textbf{Computational cost.}
+Both BRKGA variants are faster in aggregate run time than the
+Business Model Lookahead (138 s and 105 s vs 589 s on average),
+because the bounded per-window generation limit keeps each
+window's footprint small.
+BRKGA-Travel is the fastest overall, 24\% quicker than
+BRKGA-Coverage while delivering equivalent coverage.
+
+\textbf{Practical recommendation.}
+For small-to-medium instances, BRKGA-Travel offers the best
+balance of coverage quality and speed.
+For large instances, the Business Model Lookahead is the
+preferred choice due to its superior coverage and predictable
+scaling behaviour.
+A hybrid deployment strategy — switching between the two
+based on daily order volume — can capture the best of both worlds.
+
+\textbf{Future work.}
+Promising directions include adaptive generation limits that
+expand the BRKGA's budget on large instances, incorporation of
+courier fairness objectives into the rolling-horizon framework,
+and online learning of the demand-forecast parameters from
+historical platform data.

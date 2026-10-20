@@ -1,0 +1,824 @@
+% This is samplepaper.tex, a sample chapter demonstrating the
+% LLNCS macro package for Springer Computer Science proceedings;
+% Version 2.21 of 2022/01/12
+%
+\documentclass[runningheads]{llncs}
+%
+\usepackage[T1]{fontenc}
+% T1 fonts will be used to generate the final print and online PDFs,
+% so please use T1 fonts in your manuscript whenever possible.
+% Other font encondings may result in incorrect characters.
+%
+
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{graphicx}
+% Used for displaying a sample figure. If possible, figure files should
+% be included in EPS format.
+%
+% If you use the hyperref package, please uncomment the following two lines
+% to display URLs in blue roman font according to Springer's eBook style:
+%\usepackage{color}
+%\renewcommand\UrlFont{\color{blue}\rmfamily}
+%\urlstyle{rm}
+%
+\begin{document}
+%
+\title{A Biased Random-Key Genetic Algorithm with Rolling Horizon for the Meal Delivery Routing Problem}
+%
+%\titlerunning{Abbreviated paper title}
+% If the paper title is too long for the running head, you can set
+% an abbreviated paper title here
+%
+\author{Daniel Giraldo-Herrera\inst{1}\orcidID{0009-0003-8243-723X} \and \\
+David Alvarez-Martinez\inst{1}\orcidID{0000-0001-8411-1936}
+}
+%
+\authorrunning{F. Author et al.}
+% First names are abbreviated in the running head.
+% If there are more than two authors, 'et al.' is used.
+%
+\institute{Department of Industrial Engineering, Universidad de los Andes, Bogotá 111711, Colombia \\ \email{ds.giraldoh@uniandes.edu.co}\\
+\email{d.alvarezm@uniandes.edu.co}
+}
+%
+\maketitle              % typeset the header of the contribution
+%
+\begin{abstract}
+The Meal Delivery Routing Problem (MDRP) requires assigning couriers to orders and computing delivery routes under stochastic demand, tight customer time windows, and heterogeneous courier fleets. We propose a Biased Random-Key Genetic Algorithm with Rolling Horizon (BRKGA-RH) for the MDRP and evaluate two fitness variants --- BRKGA-Coverage (maximizing orders delivered) and BRKGA-Travel (minimizing travel time) --- against a Business Model and a Business Model Lookahead that defers low-volume stores via demand forecasting. All four methods operate under a rolling-horizon architecture. Experiments use real-world instances from a Latin American food-delivery platform. On small and medium instances, both BRKGA variants achieve the highest average coverage rate, outperforming the Business Model Lookahead and the Business Model by roughly eight and fifteen percentage points, respectively. On large instances the ranking reverses: the Business Model Lookahead attains the best coverage, surpassing BRKGA-Coverage by nearly four percentage points, as the bounded generation budget limits metaheuristic search on high-volume days. Both BRKGA variants are computationally faster than the Business Model Lookahead. BRKGA-Travel delivers equivalent coverage while running approximately a quarter faster than BRKGA-Coverage, making it the preferred choice for small-to-medium deployments; the Business Model Lookahead is recommended for large instances. A hybrid strategy that switches between methods based on daily order volume captures the best of both approaches.
+
+\keywords{Meal Delivery Routing Problem \and Biased Random-Key
+Genetic Algorithm \and Rolling Horizon \and Dynamic Vehicle Routing \and Food Delivery Platforms}
+\end{abstract}
+%
+%
+%
+\section{Introduction}
+
+The rapid growth of on-demand food delivery platforms has fundamentally reshaped urban logistics, transforming the way consumers access restaurant meals and creating a new class of operational challenges for platform operators~\cite{ref-savelsbergh2022}.
+Services such as Uber Eats\textsuperscript{\textregistered}, DoorDash\textsuperscript{\textregistered}, Rappi\textsuperscript{\textregistered},
+Just Eat\textsuperscript{\textregistered}, and Glovo\textsuperscript{\textregistered}
+act as digital intermediaries that simultaneously coordinate customers, restaurants, and crowd sourced couriers in dense urban environments~\cite{ref-bates2018,ref-reyes2018}.
+The core operational challenge—assigning couriers to orders and computing delivery routes in real time—is formally known as the Meal Delivery Routing Problem (MDRP)~\cite{ref-reyes2018}.
+
+The MDRP belongs to the Dynamic Vehicle Routing Problems (DVRP) family and inherits its NP-hardness from the classical Vehicle Routing Problem (VRP)~\cite{ref-wen2010}. What distinguishes MDRP from standard VRP variants is the combination of: (i)~orders that arrive continuously and unpredictably throughout the day; (ii)~tight customer time windows driven by freshness expectations; (iii)~heterogeneous courier fleets with vehicle-dependent speeds; and (iv)~the need to make assignment and routing decisions within seconds to maintain operational viability ~\cite{ref-ulmer2021,ref-haferkamp2022,ref-auad2023}. These characteristics make it impractical to solve the MDRP to optimality in real time, motivating the development of effective heuristic and metaheuristic approaches \cite{ref-liao2020,ref-xie2024}. 
+
+This article addresses that challenge by proposing a Biased Random-Key Genetic Algorithm with Rolling Horizon (BRKGA-RH) for the MDRP. The BRKGA encodes candidate solutions as vectors of random keys in $[0,1]$ and evolves a population through biased crossover, so that elite solutions are preferentially inherited by offspring,
+providing a principled balance between intensification and diversification~\cite{ref-goncalves2011}. The rolling-horizon wrapper re-invokes the BRKGA at every planning window, allowing the algorithm to react to new orders and updated courier availability without global re-optimization~\cite{ref-steever2019}. 
+
+To contextualize the performance of BRKGA we compare them against a Business rolling-horizon model that generates all feasible courier--order candidate assignments within each time window and selects a non-conflicting subset that maximizes coverage. This strategy, which we call Business model, is used by apps designed to be a strong fast baseline. The comparison between the two paradigms on the same set of instances allows us to quantify the quality--speed trade-off and to identify the instance characteristics under which metaheuristic search provides the greatest benefit. 
+
+This work makes several contributions to the study of the MDRP. First, we develop a BRKGA metaheuristic integrated with a rolling-horizon framework, featuring a chromosome encoding that guarantees solution feasibility without the need for repair operators. Second, we design two fitness function variants that target order coverage and travel-time efficiency, respectively, enabling practitioners to select the objective that best aligns with their platform's priorities. Third, we conduct an extensive computational study on twenty-four heterogeneous real-world instances, comparing BRKGA-Coverage, BRKGA-Travel, and the Business Model across solution quality, travel efficiency, and computational cost metrics. 
+
+The paper is organized as follows. Section~\ref{sec:litreview} surveys the relevant literature on the MDRP, rolling-horizon methods, and metaheuristics for
+dynamic routing. Section~\ref{sec:problem} formally defines the problem.
+Section~\ref{sec:methodology} describes the Business model heuristic
+and the proposed BRKGA-RH framework in detail.
+Section~\ref{sec:results} presents the experimental setup
+and the computational results.
+Finally, Section~\ref{sec:conclusions} summarizes the findings
+and outlines directions for future research.
+
+
+\section{Literature Review}\label{sec:litreview}
+
+
+
+The MDRP was formally defined by \cite{ref-reyes2018}, who introduced a rolling-horizon framework in which orders arrive
+stochastically, are picked up at restaurants, and are delivered by couriers subject to time-window constraints. Using simulation on real urban data, demonstrated that rolling-horizon policies can substantially reduce delivery latency compared with static daily plans.
+
+ Ulmer et al.~\cite{ref-ulmer2021} extended this baseline by
+modeling uncertain restaurant preparation times through the
+Anticipative Customer Assignment (ACA) model, which delays
+courier--order matching to avoid premature assignments and long idle waits—a design principle that informs the Business Model heuristic presented in this paper.
+
+Steever et al.~\cite{ref-steever2019} addressed the closely
+related Virtual Food Court Delivery Problem (VFCDP), using
+continuous event-driven replanning, while Yildiz and Savelsbergh~\cite{ref-yildiz2019} proposed exact column-generation methods for a deterministic variant of the MDRP
+that assumes perfect foresight, establishing provably high-quality benchmarks against which heuristic approaches can be calibrated.
+More recent work has broadened the MDRP to include multi-objective trade-offs that simultaneously minimizes platform operating costs, maximize meal freshness, and distribute orders equitably among riders \cite{ref-dusadeerungsikul2023}. Another key point for MDRP are ghost kitchens, which are food-preparation facilities that operate exclusively for delivery orders, with no dine-in service and no fixed
+storefront visible to the public. Because their physical location can be chosen freely and updated dynamically, the platform must decide not only which courier serves an order, but also from which kitchen that order should be prepared and picked up. \cite{ref-neria2024}. Finally, shared-logistics model showed that cooperation can significantly improve system-wide coverage rates \cite{ref-bi2023}.
+
+
+
+MDRP solution strategies differ in their assumptions about future
+information availability \cite{ref-reyes2018}. Static methods assume complete knowledge at the beginning of the planing horizon; they produce high-quality plans but cannot react
+to new arrivals \cite{ref-martinez2024,ref-yildiz2019}. Although static methods are inappropriate for real-time platform operation, they serve as upper-bound references for evaluating dynamic approaches.
+
+
+
+Rolling-horizon (RH) strategies re-solve a short-horizon
+sub-problem at each time window, incorporating new
+information~\cite{ref-martinez2024,ref-bajec2022,ref-xue2021,ref-thipparthy2024}. Auad et al.~\cite{ref-auad2023} dynamically resized courier regions to improve coverage and satisfaction; Mart\'{\i}nez-Sykora et al.~\cite{ref-martinez2024} applied RH
+scheduling to balance fairness and efficiency; Thipparthy et al.~\cite{ref-thipparthy2024} showed that
+batching decisions within each window substantially affect travel
+distance and wait time.
+
+Evolutionary algorithms have been applied successfully to MDRP
+variants: Liao et al.~\cite{ref-liao2020} used NSGA-II to
+balance workload and environmental impact in green meal delivery;
+Xie and Wu~\cite{ref-xie2024} designed genetic operators to
+enforce courier wage fairness without Lagrangian penalties;
+Ba\~{n}os et al.~~\cite{ref-banos2013} hybridized a genetic
+algorithm with local search for the multi-objective VRPTW,
+establishing design principles—population diversity, elite
+preservation, local refinement—that directly inform our BRKGA.
+Reinforcement-learning approaches (Q-Learning,
+DDQN~\cite{ref-bozanta2022}; deep RL~\cite{ref-ahamed2020}) show promise but require extensive training data and offer limited interpretability. Giraldo-Herrera and \'Alvarez-Mart\'{\i}nez~\cite{ref-giraldo2024} proposed a GRASP for MDRP, providing a direct methodological baseline.
+The BRKGA framework~\cite{ref-goncalves2011,ref-londe2025}
+encodes solutions as random-key vectors in $[0,1]$ decoded into
+feasible assignments without repair operators; biased crossover
+($p_e=0.7$) concentrates search around elite solutions while
+mutants maintain diversity. Its rapid per-window convergence makes it well suited for rolling-horizon contexts, yet its integration with an RH wrapper for a fully dynamic problem such as the MDRP has not been previously studied.
+
+
+The preceding survey reveals two important gaps in the existing literature.
+First, while rolling-horizon methods are the dominant paradigm for real-time MDRP decision-making, their inner solvers are almost exclusively constructive greedy heuristics. The potential of population-based search within each rolling
+window has not been systematically studied. Second, the trade-off between solution quality and computational speed is well acknowledged but rarely quantified empirically across heterogeneous instance sizes; most benchmarking studies
+focus on a single instance class (small or medium). Table~\ref{tab:litreview} summarizes the positioning of the present work relative to the most closely related studies.
+
+\begin{table}[ht]
+\centering
+\caption{Positioning of the present work in the literature.
+RH: rolling horizon; GA: genetic algorithm;
+RL: reinforcement learning; Cov: coverage; TT: travel time.}
+\label{tab:litreview}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lllllll}
+\hline
+\textbf{Study} & \textbf{Method} & \textbf{RH} &
+\textbf{Obj.} & \textbf{Dynamic} &
+\textbf{Real data} & \textbf{Instance size} \\
+\hline
+~\cite{ref-reyes2018} & Greedy & \checkmark & TT & \checkmark & \checkmark & Small--Med \\
+~\cite{ref-ulmer2021} & DP/ACA & \checkmark & TT & \checkmark & \checkmark & Small--Med \\
+~\cite{ref-steever2019} & Greedy & \checkmark & TT & \checkmark & \checkmark & Med \\
+~\cite{ref-yildiz2019} & Exact & & Cost & & \checkmark & Small--Med \\
+~\cite{ref-liao2020} & NSGA-II & & Multi & & Synthetic  & Small \\
+~\cite{ref-bozanta2022} & RL (DDQN) & \checkmark & TT & \checkmark & \checkmark & Small \\
+~\cite{ref-auad2023} & Greedy RH & \checkmark & Fairness & \checkmark & \checkmark & Med \\
+~\cite{ref-giraldo2024} & GRASP & & Cov & & \checkmark & Small--Large \\
+~\cite{ref-martinez2024}  & RH sched. & \checkmark & Fairness & \checkmark & \checkmark & Small--Med   \\
+\textbf{Our work} & \textbf{BRKGA} & \checkmark & Cov/TT & \checkmark & \checkmark & Small--Large \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Problem Definition}\label{sec:problem}
+
+We study a single-platform, multi-courier meal delivery operation in a dense urban environment. Each day the platform receives a stream of customer orders that
+must be collected from restaurants and delivered to customers, while respecting courier working schedules, vehicle capacities, and time-window commitments.
+Following the formulation of Reyes et al.~\cite{ref-reyes2018}, we model this as an online combinatorial optimization problem in which decisions are made sequentially as new information becomes available.
+
+First, we have to summarize the sets and parameters used throughout the paper.
+\setlength{\textfloatsep}{5pt}
+\setlength{\intextsep}{5pt}
+
+\begin{table}[ht]
+\centering
+\label{tab:notation}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lp{10.5cm}}
+\textbf{Symbol} & \textbf{Definition} \\
+\multicolumn{2}{l}{\textit{Sets}} \\
+$U$   & Set of customers; each $u \in U$ has delivery location $\ell_u$ \\
+$R$   & Set of restaurants; each $r \in R$ has location $\ell_r$ \\
+$O$   & Set of orders; each $o \in O$ is associated with restaurant $r_o \in R$,
+        customer $u_o \in U$, preparation time $e_o$, ready time $s^r_o$,
+        and deadline $s^u_o$ \\
+$C$   & Set of couriers; each $c \in C$ has location $\ell_c$,
+        log-in time $\alpha_c$, and log-out time $\delta_c$ \\
+$S$   & Set of feasible routes; each $s \in S$ has one pickup node
+        $r_s \in R$ and an ordered sequence of delivery nodes
+        $U_s \subseteq U$ \\
+$T$   & Set of vehicle types
+        (motorcycle, bicycle, car, pedestrian) \\
+\\
+
+\multicolumn{2}{l}{\textit{Parameters}} \\
+$v_c$             & Speed of courier $c$ (km/min), determined by vehicle type \\
+$d_{ij}$          & Haversine distance between locations $i$ and $j$ (km) \\
+$t_{ij}$          & Travel time between $i$ and $j$: $t_{ij} = d_{ij}/v_c$ \\
+$p_o$             & Compensation paid to the courier for delivering order $o$ \\
+$K$               & Maximum number of orders per route \\
+$D_{\max}$        & Maximum distance from a courier to a pickup location for
+                    eligibility (km) \\
+$\Delta$          & Rolling-horizon window length (min) \\
+\end{tabular}
+\end{table}
+
+\vspace{-6pt}
+%% ------------------------------------------------------------------
+\subsection{Decision Structure and Rolling Horizon}\label{subsec:decisions}
+%% ------------------------------------------------------------------
+
+The planning day is divided into consecutive, non-overlapping windows of length $\Delta$ minutes. At the beginning of each window $w$, the platform observes:
+
+\begin{itemize}
+    \item the set of \emph{pending orders} $O^w \subseteq O$—orders
+    that are ready or will be ready within the current window and
+    have not yet been assigned;
+    \item the set of \emph{available couriers} $C^w \subseteq C$—
+    couriers that are idle or complete their current route before
+    the window ends.
+\end{itemize}
+\vspace{-6pt}
+\noindent
+The platform then selects a set of \emph{assignments} $\mathcal{A}^w = \{(c, s) : c \in C^w,\; s \in S^w\}$, where $S^w$ is the set of routes constructed from $O^w$,
+subject to the constraints detailed in Section~\ref{subsec:constraints}.
+Each assignment is communicated to the corresponding courier at the start of the window $w$; no reassignment is possible once the courier departs the pickup location.
+The plan is then \emph{rolled forward}: unassigned orders and couriers whose routes finish before the next window re-enter the eligible pools at window $w+1$.
+
+This structure decouples the global planning problem into a sequence of short-horizon sub-problems, each of which is solved by one of the three methods compared in this paper: Business model (Section~\ref{subsec:Business model}), BRKGA-Coverage (Section~\ref{subsec:brkga_cov}), and BRKGA-Travel (Section~\ref{subsec:brkga_trav}).
+
+
+%% ------------------------------------------------------------------
+\subsection{Operational Constraints}\label{subsec:constraints}
+%% ------------------------------------------------------------------
+
+The following constraints apply uniformly to all three methods:
+
+\begin{enumerate}
+    \item Route capacity.
+    Each route $s$ contains at most $K$ orders, all originating
+    from the same restaurant: $|U_s| \leq K$.
+
+    \item Courier eligibility.
+    A courier $c$ is eligible for route $s$ only if
+    $d_{\ell_c, \ell_{r_s}} \leq D_{\max}$ and the courier's
+    log-out time satisfies $\delta_c \geq s^r_{o}$
+    for all $o \in U_s$.
+
+    \item Time-window feasibility.
+    For a route assigned to courier $c$, the courier must arrive
+    at each customer node $u_i \in U_s$ no later than the
+    deadline $s^u_{o_i}$.
+    Arrival times are propagated sequentially:
+    \begin{equation}
+        a_{u_1} = \alpha_{r_s} + t_{\ell_{r_s}, \ell_{u_1}},
+        \qquad
+        a_{u_{i+1}} = a_{u_i} + s_{u_i} + t_{\ell_{u_i}, \ell_{u_{i+1}}},
+    \end{equation}
+    where $\alpha_{r_s}$ is the courier's arrival time at the
+    pickup restaurant and $s_{u_i}$ is the service time at node $u_i$.
+
+    \item Single assignment.
+    Each order is assigned to at most one courier,
+    and each courier executes at most one route per window:
+    \begin{equation}
+        \sum_{s \in S^w} \mathbf{1}[(c,s) \in \mathcal{A}^w] \leq 1
+        \quad \forall c \in C^w.
+    \end{equation}
+
+    \item Notification rules.
+    A courier can only be notified of a new assignment when
+    idle or in route to a pickup location.
+    Couriers in transit to a customer node are not interrupted.
+
+    \item Cancellations.
+    Once an order is canceled by the platform or the customer,
+    it is permanently removed from $O$ and cannot be reassigned.
+\end{enumerate}
+
+
+%% ------------------------------------------------------------------
+\subsection{Objective Functions}\label{subsec:objectives}
+%% ------------------------------------------------------------------
+
+The performance metric throughout this paper is the
+\emph{coverage rate}: let $\bar{O} \subseteq O$ denote the set
+of orders successfully delivered by the end of the planning day;
+then
+\vspace{-6pt}
+\begin{equation}\label{eq:coverage}
+    \rho = \frac{|\bar{O}|}{|O|}.
+\end{equation}
+
+\noindent
+A higher $\rho$ reflects greater platform reliability and
+customer satisfaction.
+The four methods evaluated in Section~\ref{sec:results} all target the maximization of $\rho$, subject to the operational constraints of Section~\ref{subsec:constraints}.
+
+We treat coverage as objective function for two reasons. First, in a rolling-horizon setting the platform cannot know at dispatch time whether a target end-of-day coverage is achievable: a constraint that is satisfiable over the full horizon may be
+locally infeasible at every intermediate window, preventing any assignment from being dispatched. Second, the real instances used here contain high-volume orders on which even the best methods reach $\rho \approx 34$--$47\%$, reflecting structural fleet-capacity limitations rather than algorithmic shortcomings.Treating coverage as an objective is consistent with the established MDRP literature~\cite{ref-reyes2018,ref-ulmer2021} and always yields a feasible dispatch.
+
+
+\section{Methodology}\label{sec:methodology}
+
+This section describes the three algorithms evaluated in our study. All methods share the same rolling-horizon architecture introduced in Section~\ref{subsec:decisions}: the planning day is divided into consecutive 2-minute windows, and each method must produce a complete set of courier assignments before the window expires. This hard wall-clock budget of $\Delta = 2$ minutes per window is a non-negotiable requirement for real-time deployment; a method that exceeds it would delay courier dispatch and break the online guarantee of the platform. 
+
+
+
+
+
+%% ------------------------------------------------------------------
+\subsection{Business model - Rolling-Horizon Model}
+\label{subsec:Business model}
+%% ------------------------------------------------------------------
+
+Business model  is a deterministic model that serves as the
+baseline in our comparison that solves the MDRP at each 2-minute window. It observes only the orders and couriers available at time $t_w$ and produces a dispatch plan before the window expires — it has no knowledge of future orders beyond what can be inferred from historical demand. The deterministic base, referred to as \emph{Business model}, constitutes the performance measurement foundation of the model. At each window $w$ it processes every store that has pending orders and immediately generates the best possible assignments from the currently observed information alone. This version executes two phases and defines the coverage rate $\rho$ and average travel time $\bar{\tau}$ benchmarks reported in Section~\ref{sec:results}.
+
+Phase 1 —Candidate generation—, orders at store $r$ are sorted by deadline and partitioned into at most $B_{\max}=3$ non-overlapping batches of size $k \leq K_{\max}=3$. For each batch $s$ and the $N_{\max}=10$ nearest eligible couriers ($d \leq D_{\max}=10$\,km), feasibility is checked and a score calculated:
+\vspace{-6pt}
+\begin{equation}\label{eq:maxcover_score}
+    \text{score}(c, s) = k \times 10{,}000 + u(s) \times 10 - \tau_{cs},
+\end{equation}
+
+where $\tau_{cs}$ is route travel time and
+\vspace{-6pt}
+\begin{equation}\label{eq:urgency}
+    u(s) = \max\!\Bigl(0,\;100 - \bigl(\min_{o \in s}\,\text{deadline}(o) - t_w\bigr)\Bigr)
+\end{equation}
+
+is an urgency term that increases as deadlines approach. $\tau_{cs}$ is the minimum over three constructive sequences: nearest neighbor, earliest deadline, and distance-from-store; time-window feasibility is verified for each (Section~\ref{subsec:constraints}).
+Candidate generation uses at most 70\% of the 120-second window budget.
+
+Candidates in $\Lambda^w$ are sorted by score (descending) and a greedy pass selects the conflict-free subset approximating the set-packing problem:
+\vspace{-6pt}
+{\small
+\begin{equation}\label{eq:set_packing}
+    \max \sum_{\lambda \in \Lambda^w} \text{score}(\lambda)\,x_\lambda
+    \quad\text{s.t.}\quad
+    \sum_{\lambda: c(\lambda)=c} x_\lambda \leq 1\;\forall c,\quad
+    \sum_{\lambda: o \in s(\lambda)} x_\lambda \leq 1\;\forall o,\quad
+    x_\lambda \in \{0,1\}
+\end{equation}
+}
+The selected set $\mathcal{A}^w$ is dispatched at window start.
+
+The Business Model Lookahead prepends a Phase 0 demand-forecast filter to the Business Model, deferring stores where waiting for additional orders would enable larger batches.
+For each store $r$, expected new orders within $L=8$ minutes are:
+\vspace{-10pt}
+\begin{equation}\label{eq:forecast}
+    \hat{f}(r, t_w) =
+    \Bigl[0.7\,\hat{R}_{\text{rec}}(r) + 0.3\,\hat{R}_{\text{hist}}(r)\Bigr]
+    \times h(t_w) \times L,
+\end{equation}
+
+where $\hat{R}_{\text{rec}}(r) = |O_{r}^{[-10,\,t_w]}|/10$ and $\hat{R}_{\text{hist}}(r) = |O_{r}^{[-30,\,t_w]}|/30$ are recent and historical arrival rates, and
+\vspace{-6pt}
+{\small
+\begin{equation}\label{eq:hour_mult}
+    h(t_w) =
+    \begin{cases}
+        1.3 & t_w \in [660, 840] \cup [1080, 1260]\;\text{min (11h--14h, 18h--21h),} \\
+        0.8 & \text{otherwise.}
+    \end{cases}
+\end{equation}
+}
+\vspace{-6pt}
+Store $r$ is deferred to the next window if all three conditions hold:
+\vspace{-5pt}
+\begin{equation}\label{eq:wait_condition}
+    |O^w_r| \leq 2
+    \quad\wedge\quad
+    \hat{f}(r, t_w) \geq 3
+    \quad\wedge\quad
+    \min_{o \in O^w_r}\!\bigl(\text{deadline}(o) - t_w\bigr) > 25\;\text{min.}
+\end{equation}
+
+Stores passing this filter proceed through Phases 1 and 2 unchanged.
+Algorithm~\ref{alg:maxcover} gives the complete pseudocode (the plain Business Model is identical with lines 2--4 removed).
+
+\begin{algorithm}[ht]
+\caption{Business Model Lookahead — window $w$}
+\label{alg:maxcover}
+\begin{algorithmic}[1]
+\Require $O^w$, $C^w$, current time $t_w$, order history
+\Ensure Conflict-free assignment set $\mathcal{A}^w$
+\State Compute $\hat{f}(r, t_w)$ via Eq.~\eqref{eq:forecast} for all $r$
+\State $\Lambda^w \leftarrow \emptyset$
+\ForAll{store $r$ with $O^w_r \neq \emptyset$}
+    \If{wait condition Eq.~\eqref{eq:wait_condition} holds} \Comment{Phase 0 — lookahead filter}
+        \State \textbf{continue}
+    \EndIf \Comment{Phase 1 — global candidate generation}
+    \State Sort $O^w_r$ by deadline; partition into batches $s_1,\ldots,s_{B_{\max}}$
+    \ForAll{batch $s_j$, courier $c \in$ top-$N_{\max}$ nearby couriers in $C^w$}
+        \State $\tau_{cs} \leftarrow$ best feasible route via 3-heuristic ensemble
+        \If{route feasible}
+            \State $\Lambda^w \leftarrow \Lambda^w \cup \{(c, s_j,\;\text{score}(c,s_j))\}$
+        \EndIf
+    \EndFor
+\EndFor 
+\State Sort $\Lambda^w$ by score (descending)
+\Comment{Phase 2 — conflict-free selection}
+\State $\mathcal{A}^w \leftarrow \emptyset$;\ $\mathcal{U}_C \leftarrow \emptyset$;\ $\mathcal{U}_O \leftarrow \emptyset$
+\ForAll{$(c, s, \cdot) \in \Lambda^w$}
+    \If{$c \notin \mathcal{U}_C$ \textbf{and} $s \cap \mathcal{U}_O = \emptyset$}
+        \State $\mathcal{A}^w \leftarrow \mathcal{A}^w \cup \{(c,s)\}$;\ $\mathcal{U}_C \leftarrow \mathcal{U}_C \cup \{c\}$;\ $\mathcal{U}_O \leftarrow \mathcal{U}_O \cup s$
+    \EndIf
+\EndFor
+\State \Return $\mathcal{A}^w$
+\end{algorithmic}
+\end{algorithm}
+
+%% ------------------------------------------------------------------
+
+\label{subsec:brkga_framework}
+%% ------------------------------------------------------------------
+
+The two BRKGA variants — BRKGA-Coverage and BRKGA-Travel — share an identical algorithmic framework; they differ only in their fitness function. We describe the common framework here and specify each variant's fitness in Sections~\ref{subsec:brkga_cov} and~\ref{subsec:brkga_trav}.
+
+\setlength{\parskip}{0pt}
+Because the BRKGA is executed once per 2-minute window, the entire evolutionary loop — population initialization, fitness evaluation for all individuals, selection, crossover, and mutation — must complete within $\Delta = 2$ minutes. Exceeding this budget would delay courier dispatch and break the platform's real-time guarantee.
+All hyper-parameters were therefore calibrated jointly so that the worst-case window runtime on our largest instances remains below $\Delta$ on commodity hardware.
+Each window evolves a population of $N_p = 10$ candidate solutions over $G_{\max} = 10$ generations. Of these, $N_e = 2$ elite individuals (the two best solutions of the
+current generation) are carried unchanged into the next generation, $N_m = 2$ mutants are drawn entirely at random from $[0,1]$, and the remaining $N_o = N_p - N_e - N_m = 6$ offspring are produced by biased crossover with elite-inheritance probability $p_e = 0.7$. Inside the decoder, at most $K = 3$ couriers are evaluated per (batch, store) pair, which bounds the per-chromosome decoding cost and is the primary lever controlling runtime within the 2-minute budget.
+
+Each candidate solution for window $w$ is encoded as a random-key chromosome of length $n_{O^w} + n_{C^w}$, where $n_{O^w} = |O^w|$ and $n_{C^w} = |C^w|$:
+\vspace{-6pt}
+\begin{equation}
+    \mathbf{x} = \bigl[\,
+        \underbrace{x_1, \ldots, x_{n_{O^w}}}_{\text{order keys}}\;
+        \Big|\;
+        \underbrace{x_{n_{O^w}+1}, \ldots, x_{n_{O^w}+n_{C^w}}}_{\text{courier keys}}\,
+    \bigr], \quad x_i \in [0,1].
+\end{equation}
+\vspace{-1pt}
+Order keys encode a priority ranking over $O^w$: orders are processed in descending order of their key values, so higher keys correspond to higher scheduling priority. Courier keys encode a preference ordering over $C^w$: available couriers are tried in descending key order when seeking the best match for a pending batch. Both segments are initialized uniformly at random and evolved by the genetic operators described below.
+
+The decoder translates a chromosome $\mathbf{x}$ into a feasible assignment set $\mathcal{A}^w$ through a greedy simulation of the current window.
+The procedure is summarized in Algorithm~\ref{alg:decoder}. For example, in a window with three pending orders ${o_1, o_2, o_3}$ and two couriers ${c_1, c_2}$, a chromosome $\mathbf{x} = [0.9,\ 0.3,\ 0.7 \mid 0.4,\ 0.8]$ induces the assignment priority $o_1 \succ o_3 \succ o_2$ (descending order key) and courier preference $c_2 \succ c_1$ (descending courier key), so the decoder attempts to assign $o_1$ first using $c_2$ as the preferred courier.
+
+\begin{algorithm}[ht]
+\caption{Chromosome Decoder for window $w$}
+\label{alg:decoder}
+\begin{algorithmic}[1]
+\Require chromosome $\mathbf{x}$, $O^w$, $C^w$, $\mathcal{S}^w$
+\Ensure Assignment set $\mathcal{A}$ and fitness $f$
+\State Extract order keys and courier keys from $\mathbf{x}$
+\State Sort $O^w$ by order key (descending) $\rightarrow$ priority list $\pi_O$
+\State Sort $C^w$ by courier key (descending) $\rightarrow$ priority list $\pi_C$
+\State Group $\pi_O$ by store: $\{O^w_r\}_{r \in R}$
+\State $\mathcal{A} \leftarrow \emptyset$;\ $\text{assigned} \leftarrow \emptyset$
+\ForAll{store $r$ in order of first pending order in $\pi_O$}
+    \State $\text{avail} \leftarrow C^w \setminus \text{assigned couriers}$, sorted by $\pi_C$
+    \While{$O^w_r \neq \emptyset$ \textbf{and} $\text{avail} \neq \emptyset$}
+        \State best $\leftarrow$ None
+        \ForAll{batch size $k = 1, \ldots, K$}
+            \State $s \leftarrow$ first $k$ orders of $O^w_r$
+            \ForAll{$c \in \text{top-}K$ couriers of avail}
+                \State compute route$(c, r, s)$ via nearest-neighbour heuristic
+                \If{route is feasible \textbf{and} finish\_time $<$ best.finish\_time}
+                    \State best $\leftarrow (c, s, \text{route})$
+                \EndIf
+            \EndFor
+        \EndFor
+        \If{best $\neq$ None}
+            \State $\mathcal{A} \leftarrow \mathcal{A} \cup \{(\text{best}.c,\,\text{best}.s)\}$
+            \State mark best$.c$ and best$.s$ as assigned
+        \Else
+            \State \textbf{break}
+        \EndIf
+    \EndWhile
+\EndFor
+\State Compute $\rho$, $\bar{\tau}$ from $\mathcal{A}$; evaluate fitness $f$
+\State \Return $\mathcal{A}$, $f$
+\end{algorithmic}
+\end{algorithm}
+
+\emph{Nearest-neighbor delivery sequencing.}
+Within each batch $s$, delivery stops are ordered by the nearest-neighbor heuristic: starting from the pickup restaurant, the courier visits the unserved customer node closest (in travel time) to the current position, repeating until all nodes are served. Time-window feasibility is checked at each step; if any customer deadline $s^u_o$ is violated, the route is declared infeasible and the entire batch is discarded.
+
+\emph{Route feasibility checks.}
+Before invoking the nearest-neighbor heuristic, the decoder verifies three necessary conditions: (i) the courier can reach the restaurant and depart
+after all orders are ready ($\text{depart} \geq \max_{o \in s} s^r_o$),
+(ii) the departure time falls within the courier's shift $[\alpha_c, \delta_c]$, and
+(iii) the courier can return to the home base before $\delta_c$.
+
+At the end of each generation, the $N_e = 2$ individuals with the lowest fitness are copied without modification into the next population. This elitism ensures that the best solution found so far is never lost during the tight 10-generation window budget.
+
+Each of the $N_o = 6$ offspring is generated by selecting one elite parent $\mathbf{x}^e$ and one non-elite parent $\mathbf{x}^n$ uniformly at random.
+For each gene position $i$:
+\vspace{-1pt}
+{\small
+\begin{equation}
+    x^{\text{off}}_i =
+    \begin{cases}
+        x^e_i & \text{with probability } p_e = 0.7, \\
+        x^n_i & \text{with probability } 1 - p_e = 0.3.
+    \end{cases}
+\end{equation}
+}
+
+The bias $p_e > 0.5$ ensures that elite genetic material propagates faster than non-elite material, which is the defining feature of BRKGA~\cite{ref-goncalves2011}. The remaining $N_m = 2$ individuals (mutants) are drawn entirely from $\mathcal{U}[0,1]^{n_{O^w}+n_{C^w}}$, providing genetic diversity and preventing premature convergence within each short window.
+
+\setlength{\parskip}{0pt}
+
+Algorithm~\ref{alg:brkga_window} shows how the genetic loop is embedded in the rolling-horizon schedule. At each 2-minute tick, the platform observes $O^w$ and $C^w$, executes the full BRKGA evolutionary loop (initialization + 10 generations of evaluation, selection, crossover, and mutation), and immediately dispatches the
+assignments of the best individual found. If the genetic loop finishes in fewer than $\Delta$ seconds, the solution is immediately returned, allowing the system to respond to the user much earlier than the maximum allowed time and preventing unnecessary increases in waiting times for order assignment; if it were to exceed $\Delta$, the best solution available at the deadline would be dispatched instead — though our parameterization ensures this never occurs in practice.
+
+
+\begin{algorithm}[ht]
+\caption{BRKGA Rolling-Horizon main loop}
+\label{alg:brkga_window}
+\begin{algorithmic}[1]
+\Require Orders $O$, Couriers $C$, window length $\Delta$
+\State Initialise solution state; $\text{assigned} \leftarrow \emptyset$
+\For{$w = 0, \Delta, 2\Delta, \ldots, 1440$}
+    \State Release couriers whose routes finished $\leq w$
+    \State $O^w \leftarrow \{o \in O \setminus \text{assigned} : s^r_o \leq w\}$
+    \State $C^w \leftarrow$ idle couriers at time $w$
+    \If{$O^w = \emptyset$ \textbf{or} $C^w = \emptyset$}
+        \State \textbf{continue}
+    \EndIf
+    \State \textit{// BRKGA must complete within $\Delta$ minutes}
+    \State Initialise population $\mathbf{P} \sim \mathcal{U}[0,1]^{N_p \times (n_{O^w}+n_{C^w})}$
+    \State $f^* \leftarrow \infty$;\ $\mathcal{A}^* \leftarrow \emptyset$
+    \For{$g = 1, \ldots, G_{\max}$} \Comment{$G_{\max} = 10$}
+        \ForAll{$\mathbf{x} \in \mathbf{P}$}
+            \State $(\mathcal{A}, f) \leftarrow \text{Decode}(\mathbf{x}, O^w, C^w)$
+            \If{$f < f^*$} $f^* \leftarrow f$;\ $\mathcal{A}^* \leftarrow \mathcal{A}$ \EndIf
+        \EndFor
+        \State Select $N_e$ elite; generate $N_o$ offspring + $N_m$ mutants
+        \State $\mathbf{P} \leftarrow \text{elite} \cup \text{offspring} \cup \text{mutants}$
+    \EndFor
+    \State Dispatch $\mathcal{A}^*$; update state and $\text{assigned}$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+%% ------------------------------------------------------------------
+\subsection{BRKGA-Coverage}
+\label{subsec:brkga_cov}
+%% ------------------------------------------------------------------
+{\small
+BRKGA-Coverage uses the penalized fitness function $f_{\text{cov}}$
+defined, which is re-stated here for convenience:
+\vspace{-6pt}
+\begin{equation*}
+    f_{\text{cov}} =
+    \begin{cases}
+        10^{9}\,(1 - \rho) + \bar{\tau}/20 & \text{if } \rho < 0.50, \\
+        10^{7}\,(1 - \rho) + \bar{\tau}/20 & \text{if } 0.50 \leq \rho < 0.60, \\
+        10^{5}\,(1 - \rho) + \bar{\tau}/20 & \text{if } \rho \geq 0.60.
+    \end{cases}
+\end{equation*}
+}
+The tiered structure imposes an absolute priority on coverage: until at least 60\% of the window's orders are assigned, any improvement in coverage dominates all travel-time gains. Only when $\rho \geq 0.60$ does the secondary term $\bar{\tau}/20$
+become influential. The normalization factor of 20 corresponds to a baseline travel
+time of 20 minutes per order; it ensures that the secondary objective contributes at most a few percent of the primary penalty in the $\rho \geq 0.60$ regime. The chromosome decoder evaluates $\rho$ and $\bar{\tau}$ and the BRKGA minimizes $f_{\text{cov}}$ across the 10 generations per window.
+
+
+
+%% ------------------------------------------------------------------
+\subsection{BRKGA-Travel}
+\label{subsec:brkga_trav}
+%% ------------------------------------------------------------------
+
+BRKGA-Travel fitness function is defined as:
+\vspace{-6pt}
+
+{\small
+\begin{equation*}
+    f_{\text{trav}} =
+    \begin{cases}
+        10^{6}\,(1 - \rho) + \bar{\tau} & \text{if } \rho < 0.50, \\
+        10^{4}\,(1 - \rho) + \bar{\tau} & \text{if } \rho \geq 0.50.
+    \end{cases}
+\end{equation*}
+}
+The penalty coefficients are two to five orders of magnitude smaller than those in $f_{\text{cov}}$, allowing the algorithm to trade a modest reduction in coverage for meaningful gains in travel efficiency. For instance, a solution with $\rho = 0.55$ and $\bar{\tau} = 12$ min/order achieves $f_{0\text{trav}} = 10^4 \times 0.45 + 12 = 4{,}512$, whereas a solution with $\rho = 0.60$ and $\bar{\tau} = 18$ min/order achieves $f_{\text{trav}} = 4{,}18$; the second solution is preferred despite slightly lower coverage. In contrast, $f_{\text{cov}}$ would rank the first solution higher ($\approx 10^5 \times 0.40 + 0.9 = 40{,}001$ versus $10^5 \times 0.40 + 0.6 = 40{,}001$ — a negligible difference at this coverage level, but
+$f_{\text{cov}}$ heavily penalizes any coverage below $\rho = 0.60$). In all other respects — encoding, decoder, operators, rolling-horizon integration, and the 2-minute real-time budget — BRKGA-Travel is identical to BRKGA-Coverage.
+
+The implementation of the proposed approach is available in the following GitHub repository: https://github.com/Danielgiraldosb/BRKGA-for-Meal-delivery-routing-problem
+
+\vspace{-10pt}
+\section{Computational Experiments and Results}\label{sec:results}
+\vspace{-10pt}
+
+We evaluate the four methods on 24 real-world instances drawn from a Latin American food-delivery platform. Each instance corresponds to a full operating day and
+contains orders, couriers, and restaurant locations from one or more urban zones.
+Following the classification used in related work, instances are grouped by total order volume into three tiers: \emph{Small} ($|O| < 5{,}000$, 13 instances), \emph{Medium} ($5{,}000 \leq |O| \leq 20{,}000$, 5 instances), and \emph{Large} ($|O| > 20{,}000$, 6 instances).
+
+We compare the four algorithms presented above under identical rolling-horizon conditions ($\Delta = 2$ min, horizon 0--1\,440 min): We report two primary metrics for solution quality: (i) the \emph{coverage rate} $\rho = |\bar{O}|/|O|$ where $\bar{O}$ is the set of orders successfully delivered by the \emph{end of the full planning day} and (ii) the average travel time per delivered order $\bar{\tau}$ in minutes. Note that inside the BRKGA decoder a \emph{per-window} coverage $\rho^w = |\mathcal{A}^w|/|O^w|$ is used as part of the fitness functions $f_{\text{cov}}$ and $f_{\text{trav}}$ to guide search within each 2-minute window; the end-of-day $\rho$ accumulates these decisions over the full 1,440-minute horizon.
+We also report \emph{total daily execution time} (sum over all windows) in seconds as the primary efficiency metric; see Table~\ref{tab:results_all} caption for per-window context. All experiments were run on commodity hardware (Intel Core i9-12900H, 16 GB RAM, Windows 11), and all algorithms were implemented and executed using Python 3.7.
+
+
+Table~\ref{tab:results_all} reports the coverage rate $\rho$ (\%) and average travel time $\bar{\tau}$ (min/order) for BRKGA-Coverage and BRKGA-Travel, together with the coverage rate for the two Business Model variants and the total execution time (in seconds) of BRKGA-Coverage and Business Model Lookahead. The size column encodes Small (S), Medium (M), and Large (L). Bold entries highlight the best coverage rate per instance.
+
+\begin{table}[ht]
+\centering
+\caption{Per-instance results for all four methods.
+$\rho$ = coverage rate (\%), $\bar{\tau}$ = avg travel time (min/order),
+$T$ = total execution time (s). Best $\rho$ per row in bold.}
+\label{tab:results_all}
+\scriptsize
+\setlength{\tabcolsep}{2.8pt}
+\begin{tabular}{rrlr|cc|cc|c|c|rrr}
+\hline
+ & & & &
+\multicolumn{2}{c|}{\textbf{BRKGA-Cov}} &
+\multicolumn{2}{c|}{\textbf{BRKGA-Trav}} &
+\textbf{BM} &
+\textbf{BML} &
+\multicolumn{3}{c}{\textbf{Exec.\ time (s)}} \\
+\textbf{Inst} & \textbf{Sz} & $|O|$ & $|C|$ &
+$\rho$ & $\bar{\tau}$ & $\rho$ & $\bar{\tau}$ &
+$\rho$ & $\rho$ &
+$T_{\text{BC}}$ & $T_{\text{BT}}$ & $T_{\text{BML}}$ \\
+\hline
+0  & L & 56{,}420 & 16{,}710 & 37.1 & 34.5 & 37.4 & 34.5 & 41.0 & \textbf{46.3} & 3{,}143 &    2{,}571 & 2{,}916 \\
+1  & S &  2{,}959 &  1{,}185 & \textbf{57.7} & 22.8 & \textbf{57.7} & 22.8 & 33.7 & 40.4 &      20 &     19 &    38 \\
+2  & L & 24{,}720 &  6{,}570 & \textbf{59.0} & 29.4 & 59.0 & 29.4 & 38.5 & 44.2 &     458 &    356 &   458 \\
+3  & S &  2{,}959 &  1{,}185 & \textbf{57.3} & 22.6 & 57.1 & 22.5 & 33.7 & 40.4 &      23 &     23 &    37 \\
+4  & S &    844   &    415   & \textbf{54.1} & 24.7 & \textbf{54.1} & 24.8 & 37.7 & 44.1 &       6 &      6 &    11 \\
+5  & M &  9{,}115 &  2{,}803 & 48.8 & 22.2 & \textbf{48.9} & 22.2 & 26.0 & 33.0 &      80 &     80 &    98 \\
+6  & L & 59{,}167 & 16{,}782 & 34.4 & 34.4 & 34.0 & 34.5 & 42.8 & \textbf{48.7} &     490 &    477 & 6{,}738 \\
+7  & M &  7{,}357 &  2{,}643 & \textbf{58.2} & 31.1 & 57.9 & 31.1 & 36.1 & 44.9 &     116 &     122 &   103 \\
+8  & L & 23{,}155 &  6{,}851 & \textbf{56.3} & 31.3 & 56.2 & 31.3 & 38.2 & 46.0 &      79 &     82 &   436 \\
+9  & S &  2{,}407 &  1{,}156 & \textbf{60.7} & 24.2 & \textbf{60.7} & 24.0 & 39.1 & 46.4 &       2 &      3 &    29 \\
+10 & S &    735   &    455   & \textbf{62.0} & 23.7 & \textbf{62.0} & 23.8 & 46.3 & 53.6 &       5 &      5 &     8 \\
+11 & M &  8{,}451 &  3{,}023 & 50.4 & 27.4 & \textbf{50.6} & 27.8 & 28.1 & 34.6 &     110 &     16 &   109 \\
+    12 & L & 31{,}199 & 13{,}152 & 51.6 & 34.3 & 51.4 & 34.0 & 51.9 & \textbf{59.2} &     979 &    1{,}064 & 1{,}201 \\
+13 & S &  4{,}516 &  1{,}876 & 70.1 & 30.5 & \textbf{70.1} & 30.8 & 51.2 & 62.0 &      56 &      6 &    79 \\
+14 & M & 13{,}051 &  4{,}824 & 68.2 & 32.1 & \textbf{68.4} & 32.3 & 50.0 & 57.9 &      32 &     36 &   360 \\
+15 & S &  1{,}462 &    941   & \textbf{66.4} & 23.2 & \textbf{66.4} & 23.1 & 48.2 & 57.1 &      17 &      2 &    32 \\
+16 & S &    538   &    430   & \textbf{70.8} & 23.6 & \textbf{70.8} & 23.7 & 63.0 & 66.7 &       4 &      4 &     8 \\
+17 & S &  4{,}390 &  2{,}368 & \textbf{66.4} & 27.1 & 66.4 & 27.0 & 44.3 & 51.4 &       6 &      6 &    73 \\
+18 & L & 30{,}448 & 12{,}218 & 45.1 & 33.8 & 46.2 & 34.0 & 56.0 & \textbf{62.4} &     295 &    459 &   966 \\
+19 & S &  4{,}389 &  1{,}908 & \textbf{72.0} & 30.6 & 72.0 & 30.8 & 53.5 & 63.5 &      57 &      6 &    69 \\
+20 & M & 13{,}076 &  4{,}905 & 69.7 & 31.1 & \textbf{69.8} & 31.2 & 51.5 & 59.5 &      31 &     34 &   266 \\
+21 & S &  1{,}376 &    959   & \textbf{64.8} & 23.0 & \textbf{64.8} & 22.8 & 43.9 & 52.8 &      15 &      1 &    22 \\
+22 & S &    539   &    396   & \textbf{74.0} & 23.6 & \textbf{74.0} & 23.7 & 61.0 & 68.7 &       3 &      3 &     6 \\
+23 & S &  4{,}387 &  2{,}111 & 65.7 & 27.5 & \textbf{65.9} & 27.5 & 42.5 & 50.3 &      53 &      4 &    69 \\
+
+\hline
+\end{tabular}
+\end{table}
+
+
+
+Averaged over all 24 instances, BRKGA-Coverage and BRKGA-Travel achieve virtually identical coverage rates of 59.2\%, followed by Business Model Lookahead at 51.4\% and Business Model at 44.1\%. The two BRKGA variants thus outperform the Business Model Lookahead by 7.8 percentage points on average, and the Business Model by 15.1 percentage points. The relative performance of the methods varies substantially with instance size, as summarized in Table~\ref{tab:results_by_size}.
+
+\begin{table}[ht]
+\centering
+\caption{Average coverage rate $\rho$ (\%) by instance size tier.}
+\label{tab:results_by_size}
+\small
+\begin{tabular}{l|r|r|r|r|r|r}
+\hline
+\textbf{Size} & \textbf{Count} & \textbf{Avg $|O|$} &
+\textbf{BRKGA-Cov} & \textbf{BRKGA-Trav} &
+\textbf{BML} & \textbf{BM} \\
+\hline
+Small  & 13 & 2{,}423 & 64.8\% & 64.8\% & 53.6\% & 46.0\% \\
+Medium &  5 & 10{,}210 & 59.1\% & 59.1\% & 46.0\% & 38.4\% \\
+Large  &  6 & 37{,}518 & 47.2\% & 47.3\% & 51.1\% & 44.8\% \\
+\textbf{All} & \textbf{24} & \textbf{11{,}688} & \textbf{59.2\%} & \textbf{59.2\%} & \textbf{51.4\%} & \textbf{44.1\%} \\
+\hline
+\end{tabular}
+\end{table}
+
+On \emph{Small} and \emph{Medium} instances the BRKGA variants
+maintain a consistent advantage of 11--20 percentage points over
+the Business Model Lookahead, which in turn outperforms the
+Business Model by 7--8 percentage points.
+However, the picture reverses on \emph{Large} instances:
+the Business Model Lookahead achieves an average of 51.1\%,
+surpassing BRKGA-Coverage (47.2\%) by 3.9 percentage points
+and the Business Model (44.8\%) by 6.3 percentage points.
+This reversal occurs on all six large instances and is most
+pronounced on Instances 0 and 6
+(56{,}420 and 59{,}167 orders, respectively),
+where BRKGA-Coverage drops to 37.1\% and 34.4\% while
+Business Model Lookahead reaches 46.3\% and 48.7\%.
+
+The explanation lies in scalability:
+on large instances the BRKGA's $G_{\max} = 10$ generations and
+$N_p = 10$ population are insufficient to explore the solution
+space effectively within the 2-minute window budget,
+whereas the Business Model Lookahead's deterministic two-phase
+approach scales gracefully and benefits from the deferral
+mechanism to consolidate larger, higher-quality batches.
+
+
+Across all 24 instances the Business Model Lookahead improves
+upon the Business Model by an average of {7.3 percentage
+points} (range: 3.7--10.8 pp), confirming that demand-forecast
+deferral consistently yields better batch utilization at the
+cost of slightly delayed dispatch.
+
+The average travel time per delivered order is remarkably similar between BRKGA-Coverage and BRKGA-Travel: 27.86 vs 27.90 min/order overall, with differences below 0.5 min/order on every instance. This near-parity reveals an important structural property of the problem: the nearest-neighbor decoder produces routes whose travel efficiency is largely determined by geographic density and time-window constraints rather than by the fitness-function penalty weights. In other words, once a feasible batch is assembled, its travel time is almost entirely dictated by the delivery sequence heuristic, leaving little room for the fitness function to differentiate between the two BRKGA variants.
+
+Travel times are systematically shorter on Small instances ($\bar{\tau} \approx 25.0$ min/order) than on Large ones ($\bar{\tau} \approx 32.9$ min/order), reflecting the wider geographic spread of deliveries in high-volume urban zones.
+
+
+\section{Conclusions}\label{sec:conclusions}
+
+BRKGA-Coverage and BRKGA-Travel achieve nearly identical average coverage rates (59.2\%), outperforming the Business Model Lookahead (51.4\%) and the plain Business Model (44.1\%) on Small and Medium instances. On Large instances ($|O|>20{,}000$) the ranking reverses: the Business Model Lookahead reaches 51.1\% versus 47.2\% for BRKGA-Coverage, demonstrating that deterministic greedy methods
+with demand-forecast deferral scale more gracefully when the search budget per window is insufficient for effective evolutionary exploration.
+
+
+Average travel time per delivered order is virtually identical
+across both BRKGA variants (27.9 min/order), confirming that
+the nearest-neighbor decoder dominates route quality regardless
+of the fitness function used.
+
+
+For small-to-medium instances, BRKGA-Travel offers the best
+balance of coverage quality and speed.
+For large instances, the Business Model Lookahead is the
+preferred choice due to its superior coverage and predictable
+scaling behavior.
+A hybrid deployment strategy — switching between the two
+based on daily order volume — can capture the best of both worlds.
+
+Promising directions include adaptive generation limits that
+expand the BRKGA's budget on large instances, incorporation of
+courier fairness objectives into the rolling-horizon framework,
+and online learning of the demand-forecast parameters from
+historical platform data.
+
+
+% ---- Bibliography ----
+%
+% BibTeX users should specify bibliography style 'splncs04'.
+% References will then be sorted and formatted in the correct style.
+%
+% \bibliographystyle{splncs04}
+% \bibliography{mybibliography}
+%
+\begin{thebibliography}{35}
+\bibitem{ref-savelsbergh2022}
+Savelsbergh, M. W. P., \& Ulmer, M. W. Challenges and opportunities in crowdsourced delivery planning and operations. {\em 4OR} {\bf 2022}, {\em 20(1)}.
+
+\bibitem{ref-bates2018}
+Bates, O., Friday, A., Allen, J., Cherrett, T., \& Davies, N. Transforming last-mile logistics: Opportunities for more sustainable deliveries. {\em Conference on Human Factors in Computing Systems - Proceedings} {\bf 2018}, {\em 2018-April}.
+
+\bibitem{ref-reyes2018}
+Reyes, D., Erera, A., Savelsbergh, M., Sahasrabudhe, S., \& O’neil, R. The Meal Delivery Routing Problem. {\em Optimization Online} {\bf 2018}, {\em 6571(2018)}.
+
+
+\bibitem{ref-wen2010}
+Wen, M., Cordeau, J., Laporte, G., \& Larsen, J. The dynamic multi-period vehicle routing problem. {\em Computers and Operations Research} {\bf 2010}, {\em 37}, 1615--1623.
+
+\bibitem{ref-ulmer2021}
+Ulmer, M. W., Thomas, B. W., Campbell, A. M., \& Woyak, N. The restaurant meal delivery problem: Dynamic pickup and delivery with deadlines and random ready times. {\em Transportation Science} {\bf 2021}, {\em 55(1)}, 75--100.
+
+\bibitem{ref-haferkamp2022}
+Haferkamp, J., Ulmer, M., \& Ehmke, J.  Heatmap-based Decision Support for Repositioning in Ride-Sharing Systems  {\em Transportation Science} {\bf 2024}, {\em 48(1)}, 110--130. 
+
+\bibitem{ref-auad2023}
+Auad, R., Erera, A., \& Savelsbergh, M. Courier satisfaction in rapid delivery systems using dynamic operating regions. {\em Omega} {\bf 2023}, {\em 121}, 102917.
+
+\bibitem{ref-liao2020}
+Liao, W., Zhang, L., \& Wei, Z. Multi-objective green meal delivery routing problem based on a two-stage solution strategy. {\em Journal of Cleaner Production} {\bf 2020}, {\em 258}.
+
+\bibitem{ref-xie2024}
+Xie, Y., \& Wu, Z. A genetic algorithm for meal delivery problem considering rider’s wage balance. {\em Chinese Control and Decision Conference } {\bf 2024}.
+
+\bibitem{ref-goncalves2011}
+Gonçalves, J.F., Resende, M.G.: Biased random-key genetic algorithms for combinatorial optimization. {\em Journal of Heuristics} {\bf 2011} {\em 17(5)}, 487--525.
+
+\bibitem{ref-steever2019}
+Steever, Z., Karwan, M., \& Murray, C. Dynamic courier routing for a food delivery service. {\em Computers and Operations Research} {\bf 2019}, {\em 107}, 173--188.
+
+\bibitem{ref-ahamed2020}
+Ahamed, T., Zou, B., Farazi, N. P., \& Tulabandhula, T. Deep Reinforcement Learning for Crowdsourced Urban Delivery. {\em Transportation Research Part B: Methodological} {\bf 2021}, {\em 152}, 227-257.
+
+\bibitem{ref-yildiz2019}
+Yildiz, B., \& Savelsbergh, M. Provably High-quality solutions for the meal delivery routing problem. {\em Transportation Science} {\bf 2019}, {\em 53(5)}, 1372--1388.
+
+\bibitem{ref-dusadeerungsikul2023}
+Dusadeerungsikul, P. O., Wisaprom, N., Sae-Ngow, T., \& Hanvivatpong, P. A Multi-Objective Model for Meal Delivery Problem in Thailand. {\em Advances in Transdisciplinary Engineering} {\bf 2023}, {\em 35}, 191--198.
+
+\bibitem{ref-neria2024}
+Neria, G., Tzur, M., Hildebrandt, F. D., \& Ulmer, M. W. The restaurant meal delivery problem with ghost kitchens. {\em Transportation Science} {\bf 2025}, {\em 59}, 433-450.
+
+\bibitem{ref-bi2023}
+Bi, H., Zhu, X., Lu, F., \& Huang, M. The Meal Delivery Routing Problem in E-commerce Platforms under the Shared Logistics Mode. {\em Journal of Theoretical and Applied Electronic Commerce Research} {\bf 2023}, {\em 18(4)}, 1799--1819.
+
+
+\bibitem{ref-martinez2024}
+Martínez, A., McLeod, F., \& Friday, A. Exploring fairness in food delivery routing and scheduling problems. {\em Expert Systems with Applications} {\bf 2024}, {\em 240}.
+
+\bibitem{ref-bajec2022}
+Bajec, P., \& Tuljak-Suban, D. A Strategic Approach for Promoting Sustainable Crowdshipping in Last-Mile Deliveries. {\em Sustainability (Switzerland)} {\bf 2022}, {\em 14(20)}.
+
+\bibitem{ref-xue2021}
+Xue, G., Wang, Z., \& Wang, G. Optimization of Rider Scheduling for a Food Delivery Service in O2O Business. {\em Journal of Advanced Transportation} {\bf 2021}, {\em Volume}.
+
+\bibitem{ref-thipparthy2024}
+Thipparthy, K. R., Khalaf, M. I., Yogi, K. S., Alghayadh, F. Y., Yusupov, A., Maguluri, L. P., \& Ofori-Amanfo, P. Optimizing delivery routes for sustainable food delivery for multiple food items per order. {\em Discover Sustainability} {\bf 2024}, {\em 5(1)}.
+
+\bibitem{ref-bozanta2022}
+Bozanta, A., Cevik, M., Kavaklioglu, C., Kavuk, E. M., Tosun, A., Sonuc, S. B., Duranel, A., \& Basar, A. Courier routing and assignment for food delivery service using reinforcement learning. {\em Computers and Industrial Engineering} {\bf 2022}, {\em 164}.
+
+\bibitem{ref-banos2013}
+Baños, R., Ortega, J., Gil, C., Márquez, A. L., \& De Toro, F. A hybrid meta-heuristic for multi-objective Vehicle Routing Problems with Time Windows. {\em Computers and Industrial Engineering} {\bf 2013}, {\em 65(2)}, 286--296.
+
+\bibitem{ref-londe2025}
+Londe, M., Pessoa, L., Andrade, C., Resende, M.: Biased random-key genetic algorithms: A review. {\em Eur. Journal of Operational Research} {\bf 2025} {\em 321(1)}, 1--22.
+
+\bibitem{ref-giraldo2024}
+Giraldo-Herrera, D., \& Álvarez, D. A GRASP Algorithm for the Meal Delivery Routing Problem. In {\em Metaheuristics International Conference} {\bf 2024}, {\em 306--320}.
+
+
+\end{thebibliography}
+\end{document}

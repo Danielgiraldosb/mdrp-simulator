@@ -1,0 +1,136 @@
+%% ============================================================
+%%  Section 2 — Literature Review (compact version)
+%%  Article: BRKGA with Rolling Horizon for the MDRP
+%%  Citation style: LNCS (numeric \cite{})
+%% ============================================================
+
+\section{Literature Review}\label{sec:litreview}
+
+%% ------------------------------------------------------------------
+\subsection{The Meal Delivery Routing Problem}\label{subsec:mdrp}
+%% ------------------------------------------------------------------
+
+The MDRP was formally defined by Reyes et al.~\cite{reyes2018mdrp},
+who introduced a rolling-horizon framework in which orders arrive
+stochastically, are picked up at restaurants, and are delivered by
+couriers subject to time-window constraints.
+Ulmer et al.~\cite{ulmer2021restaurant} extended this baseline by
+modelling uncertain restaurant preparation times through the
+\emph{Anticipative Customer Assignment} (ACA) model, which delays
+courier--order matching to avoid premature assignments and long idle
+waits—a design principle that informs the Business Model heuristic
+presented in this paper.
+Steever et al.~\cite{steever2019dynamic} addressed the closely
+related Virtual Food Court Delivery Problem (VFCDP), using
+continuous event-driven replanning, while Yildiz and
+Savelsbergh~\cite{yildiz2019provably} proposed exact
+column-generation methods for the deterministic variant, providing
+high-quality benchmarks for evaluating heuristics.
+More recent work has broadened the MDRP to include multi-objective
+trade-offs~\cite{dusadeerungsikul2023multiobjective},
+ghost kitchens~\cite{neria2024ghost} (delivery-only facilities with
+no storefront that can be sited freely, adding spatial flexibility
+to kitchen-and-route co-optimisation), and shared-logistics
+modes~\cite{bi2023shared}; our work focuses on the single-platform,
+heterogeneous-fleet setting dominant among Latin American operators.
+
+%% ------------------------------------------------------------------
+\subsection{Planning-Horizon Approaches}\label{subsec:horizon}
+%% ------------------------------------------------------------------
+
+MDRP solution strategies differ in their assumptions about future
+information availability~\cite{reyes2018mdrp}.
+\emph{Static methods} assume complete knowledge at the planning
+horizon's start; they produce high-quality plans but cannot react
+to new arrivals~\cite{dusadeerungsikul2023multiobjective,yildiz2019provably}.
+\emph{Rolling-horizon} (RH) strategies re-solve a short-horizon
+sub-problem at each time window, incorporating new
+information~\cite{reyes2018mdrp,auad2023courier}.
+Auad et al.~\cite{auad2023courier} dynamically resized courier
+regions to improve coverage and satisfaction;
+Mart\'{\i}nez-Sykora et al.~\cite{martinez2024fairness} applied RH
+scheduling to balance fairness and efficiency;
+Thipparthy et al.~\cite{thipparthy2024optimizing} showed that
+batching decisions within each window substantially affect travel
+distance and wait time.
+\emph{Fully dynamic and stochastic} methods recalculate routes on
+every event~\cite{steever2019dynamic} or incorporate probabilistic
+demand forecasts~\cite{ulmer2021restaurant}; though most adaptive,
+they rely on approximate solvers or learned
+policies~\cite{bozanta2022reinforcement} due to high computational
+demands.
+
+%% ------------------------------------------------------------------
+\subsection{Metaheuristics for Meal and Last-Mile Delivery}
+\label{subsec:metaheuristics}
+%% ------------------------------------------------------------------
+
+Evolutionary algorithms have been applied successfully to MDRP
+variants: Liao et al.~\cite{liao2020multiobjective} used NSGA-II to
+balance workload and environmental impact in green meal delivery;
+Xie and Wu~\cite{xie2024genetic} designed genetic operators to
+enforce courier wage fairness without Lagrangian penalties;
+Ba\~{n}os et al.~\cite{banos2013hybrid} hybridised a genetic
+algorithm with local search for the multi-objective VRPTW,
+establishing design principles—population diversity, elite
+preservation, local refinement—that directly inform our BRKGA.
+Reinforcement-learning approaches (Q-Learning,
+DDQN~\cite{bozanta2022reinforcement}; deep
+RL~\cite{ahamed2020deep}) show promise but require extensive
+training data and offer limited interpretability.
+Giraldo-Herrera and \'Alvarez-Mart\'{\i}nez~\cite{giraldo2024grasp}
+proposed a GRASP for the MDRP on the same Latin American dataset
+used here, providing a direct methodological baseline.
+The BRKGA framework~\cite{goncalves2011brkga,londe2025review}
+encodes solutions as random-key vectors in $[0,1]$ decoded into
+feasible assignments without repair operators; biased crossover
+($p_e=0.7$) concentrates search around elite solutions while
+mutants maintain diversity. Its rapid per-window convergence makes
+it well suited for rolling-horizon contexts, yet its integration
+with an RH wrapper for a fully dynamic problem such as the MDRP
+has not been previously studied.
+
+%% ------------------------------------------------------------------
+\subsection{Research Gap and Positioning}\label{subsec:gap}
+%% ------------------------------------------------------------------
+
+Two gaps motivate this work.
+First, RH inner solvers are almost exclusively constructive greedy
+heuristics; population-based search within each rolling window
+has not been systematically evaluated.
+Second, the quality--speed trade-off is rarely quantified across
+heterogeneous instance sizes.
+We address both by embedding a BRKGA inside an RH wrapper and
+comparing two fitness variants (coverage-oriented and
+travel-oriented) against a strong greedy baseline (Business Model)
+on 24 real-world instances (538--59{,}167 orders).
+Table~\ref{tab:litreview} summarises the positioning relative to
+the closest related studies.
+
+\begin{table}[ht]
+\centering
+\caption{Positioning of the present work in the literature.
+RH: rolling horizon; Cov: coverage; TT: travel time.}
+\label{tab:litreview}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Study} & \textbf{Method} & \textbf{RH} &
+\textbf{Obj.} & \textbf{Dynamic} &
+\textbf{Real data} & \textbf{Instance size} \\
+\midrule
+Reyes et al.~\cite{reyes2018mdrp}                        & Greedy       & \checkmark & TT       & \checkmark & \checkmark & Small--Med   \\
+Ulmer et al.~\cite{ulmer2021restaurant}                  & DP/ACA       & \checkmark & TT       & \checkmark & \checkmark & Small--Med   \\
+Steever et al.~\cite{steever2019dynamic}                 & Greedy       & \checkmark & TT       & \checkmark & \checkmark & Med          \\
+Yildiz \& Savelsbergh~\cite{yildiz2019provably}          & Exact        &            & Cost     &            & \checkmark & Small--Med   \\
+Liao et al.~\cite{liao2020multiobjective}                & NSGA-II      &            & Multi    &            & Synthetic  & Small        \\
+Bozanta et al.~\cite{bozanta2022reinforcement}           & RL (DDQN)    & \checkmark & TT       & \checkmark & \checkmark & Small        \\
+Auad et al.~\cite{auad2023courier}                       & Greedy RH    & \checkmark & Fairness & \checkmark & \checkmark & Med          \\
+Giraldo-Herrera \& \'Alvarez~\cite{giraldo2024grasp}     & GRASP        &            & Cov      &            & \checkmark & Small--Large \\
+Mart\'{\i}nez-Sykora et al.~\cite{martinez2024fairness}  & RH sched.    & \checkmark & Fairness & \checkmark & \checkmark & Small--Med   \\
+\midrule
+\textbf{This work}                                       & \textbf{BRKGA} & \checkmark & Cov/TT & \checkmark & \checkmark & Small--Large \\
+\bottomrule
+\end{tabular}
+\end{table}

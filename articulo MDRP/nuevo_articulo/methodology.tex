@@ -1,0 +1,498 @@
+%% ============================================================
+%%  Section 4 — Methodology
+%%  Article: BRKGA with Rolling Horizon for the MDRP
+%%  Citation style: LNCS (numeric \cite{})
+%% ============================================================
+
+\section{Methodology}\label{sec:methodology}
+
+This section describes the three algorithms evaluated in our study.
+All methods share the same rolling-horizon architecture introduced in
+Section~\ref{subsec:decisions}: the planning day is divided into
+consecutive 2-minute windows, and each method must produce
+a complete set of courier assignments before the window expires.
+This \textbf{hard wall-clock budget of $\Delta = 2$ minutes per window}
+is a non-negotiable requirement for real-time deployment; a method
+that exceeds it would delay courier dispatch and break the online
+guarantee of the platform.
+Table~\ref{tab:method_params} summarises the configuration shared
+by all three methods.
+
+\begin{table}[ht]
+\centering
+\caption{Shared rolling-horizon configuration.}
+\label{tab:method_params}
+\small
+\begin{tabular}{lll}
+\toprule
+\textbf{Parameter} & \textbf{Value} & \textbf{Rationale} \\
+\midrule
+Window length $\Delta$       & 2 min   & Matches platform dispatch cycle \\
+Simulation horizon           & 0–1\,440 min & Full 24-hour operating day \\
+Maximum batch size $K$       & 3 orders & Vehicle capacity constraint \\
+Vehicle types $T$            & 4 (motorcycle, bicycle, car, pedestrian) & Instance data \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%% ------------------------------------------------------------------
+\subsection{Business Model — Rolling-Horizon Coverage Model}
+\label{subsec:maxcover}
+%% ------------------------------------------------------------------
+
+The Business Model is a \emph{rolling-horizon} heuristic that solves a
+set-packing sub-problem at each 2-minute window.
+Like the BRKGA variants, it observes only the orders and couriers
+available at time $t_w$ and produces a dispatch plan before the
+window expires — it has no knowledge of future orders beyond
+what can be inferred from historical demand.
+Table~\ref{tab:maxcover_params} lists its parameters.
+
+\begin{table}[ht]
+\centering
+\caption{Business Model configuration parameters.}
+\label{tab:maxcover_params}
+\small
+\begin{tabular}{lll}
+\toprule
+\textbf{Parameter} & \textbf{Value} & \textbf{Description} \\
+\midrule
+$K_{\max}$          & 2 orders  & Maximum batch size \\
+$B_{\max}$          & 3 batches & Maximum non-overlapping batches per store per window \\
+$N_{\max}$          & 10        & Maximum couriers evaluated per batch \\
+$D_{\max}$          & 10 km     & Maximum courier-to-store eligibility radius \\
+$L$                 & 8 min     & Lookahead forecast horizon \\
+Time budget         & 120 s     & Wall-clock budget per window ($\Delta = 2$ min) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Business Model}
+\label{subsubsec:maxcover_base}
+
+The \emph{Business Model} operates without demand forecast: each window it processes every store with pending orders and generates assignments from currently observed information alone.
+It executes two phases.
+
+\textbf{Phase 1 — Candidate generation.}
+Orders at store $r$ are sorted by deadline and partitioned into at most $B_{\max}=3$ non-overlapping batches of size $k \leq K_{\max}=2$.
+For each batch $s$ and the $N_{\max}=10$ nearest eligible couriers ($d \leq D_{\max}=10$\,km), feasibility is checked and a score computed:
+
+\begin{equation}\label{eq:maxcover_score}
+    \text{score}(c, s) = k \times 10{,}000 + u(s) \times 10 - \tau_{cs},
+\end{equation}
+
+where $\tau_{cs}$ is route travel time and
+
+\begin{equation}\label{eq:urgency}
+    u(s) = \max\!\Bigl(0,\;100 - \bigl(\min_{o \in s}\,\text{deadline}(o) - t_w\bigr)\Bigr)
+\end{equation}
+
+is an urgency term increasing as deadlines approach.
+$\tau_{cs}$ is the minimum over three constructive sequences: nearest neighbour, earliest deadline, and distance-from-store; time-window feasibility is verified for each (Section~\ref{subsec:constraints}).
+Candidate generation uses at most 70\% of the 120-second window budget.
+
+\textbf{Phase 2 — Conflict-free selection.}
+Candidates in $\Lambda^w$ are sorted by score (descending) and a greedy pass selects the conflict-free subset approximating the set-packing problem:
+
+\begin{equation}\label{eq:set_packing}
+    \max \sum_{\lambda \in \Lambda^w} \text{score}(\lambda)\,x_\lambda
+    \quad\text{s.t.}\quad
+    \sum_{\lambda: c(\lambda)=c} x_\lambda \leq 1\;\forall c,\quad
+    \sum_{\lambda: o \in s(\lambda)} x_\lambda \leq 1\;\forall o,\quad
+    x_\lambda \in \{0,1\}.
+\end{equation}
+
+The selected set $\mathcal{A}^w$ is dispatched at window start.
+
+\subsubsection{Business Model Lookahead}
+\label{subsubsec:maxcover_la}
+
+The \emph{Business Model Lookahead} prepends a \textbf{Phase 0} demand-forecast filter to the Business Model, deferring stores where waiting for additional orders would enable larger batches.
+For each store $r$, expected new orders within $L=8$ minutes are:
+
+\begin{equation}\label{eq:forecast}
+    \hat{f}(r, t_w) =
+    \Bigl[0.7\,\hat{R}_{\text{rec}}(r) + 0.3\,\hat{R}_{\text{hist}}(r)\Bigr]
+    \times h(t_w) \times L,
+\end{equation}
+
+where $\hat{R}_{\text{rec}}(r) = |O_{r}^{[-10,\,t_w]}|/10$ and $\hat{R}_{\text{hist}}(r) = |O_{r}^{[-30,\,t_w]}|/30$ are recent and historical arrival rates, and
+
+\begin{equation}\label{eq:hour_mult}
+    h(t_w) =
+    \begin{cases}
+        1.3 & t_w \in [660, 840] \cup [1080, 1260]\;\text{min (11h--14h, 18h--21h),} \\
+        0.8 & \text{otherwise.}
+    \end{cases}
+\end{equation}
+
+Store $r$ is deferred to the next window if all three conditions hold:
+
+\begin{equation}\label{eq:wait_condition}
+    |O^w_r| \leq 2
+    \quad\wedge\quad
+    \hat{f}(r, t_w) \geq 3
+    \quad\wedge\quad
+    \min_{o \in O^w_r}\!\bigl(\text{deadline}(o) - t_w\bigr) > 25\;\text{min.}
+\end{equation}
+
+Stores passing this filter proceed through Phases 1 and 2 unchanged.
+Algorithm~\ref{alg:maxcover} gives the complete pseudocode (the plain Business Model is identical with lines 2--4 removed).
+
+\begin{algorithm}[ht]
+\caption{Business Model Lookahead — window $w$}
+\label{alg:maxcover}
+\begin{algorithmic}[1]
+\Require $O^w$, $C^w$, current time $t_w$, order history
+\Ensure Conflict-free assignment set $\mathcal{A}^w$
+\State Compute $\hat{f}(r, t_w)$ via Eq.~\eqref{eq:forecast} for all $r$
+\State $\Lambda^w \leftarrow \emptyset$
+\ForAll{store $r$ with $O^w_r \neq \emptyset$}
+    \If{wait condition Eq.~\eqref{eq:wait_condition} holds} \Comment{Phase 0 — lookahead filter}
+        \State \textbf{continue}
+    \EndIf
+    \State \Comment{Phase 1 — global candidate generation}
+    \State Sort $O^w_r$ by deadline; partition into batches $s_1,\ldots,s_{B_{\max}}$
+    \ForAll{batch $s_j$, courier $c \in$ top-$N_{\max}$ nearby couriers in $C^w$}
+        \State $\tau_{cs} \leftarrow$ best feasible route via 3-heuristic ensemble
+        \If{route feasible}
+            \State $\Lambda^w \leftarrow \Lambda^w \cup \{(c, s_j,\;\text{score}(c,s_j))\}$
+        \EndIf
+    \EndFor
+\EndFor
+\State \Comment{Phase 2 — conflict-free selection}
+\State Sort $\Lambda^w$ by score (descending)
+\State $\mathcal{A}^w \leftarrow \emptyset$;\ $\mathcal{U}_C \leftarrow \emptyset$;\ $\mathcal{U}_O \leftarrow \emptyset$
+\ForAll{$(c, s, \cdot) \in \Lambda^w$}
+    \If{$c \notin \mathcal{U}_C$ \textbf{and} $s \cap \mathcal{U}_O = \emptyset$}
+        \State $\mathcal{A}^w \leftarrow \mathcal{A}^w \cup \{(c,s)\}$;\ $\mathcal{U}_C \leftarrow \mathcal{U}_C \cup \{c\}$;\ $\mathcal{U}_O \leftarrow \mathcal{U}_O \cup s$
+    \EndIf
+\EndFor
+\State \Return $\mathcal{A}^w$
+\end{algorithmic}
+\end{algorithm}
+
+%% ------------------------------------------------------------------
+\subsection{BRKGA Rolling-Horizon Framework}
+\label{subsec:brkga_framework}
+%% ------------------------------------------------------------------
+
+The two BRKGA variants — BRKGA-Coverage and BRKGA-Travel —
+share an identical algorithmic framework;
+they differ only in their fitness function.
+We describe the common framework here and specify each variant's
+fitness in Sections~\ref{subsec:brkga_cov} and~\ref{subsec:brkga_trav}.
+
+\paragraph{Stopping criterion.}
+$G_{\max} = 10$ generations is the \emph{primary stopping criterion}:
+the genetic loop always runs exactly 10 generations and then
+terminates, regardless of how much wall-clock time has elapsed.
+The 2-minute wall-clock budget ($\Delta$) serves only as a
+\emph{hard safety ceiling}: if the loop were ever to exceed
+$\Delta$ (e.g., on hardware slower than the test machine),
+the best solution found up to that point would be dispatched
+immediately. Our parameterisation ensures this fallback is
+never triggered in practice.
+Remaining wall-clock time after $G_{\max}$ is reached is
+intentionally left unused to guarantee deterministic,
+analytically bounded per-window runtimes — a property
+required for a production real-time guarantee.
+Adaptive stopping (early termination on fitness stagnation,
+or extra generations when time permits) is left as future work.
+
+\paragraph{Hyper-parameter calibration.}
+Operational parameters are fixed by platform rules:
+$\Delta = 2$ min (dispatch cycle), $K = 3$ (vehicle capacity),
+$D_{\max} = 10$ km (eligibility radius).
+BRKGA hyper-parameters were calibrated in two steps.
+First, canonical defaults from Gon\c{c}alves and
+Resende~\cite{goncalves2011brkga} provided the starting point:
+$p_e = 0.7$, $N_e/N_p \approx 0.15$--$0.20$,
+$N_m/N_p \approx 0.10$--$0.15$.
+Second, values were tightened jointly to keep worst-case
+per-window runtime below $\Delta$ on the test hardware,
+with the decoder cost $O(N_p \cdot G_{\max} \cdot |O^w| \cdot K)$
+as the binding constraint.
+Reducing $N_p$ or $G_{\max}$ below 10 produced measurably worse
+coverage on medium instances in pilot runs; increasing either
+caused occasional budget overruns on large instances.
+The final values ($N_p = 10$, $G_{\max} = 10$, $N_e = 2$,
+$N_m = 2$, $p_e = 0.7$) represent the best quality--runtime
+trade-off observed in those pilots.
+
+Each window evolves a population of $N_p = 10$ candidate solutions
+over $G_{\max} = 10$ generations.
+Of these, $N_e = 2$ elite individuals (the two best solutions of the
+current generation) are carried unchanged into the next generation,
+$N_m = 2$ mutants are drawn entirely at random from $[0,1]$, and
+the remaining $N_o = N_p - N_e - N_m = 6$ offspring are produced
+by biased crossover with elite-inheritance probability $p_e = 0.7$.
+Inside the decoder, at most $K = 3$ couriers are evaluated per
+(batch, store) pair, which bounds the per-chromosome decoding cost
+and is the primary lever controlling runtime within the 2-minute budget.
+
+\subsubsection{Chromosome Encoding}\label{subsubsec:encoding}
+
+Each candidate solution for window $w$ is encoded as a
+random-key chromosome~\cite{bean1994} of length
+$n_{O^w} + n_{C^w}$, where $n_{O^w} = |O^w|$ and
+$n_{C^w} = |C^w|$:
+
+\begin{equation}
+    \mathbf{x} = \bigl[\,
+        \underbrace{x_1, \ldots, x_{n_{O^w}}}_{\text{order keys}}\;
+        \Big|\;
+        \underbrace{x_{n_{O^w}+1}, \ldots, x_{n_{O^w}+n_{C^w}}}_{\text{courier keys}}\,
+    \bigr], \quad x_i \in [0,1].
+\end{equation}
+
+\noindent
+\textbf{Order keys} encode a priority ranking over $O^w$:
+orders are processed in descending order of their key values,
+so higher keys correspond to higher scheduling priority.
+\textbf{Courier keys} encode a preference ordering over $C^w$:
+available couriers are tried in descending key order when
+seeking the best match for a pending batch.
+Both segments are initialised uniformly at random and
+evolved by the genetic operators described below.
+
+\noindent\textit{Example.}
+For a window with three pending orders $\{o_1,o_2,o_3\}$ and
+two couriers $\{c_1,c_2\}$, a chromosome
+$\mathbf{x} = [\,\underbrace{0.9,\;0.3,\;0.7}_{\text{order keys}}\mid
+\underbrace{0.4,\;0.8}_{\text{courier keys}}\,]$
+induces the assignment priority $o_1 \succ o_3 \succ o_2$
+(descending order key) and courier preference $c_2 \succ c_1$
+(descending courier key), so the decoder attempts to assign $o_1$
+first using $c_2$ as the preferred courier.
+
+\subsubsection{Chromosome Decoder}\label{subsubsec:decoder}
+
+The decoder translates a chromosome $\mathbf{x}$ into a feasible
+assignment set $\mathcal{A}^w$ through a greedy simulation of
+the current window.
+The procedure is summarised in Algorithm~\ref{alg:decoder}.
+
+\begin{algorithm}[ht]
+\caption{Chromosome Decoder for window $w$}
+\label{alg:decoder}
+\begin{algorithmic}[1]
+\Require chromosome $\mathbf{x}$, $O^w$, $C^w$, $\mathcal{S}^w$
+\Ensure Assignment set $\mathcal{A}$ and fitness $f$
+\State Extract order keys and courier keys from $\mathbf{x}$
+\State Sort $O^w$ by order key (descending) $\rightarrow$ priority list $\pi_O$
+\State Sort $C^w$ by courier key (descending) $\rightarrow$ priority list $\pi_C$
+\State Group $\pi_O$ by store: $\{O^w_r\}_{r \in R}$
+\State $\mathcal{A} \leftarrow \emptyset$;\ $\text{assigned} \leftarrow \emptyset$
+\ForAll{store $r$ in order of first pending order in $\pi_O$}
+    \State $\text{avail} \leftarrow C^w \setminus \text{assigned couriers}$, sorted by $\pi_C$
+    \While{$O^w_r \neq \emptyset$ \textbf{and} $\text{avail} \neq \emptyset$}
+        \State best $\leftarrow$ None
+        \ForAll{batch size $k = 1, \ldots, K$}
+            \State $s \leftarrow$ first $k$ orders of $O^w_r$
+            \ForAll{$c \in \text{top-}K$ couriers of avail}
+                \State compute route$(c, r, s)$ via nearest-neighbour heuristic
+                \If{route is feasible \textbf{and} finish\_time $<$ best.finish\_time}
+                    \State best $\leftarrow (c, s, \text{route})$
+                \EndIf
+            \EndFor
+        \EndFor
+        \If{best $\neq$ None}
+            \State $\mathcal{A} \leftarrow \mathcal{A} \cup \{(\text{best}.c,\,\text{best}.s)\}$
+            \State mark best$.c$ and best$.s$ as assigned
+        \Else
+            \State \textbf{break}
+        \EndIf
+    \EndWhile
+\EndFor
+\State Compute $\rho$, $\bar{\tau}$ from $\mathcal{A}$; evaluate fitness $f$
+\State \Return $\mathcal{A}$, $f$
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Nearest-neighbour delivery sequencing.}
+Within each batch $s$, delivery stops are ordered by the
+nearest-neighbour heuristic: starting from the pickup restaurant,
+the courier visits the unserved customer node closest (in travel
+time) to the current position, repeating until all nodes are
+served.
+Time-window feasibility is checked at each step;
+if any customer deadline $s^u_o$ is violated, the route is
+declared infeasible and the entire batch is discarded.
+
+\paragraph{Route feasibility checks.}
+Before invoking the nearest-neighbour heuristic, the decoder
+verifies three necessary conditions:
+(i) the courier can reach the restaurant and depart
+after all orders are ready ($\text{depart} \geq \max_{o \in s} s^r_o$),
+(ii) the departure time falls within the courier's shift
+$[\alpha_c, \delta_c]$, and
+(iii) the courier can return to the home base before $\delta_c$.
+
+\subsubsection{Genetic Operators}\label{subsubsec:operators}
+
+\paragraph{Elite selection.}
+At the end of each generation the $N_e = 2$ individuals with the
+lowest fitness are copied without modification into the next
+population.
+This elitism ensures that the best solution found so far is never
+lost during the tight 10-generation window budget.
+
+\paragraph{Biased crossover.}
+Each of the $N_o = 6$ offspring is generated by selecting one elite
+parent $\mathbf{x}^e$ and one non-elite parent $\mathbf{x}^n$
+uniformly at random.
+For each gene position $i$:
+
+\begin{equation}
+    x^{\text{off}}_i =
+    \begin{cases}
+        x^e_i & \text{with probability } p_e = 0.7, \\
+        x^n_i & \text{with probability } 1 - p_e = 0.3.
+    \end{cases}
+\end{equation}
+
+\noindent
+The bias $p_e > 0.5$ ensures that elite genetic material
+propagates faster than non-elite material, which is the
+defining feature of BRKGA~\cite{goncalves2011brkga}.
+
+\paragraph{Mutants.}
+The remaining $N_m = 2$ individuals are drawn entirely from
+$\mathcal{U}[0,1]^{n_{O^w}+n_{C^w}}$, providing genetic diversity
+and preventing premature convergence within each short window.
+
+\subsubsection{Window Integration}\label{subsubsec:integration}
+
+Algorithm~\ref{alg:brkga_window} shows how the genetic loop is
+embedded in the rolling-horizon schedule.
+At each 2-minute tick, the platform observes $O^w$ and $C^w$,
+executes the full BRKGA evolutionary loop
+(initialisation + 10 generations of evaluation, selection,
+crossover, and mutation), and immediately dispatches the
+assignments of the best individual found.
+If the genetic loop finishes in fewer than $\Delta$ seconds,
+the remaining wall-clock time is unused;
+if it were to exceed $\Delta$, the best solution available at
+the deadline would be dispatched instead — though our
+parameterisation ensures this never occurs in practice.
+
+\begin{algorithm}[ht]
+\caption{BRKGA Rolling-Horizon main loop}
+\label{alg:brkga_window}
+\begin{algorithmic}[1]
+\Require Orders $O$, Couriers $C$, window length $\Delta$
+\State Initialise solution state; $\text{assigned} \leftarrow \emptyset$
+\For{$w = 0, \Delta, 2\Delta, \ldots, 1440$}
+    \State Release couriers whose routes finished $\leq w$
+    \State $O^w \leftarrow \{o \in O \setminus \text{assigned} : s^r_o \leq w\}$
+    \State $C^w \leftarrow$ idle couriers at time $w$
+    \If{$O^w = \emptyset$ \textbf{or} $C^w = \emptyset$}
+        \State \textbf{continue}
+    \EndIf
+    \State \textit{// BRKGA must complete within $\Delta$ minutes}
+    \State Initialise population $\mathbf{P} \sim \mathcal{U}[0,1]^{N_p \times (n_{O^w}+n_{C^w})}$
+    \State $f^* \leftarrow \infty$;\ $\mathcal{A}^* \leftarrow \emptyset$
+    \For{$g = 1, \ldots, G_{\max}$} \Comment{$G_{\max} = 10$}
+        \ForAll{$\mathbf{x} \in \mathbf{P}$}
+            \State $(\mathcal{A}, f) \leftarrow \text{Decode}(\mathbf{x}, O^w, C^w)$
+            \If{$f < f^*$} $f^* \leftarrow f$;\ $\mathcal{A}^* \leftarrow \mathcal{A}$ \EndIf
+        \EndFor
+        \State Select $N_e$ elite; generate $N_o$ offspring + $N_m$ mutants
+        \State $\mathbf{P} \leftarrow \text{elite} \cup \text{offspring} \cup \text{mutants}$
+    \EndFor
+    \State Dispatch $\mathcal{A}^*$; update state and $\text{assigned}$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+%% ------------------------------------------------------------------
+\subsection{BRKGA-Coverage}
+\label{subsec:brkga_cov}
+%% ------------------------------------------------------------------
+
+BRKGA-Coverage uses the penalised fitness function $f_{\text{cov}}$
+defined in Eq.~\eqref{eq:fitness_cov}, which is re-stated here for
+convenience:
+
+\begin{equation*}
+    f_{\text{cov}} =
+    \begin{cases}
+        10^{9}\,(1 - \rho) + \bar{\tau}/20 & \text{if } \rho < 0.50, \\
+        10^{7}\,(1 - \rho) + \bar{\tau}/20 & \text{if } 0.50 \leq \rho < 0.60, \\
+        10^{5}\,(1 - \rho) + \bar{\tau}/20 & \text{if } \rho \geq 0.60.
+    \end{cases}
+\end{equation*}
+
+The tiered structure imposes an \emph{absolute priority} on coverage:
+until at least 60\% of the window's orders are assigned, any
+improvement in coverage dominates all travel-time gains.
+Only when $\rho \geq 0.60$ does the secondary term $\bar{\tau}/20$
+become influential.
+The normalisation factor of 20 corresponds to a baseline travel
+time of 20 minutes per order; it ensures that the secondary
+objective contributes at most a few percent of the primary
+penalty in the $\rho \geq 0.60$ regime.
+The chromosome decoder evaluates $\rho$ and $\bar{\tau}$ as
+described in Section~\ref{subsubsec:decoder} and the BRKGA
+minimises $f_{\text{cov}}$ across the 10 generations per window.
+
+%% ------------------------------------------------------------------
+\subsection{BRKGA-Travel}
+\label{subsec:brkga_trav}
+%% ------------------------------------------------------------------
+
+BRKGA-Travel replaces the fitness function with $f_{\text{trav}}$
+from Eq.~\eqref{eq:fitness_trav}:
+
+\begin{equation*}
+    f_{\text{trav}} =
+    \begin{cases}
+        10^{6}\,(1 - \rho) + \bar{\tau} & \text{if } \rho < 0.50, \\
+        10^{4}\,(1 - \rho) + \bar{\tau} & \text{if } \rho \geq 0.50.
+    \end{cases}
+\end{equation*}
+
+The penalty coefficients are two to five orders of magnitude
+smaller than those in $f_{\text{cov}}$, allowing the algorithm
+to \emph{trade a modest reduction in coverage for meaningful
+gains in travel efficiency}.
+For instance, a solution with $\rho = 0.55$ and
+$\bar{\tau} = 12$ min/order achieves
+$f_{\text{trav}} = 10^4 \times 0.45 + 12 = 4{,}512$,
+whereas a solution with $\rho = 0.60$ and
+$\bar{\tau} = 18$ min/order achieves $f_{\text{trav}} = 4{,}018$;
+the second solution is preferred despite slightly lower coverage.
+In contrast, $f_{\text{cov}}$ would rank the first solution
+higher ($\approx 10^5 \times 0.40 + 0.9 = 40{,}001$
+versus $10^5 \times 0.40 + 0.6 = 40{,}001$
+— a negligible difference at this coverage level, but
+$f_{\text{cov}}$ heavily penalises any
+coverage below $\rho = 0.60$).
+In all other respects — encoding, decoder, operators,
+rolling-horizon integration, and the 2-minute real-time budget —
+BRKGA-Travel is identical to BRKGA-Coverage.
+
+%% ------------------------------------------------------------------
+\subsection{Computational Complexity and Runtime Budget}
+\label{subsec:complexity}
+%% ------------------------------------------------------------------
+
+The dominant cost per BRKGA generation is the decoder, which
+runs in $O(N_p \cdot n_{O^w} \cdot n_{C^w} \cdot K^2)$ per generation
+in the worst case (batch enumeration $\times$ top-$K$ courier
+evaluation $\times$ nearest-neighbour sequencing).
+With $N_p = 10$, $G_{\max} = 10$, $K = 3$, and
+top-$K$ couriers $= 3$, the per-window work is
+$O(900 \cdot n_{O^w} \cdot n_{C^w})$.
+For our largest instances this results in runtimes well within
+the $\Delta = 2$-minute wall-clock budget (see
+Section~\ref{sec:results} for measured runtimes).
+
+MaxCover's candidate enumeration is
+$O(|R| \cdot n_{C^w} \cdot n_{O^w}^K)$
+but, because $K = 3$ and the greedy selection pass is $O(|\mathcal{C}|)$,
+it runs in milliseconds even for large instances.
+This structural difference in computational cost explains the
+runtime gap observed between the two method families in our
+experiments.
