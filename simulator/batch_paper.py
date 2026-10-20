@@ -359,6 +359,9 @@ def main() -> None:
     out = args.out or os.path.join(THIS_DIR, 'output', 'paper', f'{args.experiment}.csv')
     done = done_run_ids(out)
     todo = [c for c in grid if c['run_id'] not in done]
+    # seed-major order: after the first pass every cell has seed 1, so partial results are
+    # already a complete (if noisy) picture; later passes add seeds
+    todo.sort(key=lambda c: (c['seed'], c['instance'], c['regime'], c['method']))
     print(f"{args.experiment}: {len(grid)} cells, {len(done)} already in {out}, {len(todo)} to run")
     if args.dry_run:
         by = {}

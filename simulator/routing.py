@@ -14,7 +14,7 @@ from typing import List, Tuple, Dict, Any, Optional
 
 from config import Config
 from models import Order, Courier
-from distance import dist_km, travel_time_min, speed_of
+from distance import dist_km, dist_m, travel_time_min, speed_of
 
 
 def store_key(order: Order) -> Tuple[float, float]:
@@ -117,37 +117,56 @@ def best_route_for_courier(courier: Courier,
     jointly feasible, otherwise the single most urgent feasible order from
     that store. Returns None if no store has any feasible route at all.
     """
-    best_seq: Optional[List[Order]] = None
-    best_dist = float('inf')
-
+    # Stores sorted by distance: the first store with a feasible route IS the nearest
+    # feasible one, so feasibility is evaluated at a handful of stores instead of all.
+    # Plus an exact necessary condition (earliest possible drop-off vs latest deadline)
+    # that skips stores no route from which can be feasible. Same result as the
+    # original scan; Etapa 4 finding H7 (greedy took 35 min on the Bogota zone because
+    # 2,650 couriers each evaluated every pending store).
+    stores = []
     for orders_here in pending_by_store.values():
         candidates = [o for o in orders_here if courier.courier_id not in o.rejected_by]
-        if not candidates:
-            continue
+        if candidates:
+            stores.append((dist_km(courier.location, candidates[0].store_loc), candidates))
+    stores.sort(key=lambda item: item[0])
+    mpm = speed_of(courier, cfg)
+    overhead = cfg.pickup_service_min + cfg.dropoff_service_min
 
-        store_loc = candidates[0].store_loc
-        dist = dist_km(courier.location, store_loc)
-        if dist >= best_dist:
-            continue  # cannot beat the best feasible route found so far
+    for dist, candidates in stores:
+        # Exact necessary condition per order: even served alone and first, the drop-off
+        # cannot happen before max(arrival, ready) + pickup + store->user + drop-off.
+        # Orders that fail it (typically "dead on arrival": ready time already past the
+        # hard SLA) are what made every courier scan every store on the Bogota zone.
+        if mpm > 0:
+            t_arrive = t + dist * 1000.0 / mpm
+            ok = [o for o in candidates
+                  if max(t_arrive, o.ready_time) + overhead + dist_m(o.store_loc, o.user_loc) / mpm
+                  <= o.placement_time + o.max_click_to_door + cfg.late_tolerance_min]
+            if not ok:
+                continue
+        else:
+            ok = candidates
+        ok_ids = {o.order_id for o in ok}
 
         seq = None
         if cfg.max_bundle_size > 1 and len(candidates) > 1:
             by_urgency = sorted(candidates, key=lambda o: o.placement_time + o.max_click_to_door)
             bundle = tuple(by_urgency[:cfg.max_bundle_size])
-            result = route_feasibility(courier, bundle, t, cfg)
-            if result is not None:
-                seq = result['sequence']
+            # a bundle with a member that fails its own bound is infeasible: skip the check
+            if all(o.order_id in ok_ids for o in bundle):
+                result = route_feasibility(courier, bundle, t, cfg)
+                if result is not None:
+                    seq = result['sequence']
 
         if seq is None:
             feasible_singles = [
-                o for o in candidates
+                o for o in ok
                 if route_feasibility(courier, (o,), t, cfg) is not None
             ]
             if feasible_singles:
                 seq = [min(feasible_singles, key=lambda o: o.placement_time + o.max_click_to_door)]
 
         if seq is not None:
-            best_seq = seq
-            best_dist = dist
+            return seq
 
-    return best_seq
+    return None

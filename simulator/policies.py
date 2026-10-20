@@ -73,6 +73,18 @@ def _group_by_store(pending: Dict[int, Order]) -> Dict[Tuple[float, float], List
     return by_store
 
 
+def _remove_from_groups(by_store: Dict[Tuple[float, float], List[Order]], route: List[Order]) -> None:
+    """Drop the orders of an assigned route from the store groups (keeps insertion order)."""
+    for o in route:
+        key = store_key(o)
+        group = by_store.get(key)
+        if group is None:
+            continue
+        group[:] = [p for p in group if p.order_id != o.order_id]
+        if not group:
+            del by_store[key]
+
+
 # -- Greedy (corporate baseline) -----------------------------------------------------
 
 class GreedyPolicy(Policy):
@@ -98,13 +110,13 @@ class GreedyPolicy(Policy):
         sorted_couriers = sorted(available.values(), key=lambda c: c.history.orders_delivered)
 
         assignments = []
+        by_store = _group_by_store(pending)       # maintained incrementally (was rebuilt per courier)
         for courier in sorted_couriers:
             if not pending:
                 break
             if not courier.is_available:
                 continue
 
-            by_store = _group_by_store(pending)
             route = best_route_for_courier(courier, by_store, now, self.cfg)
             if route is None:
                 continue
@@ -116,6 +128,7 @@ class GreedyPolicy(Policy):
             ))
             for o in route:
                 del pending[o.order_id]
+            _remove_from_groups(by_store, route)
 
         return assignments
 
@@ -147,11 +160,11 @@ class FairGreedyPolicy(GreedyPolicy):
         sorted_couriers = sorted(available.values(), key=lambda c: c.history.hourly_earnings)
 
         assignments = []
+        by_store = _group_by_store(pending)
         for courier in sorted_couriers:
             if not pending or not courier.is_available:
                 continue
 
-            by_store = _group_by_store(pending)
             route = best_route_for_courier(courier, by_store, now, self.cfg)
             if route is None:
                 continue
@@ -162,5 +175,6 @@ class FairGreedyPolicy(GreedyPolicy):
             assignments.append((courier.courier_id, [o.order_id for o in route], pay))
             for o in route:
                 del pending[o.order_id]
+            _remove_from_groups(by_store, route)
 
         return assignments
