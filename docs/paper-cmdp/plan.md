@@ -223,3 +223,23 @@ Decisiones de la Etapa 3 tomadas el 2026-10-20 por encargo del autor (E1–E6, t
 `porte-brkga.md` y slide 13 del deck): `finish_per_order`, déficit por hora, peso 10 min con barrido, Gini
 sobre todos los conectados (`H_all`), prioridad equidad › cobertura sin minwage/routebalance, Pay-BRKGA como
 suma ponderada con barrido de λ_pay. Siguen abiertas solo las de la Etapa 1 (`modelo-vs-evidencia.md` §4).
+
+## Estado de la Etapa 4 (2026-10-20, noche)
+
+| Entregable | Estado | Archivo |
+|---|---|---|
+| Diseño experimental: zona de 3 km, factores, 18 configuraciones, X0–X3 (11.922 corridas), métricas, análisis pareado, T1–T8 / F1–F8, presupuesto | hecho | `docs/paper-cmdp/diseno-experimental.md` |
+| `batch_paper.py`: malla por experimento, un proceso por corrida, reintentos, timeout, reanudable, tablas por repartidor, `--dry-run`, `--estimate` | hecho y probado en local | `simulator/batch_paper.py` |
+| Piloto local (la máquina quedó estable con el turbo del CPU apagado): Pereira día completo con los 7 métodos; Bogotá 12:00–14:00 con 6 configuraciones | hecho; números en §8 del diseño | — |
+| Presupuesto: ≈ 615 h de CPU en total (cota superior) = 1,6 días con 16 procesos | estimado | diseño §9 |
+
+Hallazgos que cambiaron código (detalle en diseño §10 y `porte-brkga.md`, "E5 revisada"): MIP-Fair era
+O(n²) por ronda y no terminaba (reformulado, exacto, tests verdes); la prioridad equidad › cobertura
+entrega cobertura 0 desde el arranque en frío (default ahora cobertura › Gini, E5'); MIP-Fair en la malla
+con top-k 8; el loader tolera los ids con prefijo `c` de la instancia 3.
+
+**Bloqueo antes de X1:** BRKGA-Coverage cubre 0,16–0,21 en Bogotá frente a 0,44 del greedy (en Pereira
+iguala). BRKGA-Fair y Pay-BRKGA heredan el decodificador. Hay que diagnosticarlo (Etapa 3, pieza 1b) antes
+de lanzar las 9 configuraciones BRKGA. Pay-BRKGA además pierde 18 pts de cobertura en Pereira con
+λ_pay = 0,2 (revisar junto con lo anterior). Pendiente del autor: visto bueno a E5' y las decisiones de la
+Etapa 1. Siguiente: pieza 1b del BRKGA; luego X0 en la máquina de cómputo (o aquí, si sigue estable).

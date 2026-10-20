@@ -105,6 +105,14 @@ def get_solver(pulp, cfg: Config):
     tl_int = int(tl) if tl is not None else None
 
     if name == 'GUROBI':
+        # Prefer the in-process gurobipy backend (no LP file round trip per solve;
+        # the file-based GUROBI_CMD dominated MIP-Fair's round time in the Etapa 4 pilot).
+        try:
+            api = pulp.GUROBI(msg=0, timeLimit=tl_int)
+            if api.available():
+                return api
+        except Exception:
+            pass
         try:
             return pulp.GUROBI_CMD(msg=0, timeLimit=tl_int)
         except Exception:

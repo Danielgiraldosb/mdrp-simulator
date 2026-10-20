@@ -117,7 +117,10 @@ def parse_speeds(items: List[str]) -> Dict[str, float]:
 
 def _id_int(s: str, prefix: str) -> int:
     s = str(s).strip()
-    return int(s[len(prefix):]) if s.startswith(prefix) else int(s)
+    if s.startswith(prefix):
+        return int(s[len(prefix):])
+    digits = ''.join(ch for ch in s if ch.isdigit())   # Instancia_3 ships order ids as 'c1', 'c2', ...
+    return int(digits)
 
 
 # -- Discovery -----------------------------------------------------------------

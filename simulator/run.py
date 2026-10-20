@@ -287,7 +287,7 @@ if __name__ == '__main__':
                         help='--policy brkga_fair: earnings basis of the deficit (hourly as F_Gini, or total)')
     parser.add_argument('--mipfair-alpha', type=float, default=0.30, metavar='A',
                         help='--policy mip_fair: tolerated Gini of projected earnings (eq:fair_const)')
-    parser.add_argument('--mipfair-priority', type=str, default='fairness', choices=['fairness', 'coverage'],
+    parser.add_argument('--mipfair-priority', type=str, default='coverage', choices=['fairness', 'coverage'],
                         help='--policy mip_fair: lexicographic order (Gini excess first, or coverage first)')
     parser.add_argument('--mipfair-basis', type=str, default='hourly', choices=['hourly', 'total'],
                         help='--policy mip_fair: earnings basis of the Gini (hourly as F_Gini, or total)')

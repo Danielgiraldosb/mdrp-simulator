@@ -141,7 +141,7 @@ class Config:
     # -- MIP-Fair (mip_fair.py): per-window MIP with the elastic Gini constraint ------
     # eq:fair_const on projected H_t. alpha = tolerated Gini (criterion B: 0.30).
     mipfair_alpha: float = 0.30
-    mipfair_priority: str = 'fairness'     # fairness (Gini excess > coverage) | coverage (coverage > Gini excess)
+    mipfair_priority: str = 'coverage'      # fairness (Gini excess > coverage) | coverage (coverage > Gini excess)  # Etapa 4 pilot: fairness-first assigns nothing from a cold start
     mipfair_basis: str = 'hourly'         # hourly (as F_Gini) | total
     mipfair_cand_top_k: int = 25           # nearest couriers per route in the candidate prefilter (as ILP/Hier)
     # Whose earnings enter the Gini: 'all' = every logged-on courier (idle ones move,

@@ -208,3 +208,10 @@ cada sección.
 | E6 | Pay-BRKGA: forma y pesos | suma ponderada; rango ±30 % provisional; λ_def 0,5; barrido λ_pay {0,1; 0,2; 0,5; 1} | Una acción por ronda: un frente no es accionable; eq:cost_plus pide barrer λ. Rango a ajustar con V116 en la Etapa 4. | `config.paybrkga_*` |
 
 Registradas también en la slide 13 del deck `docs/mdrp-jerarquia-objetivos.html` (sección 11 de su copia `.md`).
+
+### E5 revisada (2026-10-20, noche, piloto de la Etapa 4)
+
+| # | Decisión | Tomada | Justificación | Dónde |
+|---|---|---|---|---|
+| E5' | Prioridad lexicográfica de MIP-Fair | **cobertura › exceso de Gini › desempate** (`mipfair_priority=coverage`, nuevo default); la variante equidad › cobertura pasa al suplemento como ablación `mipfair_a030_fairfirst` | En el piloto (Pereira, 12:00–14:00, α = 0,30, alcance `all`) la variante equidad-primero entregó **cobertura 0,000**: con todos los repartidores en 0 COP cualquier asignación sube el Gini, así que "no asignar" minimiza v en cada ronda y el sistema nunca arranca. Con cobertura primero, el exceso de Gini decide *quién* recibe cada ruta entre las asignaciones de cobertura máxima, que es la palanca de equidad; α = 1 recupera al ILP corporativo y α → 0 minimiza el Gini proyectado en cada ronda. | `config.mipfair_priority`, `run.py --mipfair-priority`, `batch_paper.py` |
+| E4' | Linealización del Gini en MIP-Fair | Misma restricción, construida por bloques: pares fijo–fijo como constante, pares libre–fijo como términos lineales en x (el ingreso de un repartidor libre toma uno entre finitos valores), pares libre–libre con variables d_ij | La versión de todos los pares es O(n²) por ronda: con 188 conectados (Pereira) no terminó dos horas en 4 min; en Bogotá (2.650) serían 3,5 millones de pares por ronda. La reformulación es exacta (los 8 tests contra fuerza bruta siguen verdes) y baja la ronda a 0,2 s en Pereira. Además `get_solver` prefiere `pulp.GUROBI` (API en memoria) sobre `GUROBI_CMD` (archivos LP). | `mip_fair.py::_solve`, `ilp_policy.get_solver` |

@@ -47,6 +47,7 @@ GreedyPolicy when PuLP is missing or the solver fails.
 """
 from __future__ import annotations
 
+import bisect
 import logging
 import time
 from typing import Any, Dict, List, Optional, Tuple
@@ -176,16 +177,46 @@ class MIPFairPolicy(Policy):
             terms = [x[k] * (w_opt[k] - w0[c]) for k in cands if k[0] == c]
             w[c] = w0[c] + pulp.lpSum(terms) if terms else w0[c]
 
-        # |w_i - w_j| bounds and the elastic Gini constraint
+        # Sum of |w_i - w_j| over all pairs, split by who can still change this round
+        # (Etapa 4 finding, 2026-10-20: the all-pairs version is O(n^2) per round and
+        # did not finish two hours of the smallest zone; this split is exact):
+        #   fixed-fixed  : a constant (sorted-array formula)
+        #   free-fixed   : linear in x, because a free courier's w takes one of finitely
+        #                  many values (w0 or w_opt[k] of the route it gets) and
+        #                  sum_j |val - w0_j| over fixed j is a number per value
+        #   free-free    : d_ij >= |w_i - w_j| variables, only among free couriers
+        free = [c for c in cids if any(k[0] == c for k in cands)]
+        fixed_vals = sorted(w0[c] for c in cids if c not in set(free))
+        m = len(fixed_vals)
+        prefix = [0.0]
+        for val in fixed_vals:
+            prefix.append(prefix[-1] + val)
+        const_ff = sum(val * (2 * (k + 1) - m - 1) for k, val in enumerate(fixed_vals))
+
+        def abs_sum_to_fixed(val: float) -> float:
+            # sum_j |val - w0_j| over fixed couriers, O(log m)
+            pos = bisect.bisect_left(fixed_vals, val)
+            return val * pos - prefix[pos] + (prefix[m] - prefix[pos]) - val * (m - pos)
+
+        cross_terms = []
+        cross_const = 0.0
+        for c in free:
+            base = abs_sum_to_fixed(w0[c])
+            cross_const += base
+            for k in cands:
+                if k[0] == c:
+                    cross_terms.append(x[k] * (abs_sum_to_fixed(w_opt[k]) - base))
+
         d = {}
-        for i in range(n):
-            for j in range(i + 1, n):
-                ci, cj = cids[i], cids[j]
+        for i in range(len(free)):
+            for j in range(i + 1, len(free)):
+                ci, cj = free[i], free[j]
                 d[ci, cj] = pulp.LpVariable(f"d_{ci}_{cj}", lowBound=0.0)
                 prob += d[ci, cj] >= w[ci] - w[cj], f"dpos_{ci}_{cj}"
                 prob += d[ci, cj] >= w[cj] - w[ci], f"dneg_{ci}_{cj}"
         if n > 1:
-            prob += (pulp.lpSum(d.values()) - self.alpha * n * pulp.lpSum(w[c] for c in cids)
+            prob += (pulp.lpSum(d.values()) + pulp.lpSum(cross_terms) + (cross_const + const_ff)
+                     - self.alpha * n * pulp.lpSum(w[c] for c in cids)
                      <= v * n * w_ref), "gini_elastic"
         else:
             prob += v == 0.0, "gini_trivial"

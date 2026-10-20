@@ -205,6 +205,7 @@ def courier_table(couriers: Dict[int, Courier], cfg: Config) -> List[Dict[str, A
         payment = max(h.earnings, guaranteed)
         rows.append({
             'courier_id':          c.courier_id,
+            'vehicle':             c.vehicle or '',
             'shift_h':             round(shift_h, 2),
             'active_h':            round(h.active_time / 60.0, 2),
             'utilization':         round(util, 3),
