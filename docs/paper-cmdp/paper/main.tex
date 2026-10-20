@@ -525,13 +525,13 @@ Emission factors & moto 0.114, car 0.167, bike/walk 0 kg CO$_2$e/km & \cite{defr
   \centering
   \begin{minipage}[b]{0.495\textwidth}
     \centering
-    \figorph{../figures/F1_zone_map.pdf}{\textwidth}{5cm}{F1: map of the 3-km zone of Bogot\'a (instance 0): stores, drop-offs and courier connection points. \todo{python simulator/figures\_paper.py --fig f1}}
+    \figorph{figures/F1_zone_map.pdf}{\textwidth}{5cm}{F1: map of the 3-km zone of Bogot\'a (instance 0): stores, drop-offs and courier connection points. \todo{python simulator/figures\_paper.py --fig f1}}
     \caption{A 3-km dispatching zone in Bogot\'a}
     \label{fig:map}
   \end{minipage}
   \begin{minipage}[b]{0.495\textwidth}
     \centering
-    \figorph{../figures/F2_acceptance_curve.pdf}{\textwidth}{5cm}{F2: logit acceptance curve on pay per km, $\theta = 903$, $b = 2.89$, 95\% band, auto-accept as $p = 1$. \todo{python simulator/figures\_paper.py --fig f2}}
+    \figorph{figures/F2_acceptance_curve.pdf}{\textwidth}{5cm}{F2: logit acceptance curve on pay per km, $\theta = 903$, $b = 2.89$, 95\% band, auto-accept as $p = 1$. \todo{python simulator/figures\_paper.py --fig f2}}
     \caption{Acceptance probability as a function of pay per kilometre}
     \label{fig:acceptance}
   \end{minipage}
@@ -656,13 +656,13 @@ Figures~\ref{fig:pareto} and \ref{fig:pareto_late} show the frontiers traced by 
   \centering
   \begin{minipage}[b]{0.495\textwidth}
     \centering
-    \figorph{../figures/F3_pareto_coverage.pdf}{\textwidth}{5cm}{F3: coverage vs end-of-day Gini frontiers by policy, manual and auto-accept. \todo{from main.csv}}
+    \figorph{figures/F3_pareto_coverage.pdf}{\textwidth}{5cm}{F3: coverage vs end-of-day Gini frontiers by policy, manual and auto-accept. \todo{from main.csv}}
     \caption{Coverage against end-of-day Gini by policy}
     \label{fig:pareto}
   \end{minipage}
   \begin{minipage}[b]{0.495\textwidth}
     \centering
-    \figorph{../figures/F4_pareto_lateness.pdf}{\textwidth}{5cm}{F4: lateness vs end-of-day Gini frontiers by policy. \todo{from main.csv}}
+    \figorph{figures/F4_pareto_lateness.pdf}{\textwidth}{5cm}{F4: lateness vs end-of-day Gini frontiers by policy. \todo{from main.csv}}
     \caption{Lateness against end-of-day Gini by policy}
     \label{fig:pareto_late}
   \end{minipage}
@@ -675,7 +675,7 @@ One of our main modelling contributions is the equity history in the state. In t
 
 \begin{figure}[t]
     \centering
-    \figorph{../figures/F6_intraday_gini.pdf}{0.7\textwidth}{5cm}{F6: intraday trajectory of the Gini coefficient for \textbf{Greedy}, \textbf{Hierarchical} and \textbf{MIP-Fair} at $\alpha^*$ on a Bogot\'a day. \todo{from round snapshots}}
+    \figorph{figures/F6_intraday_gini.pdf}{0.7\textwidth}{5cm}{F6: intraday trajectory of the Gini coefficient for \textbf{Greedy}, \textbf{Hierarchical} and \textbf{MIP-Fair} at $\alpha^*$ on a Bogot\'a day. \todo{from round snapshots}}
     \caption{Intraday trajectory of the Gini coefficient on one Bogot\'a day}
     \label{fig:intraday}
 \end{figure}
@@ -687,7 +687,7 @@ We next analyse how the three policies change the dispatching decision compared 
 
 \begin{figure}[t]
     \centering
-    \figorph{../figures/F7_earnings_violin.pdf}{0.7\textwidth}{5cm}{F7: distribution of end-of-day hourly earnings per courier, \textbf{Greedy} vs each policy at its best configuration. \todo{from output/paper/couriers/}}
+    \figorph{figures/F7_earnings_violin.pdf}{0.7\textwidth}{5cm}{F7: distribution of end-of-day hourly earnings per courier, \textbf{Greedy} vs each policy at its best configuration. \todo{from output/paper/couriers/}}
     \caption{Distribution of hourly earnings per courier by policy}
     \label{fig:violin}
 \end{figure}

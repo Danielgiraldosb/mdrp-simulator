@@ -122,7 +122,7 @@ def fig_f2(out_dir: str) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--fig', nargs='+', default=['f1', 'f2'], choices=['f1', 'f2'])
-    ap.add_argument('--out', default=os.path.normpath(os.path.join(THIS_DIR, '..', 'docs', 'paper-cmdp', 'figures')))
+    ap.add_argument('--out', default=os.path.normpath(os.path.join(THIS_DIR, '..', 'docs', 'paper-cmdp', 'paper', 'figures')))
     args = ap.parse_args()
     if 'f1' in args.fig:
         fig_f1(args.out)
