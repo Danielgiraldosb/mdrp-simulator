@@ -1,0 +1,341 @@
+% =====================================================================
+%  A GRASP algorithm for the Meal Delivery Routing Problem (MDRP)
+%  Model specification extracted from:
+%    D. Giraldo-Herrera and D. Alvarez-Martinez,
+%    "A GRASP algorithm for the Meal Delivery Routing Problem", MIC 2024.
+%  Department of Industrial Engineering, Universidad de Los Andes.
+% =====================================================================
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\IfFileExists{lmodern.sty}{\usepackage{lmodern}}{}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+% ---------------------------------------------------------------------
+% Pseudocode helpers
+% ---------------------------------------------------------------------
+\algnewcommand\algorithmicinput{\textbf{Input:}}
+\algnewcommand\Input{\item[\algorithmicinput]}
+\algnewcommand\algorithmicparams{\textbf{Parameters:}}
+\algnewcommand\Params{\item[\algorithmicparams]}
+\newcommand{\var}[1]{\texttt{#1}}
+
+\title{A GRASP Algorithm for the Meal Delivery Routing Problem\\[4pt]
+       \large Model Specification}
+\author{Daniel Giraldo-Herrera \and David \'Alvarez-Mart\'inez\\[2pt]
+        \small Department of Industrial Engineering, Universidad de Los Andes, Bogot\'a, Colombia\\
+        \small \texttt{ds.giraldoh@uniandes.edu.co}, \texttt{d.alvarezm@uniandes.edu.co}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document contains the full specification of the GRASP metaheuristic
+proposed for the Meal Delivery Routing Problem (MDRP): the problem notation,
+the delivery assumptions, the three algorithmic components (constructive phase,
+local search phase and the GRASP main loop) and the calibrated parameters.
+\end{abstract}
+
+% =====================================================================
+\section{Problem description}
+% =====================================================================
+
+Users place orders throughout the day through a delivery application. Based on
+the user's address and the active service radius, the platform decides whether
+the user is inside the service area; if so, a delivery time is promised. The
+platform dynamically adjusts the service radius according to expected and
+observed demand. The objective is to determine feasible routes for couriers to
+complete the pick-up and delivery of orders within time windows, optimizing one
+or more performance measures (orders delivered, average delivery time, total
+delivery time since the order was requested).
+
+The MDRP is split into two parts:
+\begin{enumerate}[label=(\roman*)]
+  \item \textbf{Assignment:} assigning a courier to each order based on the
+        geographical positions of the store, the courier and the customer.
+  \item \textbf{Routing:} defining the route the courier follows to deliver
+        orders in the shortest possible time, respecting the courier's maximum
+        carrying capacity.
+\end{enumerate}
+
+% =====================================================================
+\section{Notation}
+% =====================================================================
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{Sets}} \\
+$U$ & Set of users (customers) who place orders \\
+$R$ & Set of restaurants (pick-up points) \\
+$O$ & Set of orders placed by users \\
+$C$ & Set of couriers \\
+$S$ & Set of routes (bundles of orders) \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{Users and restaurants}} \\
+$\ell_u$ & Drop-off location of user $u \in U$ \\
+$\ell_r$ & Pick-up location of restaurant $r \in R$ \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{Orders} ($o \in O$)} \\
+$r_o \in R$ & Restaurant associated with order $o$ \\
+$u_o \in U$ & User associated with order $o$ \\
+$\alpha_o$ & Placement time of order $o$ \\
+$e_o$ & Ready time of order $o$ \\
+$s^r$ & Pick-up service time (depends on the restaurant) \\
+$s^u$ & Mandatory drop-off service time (linked to the user) \\
+$c_o \in C$ & Courier assigned to order $o$ (an order may remain unassigned) \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{Couriers} ($c \in C$)} \\
+$e_c$ & On-time (shift start) of courier $c$ \\
+$\ell_c$ & On-location (initial position) of courier $c$ \\
+$l_c$ & Off-time (shift end) of courier $c$, with $l_c > e_c$ \\
+$p_i$ & Compensation for each order (base amount + variable amount) \\
+$m$ & Number of orders placed \\
+\bottomrule
+\end{tabular}
+\caption{Notation of the MDRP.}
+\label{tab:notation}
+\end{table}
+
+\paragraph{Courier compensation.} A courier's compensation at the end of the
+shift is defined as
+\begin{equation}
+  \sum_{m=1}^{i} p_i \qquad \forall\, r \in R,
+\end{equation}
+where $p_i$ is the compensation for each order, composed of a base amount and a
+variable amount that depends on the time it takes for the order to be accepted,
+and $m$ is the number of orders placed.
+
+\paragraph{Routes (bundles).} Orders from the same restaurant may be aggregated
+into routes with a single pick-up and multiple drop-off locations. Every route
+$s \in S$ must satisfy
+\begin{equation}
+  \bigl|\{\, r_o : o \in s \,\}\bigr| = 1,
+\end{equation}
+i.e., all orders in a route belong to the same restaurant. A courier carries at
+most three orders per route. The information of the user associated with an
+order is only disclosed to the courier once the courier accepts the order.
+
+% =====================================================================
+\section{Delivery assumptions}
+% =====================================================================
+
+\begin{enumerate}[label=A\arabic*.]
+  \item Each order has a preparation time and a time window to be picked up and
+        delivered; this time window cannot be exceeded.
+  \item There may be unfulfilled orders due to time windows or to the absence
+        of nearby couriers.
+  \item If a courier arrives at the restaurant before the order is ready, the
+        courier waits until the order is finished.
+  \item A courier can carry at most 3 orders in a single route, provided they
+        come from the same restaurant.
+  \item Couriers use different vehicles with the following average velocities:
+        \begin{center}
+        \begin{tabular}{@{}lc@{}}
+          \toprule
+          \textbf{Vehicle} & \textbf{Average velocity (km/h)} \\
+          \midrule
+          Motorcycle & 20 \\
+          Car        & 15 \\
+          Bicycle    & 12 \\
+          Walking    & 5  \\
+          \bottomrule
+        \end{tabular}
+        \end{center}
+  \item After delivering an order, the courier returns to his position and
+        waits for another order.
+  \item Distances are computed with the haversine formula and travel times
+        with the average velocity of each courier's vehicle.
+\end{enumerate}
+
+% =====================================================================
+\section{GRASP methodology}
+% =====================================================================
+
+GRASP (Greedy Randomized Adaptive Search Procedure), introduced by Feo and
+Resende (1995), consists of two stages per iteration: a greedy randomized
+\emph{construction} and a \emph{local search} improvement. Its behaviour is
+governed by two parameters:
+\begin{itemize}
+  \item $\alpha \in [0,1]$: degree of randomness in the construction phase; it
+        defines the size of the Restricted Candidate List (RCL) as a fraction
+        of the sorted candidate list.
+  \item \textit{iterations}: total number of constructed and improved
+        solutions.
+\end{itemize}
+
+% ---------------------------------------------------------------------
+\subsection{Constructive phase}
+% ---------------------------------------------------------------------
+
+The constructive phase iteratively assigns pending orders to available
+couriers. For every courier--order pair it computes the travel time (distance
+divided by the courier's velocity), sorts the candidates by travel time and
+builds the RCL with the first $\alpha \cdot |\text{candidates}|$ elements. A
+pair is selected at random from the RCL. If the selected courier has no orders
+yet, the restaurant of the chosen order is recorded as the first element of the
+courier's assignment. The process continues until no orders are pending.
+
+\begin{algorithm}[H]
+\caption{\textsc{Constructive\_Phase}}
+\label{alg:construct}
+\begin{algorithmic}[1]
+\Input \var{couriers}, \var{orders}
+\Params $\alpha$
+\State $\var{assigned\_orders} \gets \emptyset$
+\State $\var{couriers\_available} \gets \textsc{copy}(\var{couriers})$
+\State $\var{orders\_pending} \gets \textsc{copy}(\var{orders})$
+\While{$\var{orders\_pending} \neq \emptyset$}
+  \State $\var{greedy\_values} \gets \emptyset$
+  \For{$(\var{courier\_id}, \var{courier}) \in \var{couriers\_available}$}
+    \For{$(\var{order\_id}, \var{order}) \in \var{orders\_pending}$}
+      \State $\var{time\_travel} \gets
+        \textsc{Calculate\_distance\_between}(\var{courier}, \var{order}) / \var{courier\_vel}$
+      \State $\var{greedy\_values} \gets \var{greedy\_values} \cup
+        \{(\var{time\_travel}, \var{courier\_id}, \var{order\_id})\}$
+    \EndFor
+  \EndFor
+  \State sort \var{greedy\_values} by \var{time\_travel} (ascending)
+  \State $\var{RCL} \gets$ first $\lceil \alpha \cdot |\var{greedy\_values}| \rceil$ elements of \var{greedy\_values}
+  \State $(\var{selected\_courier\_id}, \var{selected\_order\_id}) \gets \textsc{random}(\var{RCL})$
+  \If{$\var{selected\_courier\_id} \notin \var{assigned\_orders}$}
+    \State $\var{current\_establishment} \gets \var{orders}[\var{selected\_order\_id}][\text{`restaurant\_ID'}]$
+    \State $\var{assigned\_orders}[\var{selected\_courier\_id}] \gets [\var{current\_establishment}]$
+  \EndIf
+  \State $\var{assigned\_orders}[\var{selected\_courier\_id}] \gets \var{selected\_order\_id}$
+  \State remove \var{selected\_order\_id} from \var{orders\_pending}
+\EndWhile
+\State \Return \var{assigned\_orders}
+\end{algorithmic}
+\end{algorithm}
+
+% ---------------------------------------------------------------------
+\subsection{Local search phase}
+% ---------------------------------------------------------------------
+
+The local search evaluates the total travel time of the assignment produced by
+the constructive phase and explores \emph{swap} moves: for every pair of
+distinct couriers, each order of the first courier is exchanged with each order
+of the second. The index \texttt{[1:]} skips the first element of each list,
+which stores the restaurant. If the new configuration reduces the total travel
+time, it becomes the incumbent. The procedure ends when all swaps have been
+explored.
+
+\begin{algorithm}[H]
+\caption{\textsc{Local\_Search\_Phase}}
+\label{alg:ls}
+\begin{algorithmic}[1]
+\Input \var{couriers}, \var{orders}, \var{assigned\_orders}
+\State $\var{better\_assign} \gets \textsc{copy}(\var{assigned\_orders})$
+\State $\var{better\_time\_travel\_total} \gets \sum_{\text{assign} \in \var{assigned\_orders}} \var{time\_travel}$
+\For{$(\var{courier\_id\_1}, \var{orders\_assigned\_1}) \in \var{assigned\_orders}$}
+  \For{$(\var{courier\_id\_2}, \var{orders\_assigned\_2}) \in \var{assigned\_orders}$}
+    \If{$\var{courier\_id\_1} \neq \var{courier\_id\_2}$}
+      \For{$\var{order\_id\_1} \in \var{orders\_assigned\_1}[1{:}]$}
+        \For{$\var{order\_id\_2} \in \var{orders\_assigned\_2}[1{:}]$}
+          \State $\var{new\_assign} \gets \textsc{copy}(\var{assigned\_orders})$
+          \If{$\var{order\_id\_1} \in \var{new\_assign}[\var{courier\_id\_1}]$}
+            \State remove \var{order\_id\_1} from $\var{new\_assign}[\var{courier\_id\_1}]$
+          \EndIf
+          \If{$\var{order\_id\_2} \in \var{new\_assign}[\var{courier\_id\_2}]$}
+            \State remove \var{order\_id\_2} from $\var{new\_assign}[\var{courier\_id\_2}]$
+          \EndIf
+          \State $\var{new\_assign}[\var{courier\_id\_1}] \gets [\var{order\_id\_2}]$
+          \State $\var{new\_assign}[\var{courier\_id\_2}] \gets [\var{order\_id\_1}]$
+          \State $\var{new\_time\_travel\_total} \gets \sum_{\text{assign} \in \var{new\_assign}} \var{time\_travel}$
+          \If{$\var{new\_time\_travel\_total} < \var{better\_time\_travel\_total}$}
+            \State $\var{better\_assign} \gets \textsc{copy}(\var{new\_assign})$
+            \State $\var{better\_time\_travel\_total} \gets \var{new\_time\_travel\_total}$
+          \EndIf
+        \EndFor
+      \EndFor
+    \EndIf
+  \EndFor
+\EndFor
+\State \Return \var{better\_assign}
+\end{algorithmic}
+\end{algorithm}
+
+% ---------------------------------------------------------------------
+\subsection{GRASP main loop}
+% ---------------------------------------------------------------------
+
+The main loop initializes an empty best solution with infinite cost and, for
+the given number of iterations, runs the constructive phase followed by the
+local search. The total travel time of the improved solution is compared with
+the incumbent, which is updated whenever an improvement is found.
+
+\begin{algorithm}[H]
+\caption{\textsc{GRASP}}
+\label{alg:grasp}
+\begin{algorithmic}[1]
+\Input \var{couriers}, \var{orders}
+\Params $\alpha$, \var{iterations}
+\State $\var{best\_solution} \gets \emptyset$
+\State $\var{best\_cost} \gets \infty$
+\For{$i = 1$ \textbf{to} \var{iterations}}
+  \State $\var{constructed\_assign} \gets \textsc{Constructive\_Phase}(\var{couriers}, \var{orders};\, \alpha)$
+  \State $\var{improved\_assign} \gets \textsc{Local\_Search\_Phase}(\var{couriers}, \var{orders}, \var{constructed\_assign})$
+  \State $\var{current\_cost} \gets \sum_{\text{assign} \in \var{improved\_assign}} \var{time\_travel}$
+  \If{$\var{current\_cost} < \var{best\_cost}$}
+    \State $\var{best\_solution} \gets \var{improved\_assign}$
+    \State $\var{best\_cost} \gets \var{current\_cost}$
+  \EndIf
+\EndFor
+\State \Return \var{best\_solution}
+\end{algorithmic}
+\end{algorithm}
+
+% =====================================================================
+\section{Parameter calibration}
+% =====================================================================
+
+The platform runs its assignment and routing algorithms every two minutes, so
+the GRASP must return a solution within that time. Calibration was performed as
+follows:
+\begin{itemize}
+  \item $\alpha \in \{0, 0.1, 0.2, \dots, 1.0\}$ (step of $0.1$);
+  \item $\textit{iterations} \in [500, 2000]$.
+\end{itemize}
+The best results were obtained with $\alpha \geq 0.7$ and close to 2000
+iterations, but with computational times above five minutes. The selected
+configuration is therefore
+\begin{equation}
+  \boxed{\alpha = 0.7, \qquad \textit{iterations} = 1000,}
+\end{equation}
+which yields solutions about 2\% below those obtained with more iterations, with
+a computational time under two minutes.
+
+\paragraph{Experimental setup.} Python implementation; Windows 11 (64-bit),
+Intel Core i9-12900H CPU, 16\,GB RAM; 22 real-world one-day instances from a
+Colombian delivery application. The GRASP is compared against the
+simulation--optimization framework of Quintero Rojas (2020), using haversine
+distances and average courier velocities in both approaches.
+
+% =====================================================================
+\section*{References}
+% =====================================================================
+\begin{enumerate}[label={[\arabic*]}, leftmargin=*]
+  \item T.~A. Feo and M.~G.~C. Resende. Greedy randomized adaptive search
+        procedures. \emph{Journal of Global Optimization}, 6:109--133, 1995.
+  \item P.~Festa and M.~G.~C. Resende. GRASP. In R.~Mart\'i, P.~Pardalos and
+        M.~Resende (eds.), \emph{Handbook of Heuristics}. Springer, Cham, 2016.
+  \item S.~Quintero Rojas. \emph{Computational framework for solving the meal
+        delivery routing problem}. Universidad de los Andes, 2020.
+  \item D.~Reyes, A.~Erera, M.~Savelsbergh, S.~Sahasrabudhe and R.~O'Neil.
+        The meal delivery routing problem. \emph{Optimization Online}, 6571,
+        2018.
+\end{enumerate}
+
+\end{document}
