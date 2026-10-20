@@ -1,7 +1,108 @@
 % references.bib -- CMDP meal-delivery paper (EJOR, Innovative Applications of O.R.)
-% Entries copied from the thesis bibliography (Tesis_Doctoral_Giraldo_Herrera.tex, lines 1223-1439)
-% are marked "source: thesis". Entries added from the plan's literature anchors are marked
-% "source: plan" and carry TODO notes where a field could not be verified from the repo.
+% Entries copied from the thesis bibliography are marked "source: thesis"; entries added from the
+% plan's literature anchors are marked "source: plan" and carry TODO notes where a field could not be
+% verified. Entries marked "source: director" are copied verbatim (same keys) from the director's
+% References.bib files (papers/Dani_Calling_New__unmarked_ and papers/Dynamic_Purchasing_vol_1___EJOR)
+% so that he recognises them; they replace our former keys ulmer2021restaurant (-> Ulmer2021),
+% haferkamp2022heatmap (-> haferkamp2023heatmap) and powell2011approximate (-> powell2021reinforcement).
+
+% ---------------------------------------------------------------- Classics and frameworks (director)
+
+@article{Dantzig1959,
+author = {Dantzig, G. B. and Ramser, J. H.},
+title = {The Truck Dispatching Problem},
+journal = {Management Science},
+volume = {6},
+number = {1},
+pages = {80-91},
+year = {1959},
+publisher={INFORMS}
+}
+
+@incollection{powell2021reinforcement,
+  title={From reinforcement learning to optimal control: A unified framework for sequential decisions},
+  author={Powell, Warren B},
+  booktitle={Handbook of Reinforcement Learning and Control},
+  pages={29--74},
+  year={2021},
+  publisher={Springer}
+}
+
+@article{POWELL2019795,
+title = {A unified framework for stochastic optimization},
+journal = {European Journal of Operational Research},
+volume = {275},
+number = {3},
+pages = {795-821},
+year = {2019},
+issn = {0377-2217},
+author = {Warren B. Powell},
+publisher={Elsevier}
+}
+
+@article{SOEFFKER2022801,
+title = {Stochastic dynamic vehicle routing in the light of prescriptive analytics: A review},
+journal = {European Journal of Operational Research},
+volume = {298},
+number = {3},
+pages = {801-820},
+year = {2022},
+issn = {0377-2217},
+author = {Ninja Soeffker and Marlin W. Ulmer and Dirk C. Mattfeld},
+publisher={Elsevier}
+}
+
+@article{hildebrandt2022opportunities,
+  title={Opportunities for reinforcement learning in stochastic dynamic vehicle routing},
+  author={Hildebrandt, Florentin D and Thomas, Barrett W and Ulmer, Marlin W},
+  journal={Computers \& Operations Research},
+  pages={106071},
+  year={2023},
+  publisher={Elsevier}
+}
+
+@article{ulmer2020modeling,
+  title={On modeling stochastic dynamic vehicle routing problems},
+  author={Ulmer, Marlin W and Goodson, Justin C and Mattfeld, Dirk C and Thomas, Barrett W},
+  journal={EURO Journal on Transportation and Logistics},
+  volume={9},
+  number={2},
+  pages={100008},
+  year={2020},
+  publisher={Elsevier}
+}
+
+@article{ULMER2020183,
+title = {Meso-parametric value function approximation for dynamic customer acceptances in delivery routing},
+journal = {European Journal of Operational Research},
+volume = {285},
+number = {1},
+pages = {183-195},
+year = {2020},
+issn = {0377-2217},
+author = {Marlin W. Ulmer and Barrett W. Thomas},
+  publisher={Elsevier}
+}
+
+@article{stein2024learning,
+  title={Learning state-dependent policy parametrizations for dynamic technician routing with rework},
+  author={Stein, Jonas and Hildebrandt, Florentin D and Ulmer, Marlin W and Thomas, Barrett W},
+  journal={Transportation Science},
+  year={2025},
+  publisher={INFORMS}
+}
+
+@article{cuellar2023,
+title = {Adaptive stochastic lookahead policies for dynamic multi-period purchasing and inventory routing},
+journal = {European Journal of Operational Research},
+volume = {318},
+number = {3},
+pages = {1028-1041},
+year = {2024},
+issn = {0377-2217},
+author = {Daniel Cuellar-Usaqu\'en and Marlin W. Ulmer and Camilo Gomez and David \'Alvarez-Mart\'inez},
+publisher = {Elsevier}
+}
 
 % ---------------------------------------------------------------- MDRP core
 
@@ -34,15 +135,26 @@
   note    = {source: thesis}
 }
 
-@article{ulmer2021restaurant,
-  author  = {Ulmer, Marlin W. and Thomas, Barrett W. and Campbell, Ann M. and Woyak, Nicholas},
-  title   = {The restaurant meal delivery problem: Dynamic pickup and delivery with deadlines and random ready times},
-  journal = {Transportation Science},
-  volume  = {55},
-  number  = {1},
-  pages   = {75--100},
-  year    = {2021},
-  note    = {source: thesis}
+@article{Ulmer2021,
+author = {Ulmer, Marlin W. and Thomas, Barrett W. and Campbell, Ann Melissa and Woyak, Nicholas},
+title = {The Restaurant Meal Delivery Problem: Dynamic Pickup and Delivery with Deadlines and Random Ready Times},
+journal = {Transportation Science},
+volume = {55},
+number = {1},
+pages = {75-100},
+year = {2021},
+publisher={INFORMS}
+}
+
+@article{liu2021multiperiod,
+  title={On-Demand Delivery from Stores: Dynamic Dispatching and Routing with Random Demand},
+  author={Liu, Sheng and Luo, Zhixing},
+  journal={Manufacturing \& Service Operations Management},
+  volume = {25},
+number = {2},
+pages = {595-612},
+year = {2023},
+  publisher={INFORMS}
 }
 
 @article{neria2024restaurant,
@@ -103,7 +215,7 @@
   number  = {9},
   pages   = {1615--1623},
   year    = {2010},
-  note    = {source: thesis}
+  note    = {source: thesis; same key as the director's ReferencesAppx.bib}
 }
 
 @article{jozefowiez2009evolutionary,
@@ -229,15 +341,16 @@
   note    = {source: thesis}
 }
 
-@article{haferkamp2022heatmap,
-  author  = {Haferkamp, Jarmo and Ulmer, Marlin W. and Ehmke, Jan Fabian},
-  title   = {Heatmap-based decision support for repositioning in ride-sharing systems},
-  journal = {Transportation Science},
-  volume  = {58},
-  number  = {1},
-  pages   = {110--130},
-  year    = {2023},
-  note    = {source: thesis}
+@article{haferkamp2023heatmap,
+  title={Heatmap-based Decision Support for Repositioning in Ride-Sharing Systems},
+  author={Haferkamp, Jarmo and Ulmer, Marlin W and Ehmke, Jan Fabian},
+  journal={Transportation Science},
+  volume={58},
+  number={1},
+  pages={110--130},
+  year={2024},
+  publisher={INFORMS},
+  note={source: director (key); volume, number and pages added from the thesis entry}
 }
 
 @phdthesis{quintero2020computational,
@@ -289,16 +402,6 @@
   year    = {2011}
 }
 
-@book{powell2011approximate,
-  author    = {Powell, Warren B.},
-  title     = {Approximate Dynamic Programming: Solving the Curses of Dimensionality},
-  edition   = {2nd},
-  publisher = {Wiley},
-  address   = {Hoboken, NJ},
-  year      = {2011},
-  note      = {Cited for the state/exogenous-information/transition notation.}
-}
-
 @article{yitzhaki1979relative,
   author  = {Yitzhaki, Shlomo},
   title   = {Relative deprivation and the {G}ini coefficient},
@@ -307,7 +410,7 @@
   number  = {2},
   pages   = {321--324},
   year    = {1979},
-  note    = {TODO: optional; mean-absolute-difference form of the Gini used in eq:gini.}
+  note    = {Mean-absolute-difference form of the Gini used in eq:gini.}
 }
 
 % ---------------------------------------------------------------- Data sources

@@ -1,758 +1,878 @@
-% main.tex -- Skeleton of the EJOR (Innovative Applications of O.R.) manuscript.
-% Draft 2026-10-20. Sources: docs/paper-cmdp/{alcance,formulacion,modelo-vs-evidencia,porte-brkga,
-% diseno-experimental,plan}.md and the thesis literature review / gaps chapters.
-% Compile: pdflatex main; bibtex main; pdflatex main; pdflatex main.
-% Everything marked \todo{...} is missing or must be checked before submission.
-% TODO(global): not compiled on the authoring machine (no TeX installation); first build may need fixes.
+%% main.tex -- EJOR manuscript (Innovative Applications of O.R.), draft 2 (2026-10-20).
+%% Structure, notation and conventions follow the two EJOR manuscripts of the thesis director
+%% (papers/Dani_Calling_New__unmarked_/main.tex and papers/Dynamic_Purchasing_vol_1___EJOR/revision2.tex);
+%% see estilo-ejor.md. The previous draft is main_v0.tex. Content sources: docs/paper-cmdp/*.md.
+%% Compile: pdflatex main; bibtex main; pdflatex main; pdflatex main.
+%% elsarticle.cls is generated from the bundled elsarticle.dtx/.ins with "latex elsarticle.ins"
+%% (or taken from TeX Live); elsarticle-harv.bst is the author-year style used by the director.
+%% Everything marked \todo{...} depends on X1--X3 or must be checked before submission.
 
-\IfFileExists{elsarticle.cls}{%
-  \documentclass[preprint,12pt,authoryear]{elsarticle}%
-  \newif\ifelsarticle\elsarticletrue
-}{%
-  \documentclass[12pt]{article}%
-  \newif\ifelsarticle\elsarticlefalse
-}
+\documentclass[a4paper,11pt,review,3p,authoryear]{elsarticle}
 
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{amsmath,amssymb,amsthm}
-\usepackage{booktabs}
-\usepackage{multirow}
-\usepackage{tabularx}
+\usepackage{setspace}
+\onehalfspacing
+
+\usepackage{amssymb}
+\usepackage{amsmath}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\usepackage{amsthm}
+\usepackage{csquotes}
 \usepackage{graphicx}
+\usepackage{subfig}
 \usepackage{xcolor}
+\usepackage{comment}
+\usepackage{lscape}
+\usepackage[noend]{algorithmic}
 \usepackage{algorithm}
-\usepackage{algpseudocode}
-\usepackage{enumitem}
-\usepackage[hidelinks]{hyperref}
+\usepackage{mathtools}
+\usepackage{url}
+\usepackage{adjustbox}
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+\usepackage{multirow}
+\usepackage{paralist}
+\usepackage{pifont}
+\urlstyle{same}
+\usepackage[table]{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{float}
+\usepackage{microtype}
+\newcommand{\cmark}{\text{\ding{51}}}%
+\newcommand{\xmark}{\text{\ding{55}}}%
 
-% ---- fallbacks when elsarticle is not available -------------------------------------------
-\ifelsarticle\else
-  \usepackage[authoryear,round]{natbib}
-  \usepackage{geometry}
-  \geometry{margin=2.5cm}
-  \newenvironment{frontmatter}{}{\maketitle}
-  \newenvironment{highlights}{\section*{Highlights}\begin{itemize}}{\end{itemize}}
-  \newenvironment{keyword}{\par\noindent\textbf{Keywords:} }{\par}
-  \newcommand{\sep}{; }
-  \newcommand{\address}[2][]{}
-  \newcommand{\cortext}[2][]{}
-  \newcommand{\corref}[1]{}
-  \newcommand{\ead}[1]{}
-  \let\elsauthor\author
-  \renewcommand{\author}[2][]{\elsauthor{#2}}
-\fi
+\newtheorem{insight}{Insight}
+\newtcolorbox{mybox}{
+    enhanced jigsaw,
+    colback=white,
+    colframe=black,
+    arc=0mm,
+    boxrule=0mm,
+    leftrule=5pt,rightrule=0pt,toprule=0pt,bottomrule=0pt,
+    before skip=15pt, after skip=15pt
+}
+\newcommand{\Insight}[1]{\vspace{-0.25cm}\begin{mybox}\vspace{-0.25cm}\begin{insight} #1 \vspace{-0.25cm}\end{insight} \end{mybox}}
 
-% elsarticle versions before 3.0 lack the highlights environment; define it if missing
-\makeatletter
-\@ifundefined{highlights}{\newenvironment{highlights}{\section*{Highlights}\begin{itemize}}{\end{itemize}}}{}
-\makeatother
+\definecolor{safeblue}{RGB}{0,90,181}
+\newcommand{\rev}[1]{{\color{safeblue} #1}}
+\definecolor{safered}{RGB}{220,50,32}
+\newcommand{\todo}[1]{{\color{safered} [TODO: #1]}}
 
-% ---- helpers ------------------------------------------------------------------------------
-\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
-\newcommand{\placeholderfig}[2]{\fbox{\parbox[c][#1][c]{0.9\linewidth}{\centering\textcolor{gray}{#2}}}}
+% Natbib setup for author-year style (as in the director's manuscripts)
+\usepackage{natbib}
+ \bibpunct[, ]{(}{)}{,}{a}{}{,}%
+ \def\bibfont{\small}%
+ \def\bibsep{\smallskipamount}%
+ \def\bibhang{24pt}%
+ \def\newblock{\ }%
+ \def\BIBand{and}%
+
+\usepackage[]{multibib}
+\newcites{Appx}{Appendix references}
+%% The director keeps a separate reference list for the appendix (\citeAppx, ReferencesAppx.bib) so that
+%% it does not count against the 35-page limit. The appendix of this draft still uses \cite; switch to
+%% \citeAppx and add ReferencesAppx.bib once the detailed review is final.
+
+% ---- figure helper: use the PDF when it exists, a framed placeholder otherwise ----------------
+\newcommand{\placeholderfig}[2]{\fbox{\parbox[c][#1][c]{0.9\linewidth}{\centering\color{gray}#2}}}
+\newcommand{\figorph}[4]{\IfFileExists{#1}{\includegraphics[width=#2]{#1}}{\placeholderfig{#3}{#4}}}
+
+% ---- problem-specific macros ---------------------------------------------------------------------
 \newcommand{\Hist}{\mathcal{H}}
 \newcommand{\FG}{F_{\text{Gini}}}
 \newcommand{\FD}{F_{\text{Deficit}}}
 \newcommand{\FO}{F_{\text{Orders}}}
 \newcommand{\FM}{F_{\text{MaxMin}}}
-\newcommand{\E}{\mathbb{E}}
-\newcommand{\ind}{\mathbf{1}}
 \DeclareMathOperator{\dist}{dist}
 \DeclareMathOperator{\earn}{earn}
-\DeclareMathOperator{\act}{active}
+\DeclareMathOperator{\act}{act}
 \DeclareMathOperator{\pay}{pay}
+\DeclareMathOperator{\ord}{ord}
 
-\newtheorem{proposition}{Proposition}
-\newtheorem{remark}{Remark}
-\newtheorem{definition}{Definition}
+\journal{European Journal of Operational Research}
 
 \begin{document}
 
 \begin{frontmatter}
 
-\title{Fair dispatching with price-responsive couriers: a constrained Markov decision process for the meal-delivery routing problem with an end-of-day earnings-inequality guarantee}
+\title{Fair dispatching with price-responsive couriers: an end-of-day earnings guarantee for the meal delivery routing problem}
 
-\author[a]{Daniel Giraldo-Herrera\corref{cor1}}
-\ead{\todo{email}}
-\author[a]{\todo{co-author(s) and thesis supervisor}}
-\address[a]{\todo{Department, University, City, Colombia}}
-\cortext[cor1]{Corresponding author.}
+\author[1]{Daniel Giraldo-Herrera\corref{cor1}} \ead{\todo{email}} \cortext[cor1]{Corresponding Author}
+
+\author[1]{\todo{Co-author(s) and thesis director}}
+
+\affiliation[1]{organization={Universidad de Los Andes}, addressline={Cra. 1 No 18a-12}, postcode={111711}, city={Bogot\'a}, country={Colombia}}
 
 \begin{abstract}
-% EJOR: at most 250 words. Current draft: about 230 words. TODO: update numbers after X1--X3.
-On-demand meal-delivery platforms dispatch crowdsourced couriers every few minutes, and couriers decide whether to accept each offer according to what it pays. Fairness-aware dispatching studies balance workload within each decision window and assume that offers are always accepted; neither assumption holds for couriers whose income is earned over a full day. We formulate the meal-delivery routing problem as a constrained Markov decision process whose state carries an equity history (each courier's accumulated earnings, orders and active time), whose constraint bounds the end-of-day Gini coefficient of hourly earnings by a threshold~$\alpha$, and whose transition draws courier acceptance from a logit on pay per kilometre with two empirically observed regimes (manual acceptance and auto-accept). The formulation contains the corporate, workload-balance and minimum-wage models as special cases. We propose three solution methods that share routes, decision windows and acceptance model with four baselines: BRKGA-Fair (a decoder biased by the equity deficit), Pay-BRKGA (which also sets per-offer pay within a bounded band) and MIP-Fair (a per-window mixed-integer programme with a block-exact linearisation of the Gini constraint). The acceptance model is calibrated from 135 intercept surveys and 44 interviews with couriers in Bogot\'a (threshold 903 COP/km, 95\% interval [615; 1\,242]). Experiments on 24 operating days from six Colombian cities quantify the coverage and punctuality given up for the guarantee, by method, by acceptance regime and by threshold, and select $\alpha$ by three criteria. \todo{one sentence with the headline numbers from T3/T4/T6.}
+We study dispatching problems in which a platform repeatedly assigns work to self-employed agents who may reject it, and in which the platform is accountable for how the earnings of those agents are distributed at the end of the day rather than within each decision window. Our focal application is meal delivery, where every two minutes a platform offers routes and pay to crowdsourced couriers, couriers accept or reject according to what the offer pays per kilometre, and fairness-aware dispatching has so far balanced work within the window while assuming that offers are always accepted. We formulate the problem as a constrained Markov decision process whose state carries an equity history (each courier's accumulated earnings, orders and active time), whose constraint bounds the end-of-day Gini coefficient of hourly earnings by a threshold $\alpha$, and whose transition draws acceptance from a logit on pay per kilometre with two empirically observed regimes, manual acceptance and auto-accept. The formulation contains corporate, workload-balance and minimum-wage dispatching as special cases. We develop three policies that solve the same problem inside one simulator against four benchmarks: \textbf{BRKGA-Fair} biases a genetic decoder by the equity deficit, \textbf{Pay-BRKGA} also sets per-offer pay within a bounded band, and \textbf{MIP-Fair} solves a per-window mixed-integer programme with a block-exact linearisation of the Gini constraint. Acceptance is calibrated from 135 intercept surveys and 44 interviews with couriers in Bogot\'a. Using 24 operating days from six Colombian cities, we quantify the coverage and punctuality given up for the guarantee by policy, by acceptance regime and by threshold, and select $\alpha$ by three criteria. \todo{Two sentences with the headline numbers from X1: cost of the guarantee at $\alpha^*$ and the regime loss.} Preliminary runs show that fairness enforced window by window increases end-of-day inequality, and that the pay lever retains coverage with 8--18\% less total pay.
 \end{abstract}
 
-\begin{highlights}
-\item CMDP for meal delivery with an end-of-day Gini constraint on couriers' hourly earnings
-\item Equity history in the state; price-responsive logit acceptance with manual and auto-accept regimes
-\item BRKGA-Fair, Pay-BRKGA and MIP-Fair share routes, windows and acceptance with four baselines
-\item Acceptance calibrated from 135 surveys and 44 interviews with couriers in Bogot\'a
-\item 24 real operating days from six Colombian cities quantify the cost of the fairness guarantee
-\end{highlights}
-
 \begin{keyword}
-Routing \sep meal delivery \sep fairness \sep constrained Markov decision process \sep gig economy \sep biased random-key genetic algorithm
+Routing \sep Meal delivery \sep Fairness \sep Constrained Markov decision process \sep Crowdsourced couriers
 \end{keyword}
 
 \end{frontmatter}
 
-% ============================================================================================
-\section{Introduction}
-\label{sec:intro}
+%% main text
+\section{Introduction} \label{sec:introduction}
 
-On-demand meal-delivery platforms coordinate restaurants, customers and a crowd of self-employed couriers through an assignment decision repeated every few minutes. The operational literature on the meal-delivery routing problem (MDRP) has made that decision efficient: rolling-horizon re-optimisation, order bundling and anticipatory assignment now deliver high coverage with short click-to-door times \citep{reyes2018meal,yildiz2019provably,ulmer2021restaurant}. Two features of the couriers' side of the problem have, however, been left outside the models. First, couriers earn a living over a day, not over a two-minute window, so a dispatcher that balances work within each window can still produce a very unequal distribution of daily hourly earnings when couriers connect at different times or when some of them systematically receive the better routes. Second, a courier is not a vehicle: whether an offer is accepted depends on what it pays relative to the distance it asks for, and platforms have increasingly moved their workforce to an auto-accept regime precisely because manual rejection erodes coverage.
+Dispatching problems arise when a limited set of agents must be matched repeatedly to requests that appear over time. In a corporate fleet, the agents are vehicles: an assignment is executed as soon as it is made, and the quality of a dispatching policy is measured by the service it delivers to customers \citep{Dantzig1959,pillac2013review}. In platform operations, however, the agents are self-employed workers who decide whether to execute each assignment and who earn their living from the sum of the assignments they execute over a day. Two features of such settings are absent from the corporate model. First, an assignment is an offer: whether it is accepted depends on what it pays relative to the effort it asks for, so the transition of the system is endogenous to the pay decision. Second, the platform is accountable for a distributional outcome, the earnings of its workers at the end of the day, which no single decision window determines but every decision window affects.
 
-This paper treats courier welfare as a dispatching objective rather than as a sanction imposed on the platform afterwards. We ask:
+Meal delivery is the focus of this work and the setting in which these features are sharpest. On-demand platforms coordinate restaurants, customers and a crowd of couriers through an assignment decision repeated every few minutes. The operational literature on the meal delivery routing problem (MDRP) has made that decision efficient: rolling-horizon re-optimisation, order bundling and anticipatory assignment deliver high coverage with short click-to-door times \citep{reyes2018meal,yildiz2019provably,Ulmer2021}. The couriers' side of the problem has received less attention. A courier earns over a day, not over a two-minute window, so a dispatcher that balances work within each window can still produce a very unequal distribution of daily hourly earnings when couriers connect at different times or when some of them systematically receive the better routes. Moreover, a courier is not a vehicle: in the field, couriers reason in pay per kilometre and reject long, low-paying routes, and platforms have moved their workforce to an auto-accept regime, backed by sanctions, precisely because manual rejection erodes coverage. Similar structures arise in ride-hailing, where income inequality among drivers has been traded against efficiency \citep{lesmana2019balancing}, in crowdsourced last-mile delivery \citep{sobhanan2024equity} and in gig platforms that guarantee an hourly wage by paying for idle time \citep{nair2022work4food}. These settings differ in detail, but they share a platform that decides who receives which work and at what pay, workers who respond to that pay, and a fairness outcome that is defined over a horizon longer than the decision window.
 
-\begin{quote}\itshape
-How should a meal-delivery platform assign routes and set per-offer pay, window by window, so that the end-of-day Gini coefficient of couriers' hourly earnings does not exceed a threshold $\alpha$ when each courier accepts or rejects offers according to pay per kilometre, and what does it give up in coverage and punctuality relative to corporate dispatching for doing so?
-\end{quote}
+Methodologically, these problems are challenging because the fairness guarantee, the acceptance behaviour and the routing decision are coupled within the same sequential process. The value of offering a route to a courier depends on whether the courier will accept it, which depends on the pay; the pay changes the platform's cost and the courier's earnings; and the earnings accumulated by every courier determine whether the end-of-day guarantee can still be met by the remaining windows of the day. Anticipation is therefore required, but of a particular kind: not of future demand, which rolling-horizon dispatching handles procedurally, but of the distributional consequence of the current assignment at the end of the day. In the meal-delivery setting, this means jointly deciding, window by window, who receives each route and what the offer pays, while keeping track of what every courier has earned and worked so far.
 
-Both halves of the question are falsifiable. The first is answered by policies that do or do not satisfy the constraint on 24 real operating days; the second, by the Pareto frontier of coverage and lateness against the end-of-day Gini coefficient, by method and by acceptance regime.
+We address this problem as a constrained Markov decision process (CMDP, \citealt{altman1999constrained}). The state carries, in addition to the positions of couriers and the pool of orders, an \emph{equity history} $\Hist_t$ with the earnings, orders and active time accumulated by every courier. The constraint bounds the end-of-day Gini coefficient of hourly earnings by a tolerated inequality $\alpha$. The transition draws the acceptance of every offer from a logit on pay per kilometre, estimated from field data, with a manual regime in which couriers reject and an auto-accept regime in which they do not. We then develop three policies that read $\Hist_t$ when deciding the current window. \textbf{BRKGA-Fair} biases the decoder of a biased random-key genetic algorithm by each courier's equity deficit; \textbf{Pay-BRKGA} extends the chromosome with a pay gene per courier and sets the offer within a bounded band around the tariff; and \textbf{MIP-Fair} solves a per-window mixed-integer programme in which the Gini constraint is written on the projected end-of-window history and linearised exactly by blocks of courier pairs. In terms of the framework of \cite{powell2021reinforcement}, all three are cost function approximations: they modify the optimisation problem solved in each window with terms computed from $\Hist_t$ instead of learning a value of the future. The three policies share route candidates, decision window, acceptance model and metrics with four benchmarks inside a single discrete-event simulator, so that the frontiers they trace in $\alpha$, in the deficit weight and in the pay weight are comparable.
 
-The paper makes three contributions.
-\begin{enumerate}[label=(\roman*)]
-\item \textbf{A constrained MDP with intertemporal equity and price-endogenous acceptance.} The state includes an equity history $\Hist_t$ (accumulated earnings, orders and active time per courier); the Gini constraint is imposed on end-of-day hourly earnings rather than per window; and the acceptance of each offer is a logit on pay per kilometre with two regimes, manual and auto-accept. We show that the formulation contains the corporate model ($\alpha=1$), workload-balance models ($\FO$) and minimum-wage models ($\FD$) as special cases, and why per-window fairness does not guarantee end-of-day fairness (Section~\ref{sec:model}).
-\item \textbf{Three solution methods for the same CMDP in a single simulator.} BRKGA-Fair uses the deficit recorded in $\Hist_t$ to bias its decoder; Pay-BRKGA optimises coverage against $\FD$ with a weight $\lambda$ and sets per-offer pay inside a bounded band; MIP-Fair solves a per-window mixed-integer programme with the Gini constraint linearised exactly over $\Hist_t$. The three share route candidates, a two-minute window, the acceptance model and the metrics with four baselines (corporate greedy, a coverage ILP, BRKGA-Coverage and a hierarchical coverage $\succ$ lateness $\succ$ equity $\succ$ cost policy), and are verified against brute-force optima on a toy instance (Section~\ref{sec:methods}).
-\item \textbf{The cost of the fairness guarantee measured on real operations.} Twenty-four operating days from six Colombian cities, with acceptance calibrated in the field (135 surveys, 44 interviews, threshold 903 COP/km with its confidence interval): Pareto frontiers per method, the loss attributable to the acceptance regime, sensitivity to the logit threshold, the choice of $\alpha$ by three criteria (historical, inequality bands, Pareto knee) and the side effect on emissions through fleet composition (Sections~\ref{sec:design}--\ref{sec:results}).
-\end{enumerate}
+This study is guided by three research questions that connect the structure of the decision problem, the proposed policies, and the operational conditions under which the guarantee is affordable. First, does an end-of-day fairness guarantee require the equity history in the state, or can fairness enforced within each window deliver it? Second, which lever satisfies the guarantee at the lowest cost in coverage and punctuality, choosing who receives each route or choosing what the offer pays, and does the answer depend on the acceptance regime? Third, under which operational conditions, acceptance regime, logit threshold, tolerated inequality and fleet composition, is the guarantee cheap or expensive, and which $\alpha$ is sustainable for a platform? Using 24 operating days from six Colombian cities with acceptance calibrated in the field (135 surveys, 44 interviews), we compare the three policies against a corporate greedy dispatcher, a coverage ILP, a coverage-only BRKGA and a hierarchical policy that is fair within each window. \todo{Rewrite the next sentences once X1--X3 are in.} Preliminary results on one seed show that coverage is essentially flat across policies at the scale of a dispatching zone, that fairness enforced window by window raises end-of-day inequality, and that the pay lever retains coverage at lower platform cost because pay per kilometre stays above the acceptance threshold. The computational study is designed to establish the following insights:
 
-The rest of the paper is organised as follows. Section~\ref{sec:related} positions the work in the operational, economic and behavioural literature on the MDRP. Section~\ref{sec:setting} describes the platform, the 24 instances and the behavioural evidence. Section~\ref{sec:model} states the CMDP, Section~\ref{sec:methods} the solution methods and Section~\ref{sec:platform} the simulation platform and its calibration. Section~\ref{sec:design} gives the experimental design, Section~\ref{sec:results} the results, Section~\ref{sec:discussion} the discussion, Section~\ref{sec:limitations} the limitations and Section~\ref{sec:conclusions} the conclusions. An online supplement collects the full acceptance calibration, per-instance tables, BRKGA parameters, toy-instance verification and the survey instrument.
+\begin{compactitem}
+    \item The guarantee is a property of the day, not of the window. A policy that is fair within every window (\textbf{Hierarchical}) increases the end-of-day Gini coefficient relative to the corporate dispatcher in five of six cities in the pilot; only policies that read $\Hist_t$ can control the constraint. \todo{confirm with X1.}
+    \item At the scale of a 3-km dispatching zone, coverage differs by less than one point between policies, so the cost of the guarantee is paid in \emph{who} receives each route and in lateness rather than in orders delivered. \todo{confirm with X1 (T3) and quantify lateness.}
+    \item The acceptance regime matters more than the dispatching policy in the manual world: with a flat tariff, long singletons are rejected with high probability, and coverage is bounded by behaviour rather than by optimisation. \todo{from F5.}
+    \item The pay lever acts even where the assignment lever cannot: \textbf{Pay-BRKGA} keeps coverage with 8--18\% less total pay in the pilot because the resulting pay per kilometre remains above the threshold. \todo{confirm with X1.}
+    \item Dispatching alone cannot lift couriers to the statutory minimum wage at the current tariff: 98--100\% of couriers remain below it under every policy, consistent with the 92\% observed in the survey. What dispatching can do is distribute the shortfall evenly.
+    \item The three criteria for choosing $\alpha$ (historical anchor, inequality bands, Pareto knee) give an interval rather than a point; \todo{state the interval and the recommended operating point from T6.}
+\end{compactitem}
 
-% ============================================================================================
+The paper makes three contributions. First, as a theoretical and modelling contribution, we formulate meal-delivery dispatching as a CMDP with an intertemporal equity history in the state, an end-of-day Gini constraint and price-endogenous acceptance. The formulation contains the corporate model ($\alpha = 1$), workload-balance models and minimum-wage models as special cases, and we show by a numerical example why per-window fairness does not imply end-of-day fairness. Second, as a methodological contribution, we develop three cost function approximations for the same CMDP, including a block-exact linearisation of the Gini constraint that reduces the per-window programme from $O(n^2)$ pairs to a problem solvable in a fraction of a second with thousands of connected couriers, and we verify all three against exhaustive enumeration on a toy instance. Third, as a managerial contribution, we measure the cost of the fairness guarantee on real operations: 24 days from six cities with field-calibrated behaviour, Pareto frontiers per policy and regime, the loss attributable to the acceptance regime, the sensitivity to the behavioural threshold, the choice of $\alpha$ by three criteria, and the side effect on emissions through fleet composition. To the best of our knowledge, this is the first MDRP formulation in which fairness is guaranteed at the end of the day rather than per window and in which courier acceptance responds to the pay the platform decides.
+
+The remainder of this paper is organised as follows. Section~\ref{sec:Literature} reviews the related literature, and Section~\ref{sec:problem_definition} defines the problem. Section~\ref{sec:method} presents the three policies, followed by the experimental setting in Section~\ref{sec:Experimental_setting}. Section~\ref{sec:computational_study} reports the computational study and analyses the results. Section~\ref{sec:findings_discussion} synthesises the main findings and discusses their methodological and managerial implications. The paper concludes with a summary and outlook in Section~\ref{sec:Conclusion}. Additional details on the literature, the formulation, the algorithms and the results are provided in the Appendix.
+
 \section{Related work}
-\label{sec:related}
+\label{sec:Literature}
 
-We organise the literature in three blocks that together constitute the MDRP: the operational block (routing and assignment), the economic block (pricing, compensation and guarantees) and the behavioural block (acceptance, rejection and availability). Fairness enters through decisions that cross all three, and the review shows that, with few exceptions, the literature has used \emph{balance} rather than fairness as its operational proxy.
+The problem studied in this paper lies at the intersection of three literature streams: the operational stream on the MDRP (routing and assignment), the stream on fairness and compensation in delivery and ride-hailing platforms, and the behavioural stream on courier acceptance and availability. We first review the literature associated with these problem components and then discuss the methodological positioning of the proposed policies. Several of the reviewed works motivate the benchmark policies used in our computational study. A broader review is provided in \ref{sec:App_literature_review}. Table~\ref{tab:Litclass} summarises the positioning.
 
-\subsection{Operational block}
-
-\citet{reyes2018meal} defined the MDRP as a rolling-horizon, dynamic-deterministic problem: at each re-optimisation epoch a deterministic instance is solved and the horizon rolls forward as new orders arrive, so uncertainty is handled procedurally. Their public instance library (mdrplib, from Grubhub) has become the standard benchmark. \citet{yildiz2019provably} obtained provably high-quality solutions for a deterministic variant and found that bundling by itself does not reduce travel much; courier capacity and shift scheduling are the main levers. \citet{steever2019dynamic} revise assignments whenever an order arrives or traffic changes; \citet{ulmer2021restaurant} delay assignment until preparation-time uncertainty resolves. Later contributions address shared logistics \citep{bi2023meal}, courier satisfaction through dynamic operating regions \citep{auad2023courier}, order batching for crowdsourced fleets \citep{simoni2023crowdsourced} and ghost kitchens \citep{neria2024restaurant}. \citet{pillac2013review} give the degree-of-dynamism criterion that justifies a rolling or dynamic horizon for a problem in which essentially all orders are revealed after the day starts. Across these models acceptance is exogenous or perfect. The closest precedent to endogenous acceptance is the discrete-event framework of \citet{quintero2020computational}, in which the probability of accepting a notification depends on the assignment distance and a courier-level parameter, but not on the pay offered.
-
-\subsection{Economic block}
-
-Most operational models pay a fixed amount per delivery or minimise distance as a cost proxy. \citet{reyes2018meal} and \citet{yildiz2019provably} include a shift-level guaranteed minimum set by the company; neither conditions it on a fairness criterion across couriers. \citet{wen2010dynamic} balance workload and income opportunities within a multi-period routing model. \citet{lesmana2019balancing} define fairness as income inequality among drivers in ride-sourcing and trace the efficiency--fairness frontier with a reassignment algorithm. \citet{bajec2022strategic} use Shapley-value incentives for sustainable crowdshipping, and \citet{sobhanan2024equity} give bi-objective equity--cost frontiers for crowdsourced last-mile delivery. None integrates acceptance-dependent pay, a real tariff schedule and an intertemporal guarantee within a rolling-horizon routing problem.
-
-\subsection{Behavioural block}
-
-\citet{liao2020multi} balance workload with a two-stage NSGA-II and argue that equitable distribution is itself an incentive. Reinforcement-learning approaches \citep{ahamed2020deep,bozanta2022courier} include courier availability in the state but keep acceptance exogenous; \citet{haferkamp2022heatmap} address repositioning. No MDRP study models acceptance as a function of the system state and the offered payment, although a courier offered a long, low-paying route is more likely to reject it, which biases both coverage and fairness estimates.
-
-\subsection{Fairness in delivery platforms}
-
-Three recent streams come closest to our question. FairFoody \citep{gupta2022fairfoody} and WORK4FOOD \citep{nair2022work4food} treat fairness as income distribution among couriers in Indian food-delivery data: the former balances earnings by assignment, the latter guarantees a minimum hourly wage by controlling the number of active couriers and paying for idle time. \citet{martinez2024exploring} explore fairness constraints in food-delivery routing and scheduling and find moderate efficiency costs. Reinforcement-learning formulations of fair courier assignment \citep{rl2025fairdelivery} learn policies with a fairness term in the reward. \todo{one sentence on what arXiv:2501.05808 actually does, after reading it.} These works share two limits that this paper removes: fairness is enforced per window or by a reward term whose end-of-day consequence is not guaranteed, and couriers accept whatever is assigned. \citet{corbettdavies2023measure} show in the algorithmic-fairness literature that short- and long-horizon fairness can diverge; our equity history is the mechanism that makes the long horizon controllable in dispatching.
-
-\subsection{Positioning}
-
-Table~\ref{tab:positioning} summarises the positioning. \todo{fill the positioning table; columns: fairness metric, horizon of the guarantee (window / day), acceptance (perfect / exogenous / endogenous), pay as decision, real data.}
-
-\begin{table}[ht]
-\centering\small
-\caption{Positioning of this paper against the closest literature. \todo{complete rows.}}
-\label{tab:positioning}
-\begin{tabular}{lccccc}
-\toprule
-Work & Fairness metric & Guarantee horizon & Acceptance & Pay decided & Real data \\
-\midrule
-\citet{reyes2018meal} & -- & -- & perfect & no & Grubhub \\
-\citet{lesmana2019balancing} & income Gini & window & perfect & no & ride-sourcing \\
-\citet{gupta2022fairfoody} & income & window & perfect & no & India \\
-\citet{nair2022work4food} & hourly wage & shift & perfect & idle pay & India \\
-\citet{martinez2024exploring} & \todo{} & \todo{} & perfect & no & UK \\
-\citet{rl2025fairdelivery} & \todo{} & reward term & \todo{} & \todo{} & \todo{} \\
-This paper & end-of-day hourly Gini & day & logit on pay/km & band & Colombia (6 cities) \\
-\bottomrule
+\begin{table}[htbp]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.1}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{cl|cc|ccc|c}
+\hline
+ & \multirow{2}{*}{\textbf{Paper}}
+& \multicolumn{2}{c|}{\textbf{Courier welfare}}
+& \multicolumn{3}{c|}{\textbf{Courier behaviour and pay}}
+& \multirow{2}{*}{\textbf{Real data}} \\
+\cline{3-4} \cline{5-7}
+ &
+& \shortstack{\textbf{Fairness}\\\textbf{metric}}
+& \shortstack{\textbf{Guarantee}\\\textbf{horizon}}
+& \shortstack{\textbf{Acceptance}\\\textbf{}}
+& \shortstack{\textbf{Pay}\\\textbf{decided}}
+& \shortstack{\textbf{History}\\\textbf{in state}}
+&  \\
+\hline
+\multirow{8}{*}{\rotatebox{90}{\textbf{MDRP operations}}} & \cite{reyes2018meal} &  &  & perfect &  &  & \checkmark \\
+ & \cite{yildiz2019provably} &  &  & perfect &  &  & \checkmark \\
+ & \cite{steever2019dynamic} &  &  & perfect &  &  & \todo{?} \\
+ & \cite{Ulmer2021} &  &  & perfect &  &  & \checkmark \\
+ & \cite{liu2021multiperiod} &  &  & perfect &  &  & \checkmark \\
+ & \cite{auad2023courier} & satisfaction & shift & perfect &  &  & \checkmark \\
+ & \cite{simoni2023crowdsourced} &  &  & perfect &  &  & \todo{?} \\
+ & \cite{neria2024restaurant} &  &  & perfect &  &  & \todo{?} \\
+\hline
+\multirow{7}{*}{\rotatebox{90}{\textbf{Fairness and pay}}} & \cite{wen2010dynamic} & workload & horizon & perfect &  &  &  \\
+ & \cite{liao2020multi} & workload & instance & perfect &  &  &  \\
+ & \cite{lesmana2019balancing} & income Gini & window & perfect &  &  & \checkmark \\
+ & \cite{gupta2022fairfoody} & income & \todo{window/day} & perfect &  &  & \checkmark \\
+ & \cite{nair2022work4food} & hourly wage & shift & perfect & idle pay &  & \checkmark \\
+ & \cite{martinez2024exploring} & \todo{} & \todo{} & perfect &  &  & \checkmark \\
+ & \cite{sobhanan2024equity} & workload & instance & perfect &  &  & \todo{?} \\
+\hline
+\multirow{4}{*}{\rotatebox{90}{\textbf{Behaviour}}} & \cite{ahamed2020deep} &  &  & exogenous &  &  &  \\
+ & \cite{bozanta2022courier} &  &  & exogenous &  &  &  \\
+ & \cite{quintero2020computational} &  &  & distance &  &  & \checkmark \\
+ & \cite{rl2025fairdelivery} & \todo{} & reward term & \todo{} & \todo{} & \todo{} & \todo{} \\
+\hline
+ & \textbf{Our work} & hourly-earnings Gini & day & pay per km & \checkmark & \checkmark & \checkmark \\
+\hline
 \end{tabular}
+\end{adjustbox}
+\caption{Positioning of our work relative to the literature across courier welfare, courier behaviour and pay, and data. \todo{verify the cells marked ? and complete the rows of \citet{martinez2024exploring} and \citet{rl2025fairdelivery}.}}
+\label{tab:Litclass}
 \end{table}
 
-% ============================================================================================
-\section{Problem setting and behavioural evidence}
-\label{sec:setting}
+\paragraph{Problem-related literature}
 
-\subsection{The platform and the dispatching cycle}
+The MDRP was defined by \cite{reyes2018meal} as a rolling-horizon, dynamic-deterministic problem: at each re-optimisation epoch a deterministic instance is solved and the horizon rolls forward as new orders arrive, so uncertainty is handled procedurally rather than through anticipation. Their public instance library (Grubhub) has become the standard benchmark. \cite{yildiz2019provably} obtained provably high-quality solutions for a deterministic variant and found that bundling by itself does not reduce travel much; courier capacity and shift scheduling are the main levers. \cite{steever2019dynamic} revise assignments whenever an order arrives or traffic changes; \cite{Ulmer2021} delay assignment until preparation-time uncertainty resolves and anticipate it with approximate dynamic programming; \cite{liu2021multiperiod} dispatch and route on-demand deliveries from stores with random demand. Later contributions address shared logistics \citep{bi2023meal}, courier satisfaction through dynamic operating regions \citep{auad2023courier}, order batching for crowdsourced fleets \citep{simoni2023crowdsourced} and ghost kitchens \citep{neria2024restaurant}. The degree-of-dynamism criterion of \cite{pillac2013review} justifies a rolling horizon for a problem in which essentially all orders are revealed after the day starts; for the broader class of stochastic dynamic vehicle routing problems we refer to \cite{SOEFFKER2022801} and \cite{hildebrandt2022opportunities}, and for the modelling of such problems as sequential decision processes to \cite{ulmer2020modeling}. Across these models, acceptance is perfect or exogenous and couriers are treated as vehicles. This literature motivates our corporate benchmarks: the \textbf{Greedy} dispatcher reproduces the platform's practice of assigning each order to the nearest feasible courier, and the \textbf{ILP} is the exact per-window coverage dispatcher that our \textbf{MIP-Fair} policy extends.
 
-The platform connects couriers $C$, users $U$ and stores $R$. Stores and couriers (connection time, position and vehicle) are known in advance; orders are revealed at placement time. Every two minutes the dispatcher assigns to each available courier at most one route, where a route collects up to $Q$ orders from a single store, and offers it with a pay. The courier accepts or rejects; accepted routes are executed (pick-up, drop-off) and rejected orders return to the pool for the next window. Couriers are notified only while idle or picking up. An order is cancelled, and counted against coverage, when no feasible assignment exists before its hard service deadline.
+Fairness has entered delivery and ride-hailing platforms mostly as \emph{balance}. \cite{wen2010dynamic} balance workload and income opportunities within a multi-period routing model, and \cite{liao2020multi} balance workload in meal delivery with a two-stage NSGA-II, arguing that an equitable distribution is itself an incentive. \cite{lesmana2019balancing} define fairness as income inequality among ride-sourcing drivers and trace the efficiency--fairness frontier with a reassignment algorithm applied batch by batch. FairFoody \citep{gupta2022fairfoody} and WORK4FOOD \citep{nair2022work4food} treat fairness as income distribution among couriers in Indian food-delivery data: the former balances earnings by assignment, the latter guarantees a minimum hourly wage by controlling the number of active couriers and paying for idle time. \cite{martinez2024exploring} explore fairness constraints in food-delivery routing and scheduling on UK data and find moderate efficiency costs, and \cite{sobhanan2024equity} give bi-objective equity--cost frontiers for crowdsourced last-mile delivery. These works share two limits that this paper removes: fairness is enforced per window or per instance, or through a reward term whose end-of-day consequence is not guaranteed, and couriers accept whatever is assigned. The per-window logic motivates our \textbf{Hierarchical} benchmark, which equalises earnings among the couriers of each window and ignores the history; comparing it with \textbf{BRKGA-Fair} and \textbf{MIP-Fair} isolates the value of carrying $\Hist_t$ in the state. On the economic side, \cite{reyes2018meal} and \cite{yildiz2019provably} include a shift-level guaranteed minimum set by the company, \cite{bajec2022strategic} use Shapley-value incentives for sustainable crowdshipping, and the algorithmic-fairness literature shows that short- and long-horizon fairness can diverge \citep{corbettdavies2023measure}. None of these integrates pay as a dispatching decision to which acceptance responds.
 
-\subsection{Twenty-four operating days in six Colombian cities}
+Courier behaviour has been modelled mainly as availability. Reinforcement-learning approaches \citep{ahamed2020deep,bozanta2022courier} include courier availability in the state but keep acceptance exogenous, and \cite{haferkamp2023heatmap} address repositioning. The closest precedent to endogenous acceptance is the discrete-event framework of \cite{quintero2020computational}, in which the probability of accepting a notification depends on the assignment distance and a courier-level parameter, but not on the pay offered. Customer acceptance has been anticipated in delivery routing \citep{ULMER2020183}, but there it is the platform that accepts requests, not the agent who accepts work. No MDRP study models acceptance as a function of the offered pay, although a courier offered a long, low-paying route is more likely to reject it, which biases both coverage and fairness estimates. \todo{One sentence on what \citet{rl2025fairdelivery} (arXiv:2501.05808) actually does, after reading it.}
 
-The data are 24 full operating days (00:00--24:00) exported by a leading on-demand delivery platform operating in Colombia \todo{confirm whether the platform may be named}. Each day records every order (store, drop-off coordinates, placement, preparation and promised drop-off times) and every courier (vehicle, connection point, on and off times). Projecting the coordinates showed that the 24 days cover six cities: Bogot\'a, Medell\'in, Cali, Barranquilla, Bucaramanga and Pereira (four days each, except three for Cali and five for Bucaramanga). Full-city days range from 540 orders and 400 couriers (Pereira) to 59\,000 orders and 16\,800 couriers (Bogot\'a); fleet composition differs sharply, from 45\% bicycles in Bogot\'a to 90\% motorcycles in Pereira and Bucaramanga, which matters for the emissions diagnostic. Table~\ref{tab:instances} (T1) lists the instances at the 3-km zone scale used in the experiments (Section~\ref{sec:design}).
+\paragraph{Methodological literature}
 
-\begin{table}[ht]
-\centering\small
-\caption{T1. The 24 instances: city, orders and couriers in the 3-km zone, stores, orders per courier and vehicle mix. Zone counts from \texttt{loader\_real.py}; full-city counts and vehicle mix from \texttt{instancias\_reales.csv}.}
-\label{tab:instances}
-\begin{tabular}{rlrrrrl}
-\toprule
-Inst. & City & Orders & Couriers & Stores & Orders/courier & Vehicle mix (full city, \%: bike/moto/walk/car) \\
-\midrule
-0 & Bogot\'a & 10\,215 & 2\,650 & 926 & 3.9 & 45/39/9/7 \\
-6 & Bogot\'a & 9\,743 & 2\,489 & 997 & 3.9 & 43/39/10/8 \\
-12 & Bogot\'a & 5\,618 & 1\,967 & 859 & 2.9 & 44/41/6/9 \\
-18 & Bogot\'a & 5\,875 & 1\,931 & 912 & 3.0 & 39/39/11/11 \\
-2 & Medell\'in & 6\,169 & 1\,692 & 602 & 3.6 & 16/72/6/7 \\
-8 & Medell\'in & 5\,778 & 1\,773 & 628 & 3.3 & 15/71/7/7 \\
-14 & Medell\'in & 3\,953 & 1\,244 & 614 & 3.2 & 15/72/5/8 \\
-20 & Medell\'in & 3\,918 & 1\,259 & 587 & 3.1 & 15/70/7/8 \\
-5 & Barranquilla & 7\,773 & 1\,442 & 470 & 5.4 & 21/64/4/10 \\
-11 & Barranquilla & 7\,116 & 1\,532 & 474 & 4.6 & 22/63/4/11 \\
-17 & Barranquilla & 3\,606 & 1\,168 & 4\,014$^{a}$ & 3.1 & 19/66/3/13 \\
-23 & Barranquilla & 3\,612 & 1\,046 & 431 & 3.5 & 20/59/5/15 \\
-7 & Cali & 1\,813 & 745 & 269 & 2.4 & 21/72/2/5 \\
-13 & Cali & 1\,262 & 488 & 260 & 2.6 & 21/73/2/5 \\
-19 & Cali & 1\,292 & 476 & 264 & 2.7 & 22/71/2/5 \\
-1 & Bucaramanga & 1\,851 & 574 & 216 & 3.2 & 9/89/1/1 \\
-3 & Bucaramanga & 1\,851 & 574 & 216 & 3.2 & 9/89/1/1 \\
-9 & Bucaramanga & 1\,527 & 610 & 218 & 2.5 & 9/89/1/1 \\
+Our policies belong to the class of cost function approximations in the framework of \cite{powell2021reinforcement} and \cite{POWELL2019795}: the problem solved in each window is modified by terms, the equity deficit, the projected Gini excess and the pay excess, that encode the end-of-day consequence of the current decision, without learning a value function. This is the same class as rule-based and parametrised policies in the dynamic routing literature \citep{SOEFFKER2022801}, where parameters are either tuned by enumeration or learned by simulation \citep{stein2024learning}. We tune the deficit weight, the tolerated inequality and the pay weight by enumeration over a grid and report the full frontier, since the trade-off itself is the object of study. Two methodological components are specific to this paper. The first is the biased random-key genetic algorithm \citep{goncalves2011biased} with rolling horizon that we ported from our earlier work on the MDRP \citep{giraldo2026brkga,giraldo2024grasp}; the decoder is the component that reads $\Hist_t$. The second is the linearisation of the Gini constraint, which in its natural form requires one variable per pair of couriers; we show that, because a courier takes at most one route per window, only the pairs of free couriers need variables and the remaining pairs enter as constants or as linear terms, and we verify the reformulation against the all-pairs model. The Gini coefficient is used in its mean-absolute-difference form \citep{yitzhaki1979relative}. To the best of our knowledge, the proposed policies are the first to control an end-of-day inequality constraint on real meal-delivery operations with acceptance that responds to the pay the platform decides.
+
+\section{Problem definition}
+\label{sec:problem_definition}
+
+In this section, we define the fair meal-delivery dispatching problem and formulate it as a constrained sequential decision process. We first describe the problem and the field evidence on courier behaviour that shapes it. We then define the components of the process. An illustrative numerical example connecting the formulation to the dispatching decisions, and showing why per-window fairness does not imply end-of-day fairness, is provided in \ref{sec:example}.
+
+\subsection{Problem description}
+\label{sec:Problem_description}
+
+A platform connects a set of stores $R$, a set of users $U$ and a set of couriers $C$ over one operating day. Stores and couriers (connection time, position and vehicle) are known in advance; orders are revealed at placement time. Every two minutes, the dispatcher assigns to each available courier at most one route, where a route collects up to $Q$ orders from a single store and delivers them to their users, and offers it with a pay. The courier accepts or rejects the offer. Accepted routes are executed (pick-up, drop-off); the orders of rejected routes return to the pool for the next window. Couriers are notified only while idle or picking up. An order is cancelled, and counted against coverage, when no feasible assignment exists before its hard service deadline. We assume that each user places at most one order per day and that a cancelled order does not re-enter the system, as in the public MDRP instances \citep{reyes2018meal}.
+
+Three aspects distinguish this problem from the corporate MDRP, and each is supported by field evidence collected with couriers of the platform in Bogot\'a (44 semi-structured interviews in 2020--2021 and an intercept survey of 135 couriers in May--June 2021; the full assumption-versus-evidence table is in the online supplement). First, \emph{acceptance responds to pay per kilometre}. Couriers reason in pay per kilometre (\enquote{nobody takes 4.1 km for 3{,}300}); in the survey, pay (importance 5.71 on a 7-point scale) and distance (5.65) are the dominant factors in that order. A logit on $\ln(\text{pay/km})$ fitted to 32 acceptance decisions by 11 interviewees gives an indifference threshold of 903 COP/km (95\% interval [615; 1{,}242]) and slope 2.89 ([2.02; 5.23]). Second, \emph{there are two decision regimes}. In the 2020 interviews no courier auto-accepted (0 of 12) and rejection was common (13 of 14); by 2021, 23 of 25 auto-accepted and 2 of 12 rejected. In the survey 64\% auto-accept always or almost always; behind the shift are platform sanctions for rejecting (60\% of surveyed couriers had been blocked, median 24 hours), and auto-accepting protects against them (odds ratio 2.76). In the auto-accept regime the courier's decision is whether to be connected at all, which the data record as on and off times. Third, \emph{the tariff is flat in distance}. The per-kilometre rate estimated from the interviews is 155 COP/km with a 95\% interval [$-103$; 413] and $R^2 = 0.02$; the survey reports 2{,}200 COP per order outside the platform's bonus ladder. We therefore model a flat tariff and treat per-offer pay as a policy instrument, not as a description of current practice.
+
+The evidence also fixes the fairness outcome. Median hourly earnings while connected were 2{,}622 COP in the survey and 3{,}957 COP in the interviews; 91.9\% of surveyed couriers earned less than the 2021 statutory minimum wage per hour (4{,}368 COP), and the platform guarantees no hourly pay. The Gini coefficient of daily income among surveyed couriers is 0.39 outside the bonus ladder and 0.26 inside it. We therefore measure fairness on hourly earnings at the end of the day, normalised by active time so that connecting late is not penalised, and we use the two survey values as anchors for the tolerated inequality. Service and decision times are taken from the same sources: a median in-store wait of 20 minutes with a purchased order (60 minutes in the stressed interview accounts) and a median decision time of 16 seconds for an offer displayed for 20 seconds. We note that the bonus ladder is a multi-day mechanism whereas our equity history is intraday, and that all behavioural evidence is from Bogot\'a; both are discussed as limitations in Section~\ref{sec:Conclusion}.
+
+The goal of the platform is to find a dispatching and pay-setting policy that minimises expected undelivered orders and lateness over the day while guaranteeing that the end-of-day Gini coefficient of the couriers' hourly earnings does not exceed a tolerated value $\alpha$.
+
+\subsection{Sequential decision process}
+\label{sec:SDP}
+
+The problem at hand is stochastic and dynamic. Orders are revealed over the day, preparation times are uncertain, and the acceptance of every offer is a random variable whose distribution depends on the pay the platform decides. Because assignment and pay decisions are made every two minutes and change the earnings and availability of couriers for the rest of the day, we model the problem as a sequential decision process \citep{powell2021reinforcement,ulmer2020modeling,cuellar2023} with a constraint on a terminal quantity, that is, a constrained Markov decision process \citep{altman1999constrained}. In the following, we define its components: decision point and state, decisions, cost function, exogenous information and transition, and the constrained objective.
+
+\paragraph{Decision point and state}
+
+The process consists of decision points $t \in T$ with $T = \{0, 1, \dots, t_{\max}\}$, one at the start of every two-minute window of the day; we refer to the dispatching decision made at $t$ as a \emph{round}. At decision point $t$, the state $S_t$ contains the information accessible to the dispatcher. For our problem, a state contains information on the couriers, the orders waiting to be assigned, their preparation, and what every courier has earned and worked so far. We define the state by the following components:
+
+\begin{compactitem}
+    \item the courier information $\mathcal{L}_t$, giving for each courier $c \in C$ its position $\ell_c(t)$, status $\sigma_c(t) \in \{\text{idle, picking-up, in-transit, dropping-off, offline}\}$ and time to next availability $\eta_c(t)$,
+    \item the set $\mathcal{O}_t$ of unassigned orders; order $o$ is linked to a store $r_o \in R$ with location $\ell_{r_o}$ and to a user $u_o \in U$ with drop-off location $\ell_{u_o}$, and has placement time $a_o$, ready time $e_o$ and promised drop-off time $d_o$,
+    \item the vector $\mathcal{P}_t$ of estimated remaining preparation times $\hat p_o(t)$ of the unassigned orders,
+    \item and the equity history $\Hist_t = (h_c(t))_{c \in C}$, with
+\end{compactitem}
+\begin{equation}
+h_c(t) = \bigl(\earn_c(t),\; \ord_c(t),\; \act_c(t)\bigr), \qquad c \in C,
+\label{eqn:history}
+\end{equation}
+the earnings, orders delivered and active (connected) time accumulated by courier $c$ up to $t$. In summary, $S_t = (\mathcal{L}_t, \mathcal{O}_t, \mathcal{P}_t, \Hist_t)$. In the initial state $S_0$ no order has been placed and $h_c(0) = (0, 0, 0)$ for all couriers. The equity history is the component that enables dynamic fairness control: a policy that reads $\Hist_t$ can prevent inequities from compounding across windows. It is absent from existing MDRP formulations, where the state contains the positions and plans of couriers but not what they have earned \citep{ulmer2020modeling}.
+
+Courier $c$ has on-time $e_c$, off-time $l_c > e_c$, initial location $\ell_c$ and vehicle type $v_c \in \{\text{walking, bicycle, motorcycle, car}\}$. Travel times are deterministic, $\tau(\ell, \ell') = \kappa\, \|\ell - \ell'\| / \nu(v_c)$, with a circuity factor $\kappa$ and a vehicle-dependent speed $\nu(v_c)$; service times $s_r$ at the store and $s_u$ at the user are included in the duration of a route. A route $s$ collects at most $Q$ orders from a single store and is served by a single courier; $\dist(s)$ is its length, $\tau_s$ its duration and $|s|$ the number of orders it contains.
+
+\paragraph{Decisions}
+
+At each decision point $t$, the dispatcher decides which available courier receives which route and what the offer pays. A decision is therefore represented by a set of triples
+\begin{equation}
+x_t = \bigl\{(c, s, \pi_{c,s}) : c \in C_t^{\text{free}},\; s \in \mathcal{S}_t\bigr\},
+\label{eqn:decision}
+\end{equation}
+where $C_t^{\text{free}}$ is the set of available couriers, $\mathcal{S}_t$ the set of feasible routes that can be built from $\mathcal{O}_t$, and $\pi_{c,s}$ the pay offered for the pair. A route is feasible for a courier if every order can be picked up after its ready time and dropped off before its hard deadline $d_o + \Delta^{\max}$, given the courier's position and speed. A decision $x_t \in \mathcal{X}(S_t)$ is feasible if each courier receives at most one route and each order appears in at most one route.
+
+The pay offer follows the platform's tariff, an affine function of route distance,
+\begin{equation}
+\pi_{c,s} = \pi_0 \cdot |s| + \pi_1 \cdot \dist(s),
+\label{eqn:tariff}
+\end{equation}
+with $\pi_0$ a base fee per order and $\pi_1$ a per-kilometre rate. Following the field evidence of Section~\ref{sec:Problem_description}, the baseline tariff is flat ($\pi_0 = 2{,}200$ COP, $\pi_1 = 0$). Pay-setting policies may scale the offer by a multiplier $m_c \in [1-\delta, 1+\delta]$ around the tariff; they do not set pay arbitrarily.
+
+\paragraph{Acceptance, exogenous information and transition}
+
+After decision $x_t$ in state $S_t$, two kinds of information are revealed. The first is the acceptance of every offer. Courier $c$ accepts route $s$ offered at pay $\pi_{c,s}$ with probability
+\begin{equation}
+p_{c,s}(\pi_{c,s}) =
+\begin{cases}
+\sigma\!\bigl(b\,[\ln(\pi_{c,s}/\dist(s)) - \ln\theta]\bigr) & \text{manual regime},\\[2pt]
+1 & \text{auto-accept regime},
+\end{cases}
+\label{eqn:acceptance}
+\end{equation}
+where $\sigma$ is the logistic function, $\theta$ the pay per kilometre at which acceptance is even and $b$ the slope on log pay per kilometre. Eq.~\eqref{eqn:acceptance} is the form the field evidence supports: couriers evaluate offers by pay per kilometre, and the pay decided by the platform enters the decision directly, which distinguishes it from the distance-only acceptance of \cite{quintero2020computational}. We denote by $\mathbf{b}_t \in \{0,1\}^{|x_t|}$ the vector of Bernoulli acceptance realisations. The second kind of information is exogenous to the decision: $\omega_{t+1} = (\Delta\mathcal{O}_{t+1}, \Delta\mathcal{P}_{t+1}, \Delta\mathcal{A}_{t+1})$ reveals the orders placed during the window, the realised preparation times, and the courier log-ins and log-outs. The transition function $\mathcal{T}(S_t, x_t, \mathbf{b}_t, \omega_{t+1})$ leads to the new state $S_{t+1}$ with the following updates:
+
+\begin{compactitem}
+    \item accepted routes are executed: the courier's status, position and time to availability in $\mathcal{L}_{t+1}$ follow from the route's pick-up and drop-off sequence, and the orders of accepted routes leave $\mathcal{O}_{t+1}$,
+    \item the orders of rejected routes remain in $\mathcal{O}_{t+1}$, together with the new orders $\Delta\mathcal{O}_{t+1}$; orders whose hard deadline can no longer be met are cancelled,
+    \item preparation estimates are replaced by realisations where revealed, $\mathcal{P}_{t+1}$,
+    \item couriers that log in or out change status according to $\Delta\mathcal{A}_{t+1}$,
+    \item and the equity history is updated for every accepted pair: $\earn_c(t+1) = \earn_c(t) + \pay(c, s, \pi_{c,s})$ and $\ord_c(t+1) = \ord_c(t) + |s|$ when the route is completed, while $\act_c(t+1) = \act_c(t) + 2$ minutes for every connected courier, accepted or not.
+\end{compactitem}
+
+\paragraph{Cost function}
+
+The cost $\mathcal{C}(S_t, x_t, \mathbf{b}_t, \omega_{t+1})$ of a decision penalises orders that are cancelled during the window and the lateness of orders delivered during the window,
+\begin{equation}
+\mathcal{C}(S_t, x_t, \mathbf{b}_t, \omega_{t+1}) = w_1 \sum_{o \in \mathcal{O}_t} \mathbb{I}[o \text{ cancelled}] + w_2 \sum_{o \text{ delivered}} \max\bigl(0,\; \tau_{\text{drop}}(o) - d_o\bigr),
+\label{eqn:cost}
+\end{equation}
+where $\mathbb{I}(\cdot)$ is the indicator function and $w_1, w_2 > 0$ weigh coverage against punctuality. Its extension with a payment term, used by the pay-setting policy, is
+\begin{equation}
+\mathcal{C}^{+}(S_t, x_t, \mathbf{b}_t, \omega_{t+1}) = \mathcal{C}(S_t, x_t, \mathbf{b}_t, \omega_{t+1}) + \lambda \sum_{(c,s) \in x_t} b_{c,s}\, \pay(c, s, \pi_{c,s}),
+\label{eqn:cost_plus}
+\end{equation}
+where $\pay(c,s,\pi_{c,s})$ is the amount paid for an accepted route and $\lambda > 0$ trades platform cost against coverage. In our experiments coverage and lateness are reported separately; the lexicographic reading coverage $\succ$ lateness used by all policies corresponds to $w_1 \gg w_2$. \todo{state the values of $w_1$ and $w_2$ if a scalar cost is reported.}
+
+\paragraph{Fairness metrics and constrained objective}
+
+Let $\earn_c(T)$ and $\act_c(T)$ be the earnings and active time of courier $c$ at the end of the day and $w_c = \earn_c(T)/\act_c(T)$ the hourly earnings. The primary fairness metric is the Gini coefficient of hourly earnings over the couriers active during the day,
+\begin{equation}
+\FG(\mathbf{w}) = \frac{\sum_{c \in C} \sum_{c' \in C} |w_c - w_{c'}|}{2\,|C| \sum_{c \in C} w_c},
+\qquad \mathbf{w} = (w_c)_{c \in C},
+\label{eqn:gini}
+\end{equation}
+with $\FG \in [0,1]$ and $0$ perfect equality. Normalising by active time makes Eq.~\eqref{eqn:gini} an input-adjusted statistic rather than a description of total pay. Three secondary metrics are reported: max--min fairness $\FM = \min_c w_c$; order-count balance $\FO$, the Gini coefficient of orders delivered per active hour; and the minimum-wage deficit $\FD = |\{c : w_c < w^*\}| / |C|$, with $w^*$ the statutory minimum hourly wage.
+
+A solution to the problem is a policy $\pi \in \Pi$ that assigns a decision $\mathcal{X}^\pi_t(S_t)$ to each state. The optimal policy minimises the expected cumulative cost subject to the end-of-day fairness guarantee:
+\begin{alignat}{2}
+\pi^{*} = \underset{\pi \in \Pi}{\mathrm{argmin}}\;& \mathbb{E}\left[\sum_{t \in T} \mathcal{C}\bigl(S_t, \mathcal{X}^\pi_t(S_t), \mathbf{b}_t, \omega_{t+1}\bigr) \,\Big|\, S_0 \right] \label{eqn:objective}\\
+\text{s.t.}\;\; & \mathbb{E}\bigl[\FG(\mathbf{w}^{\pi}) \,\big|\, S_0\bigr] \le \alpha, \label{eqn:fair_const}\\
+& \mathcal{X}^\pi_t(S_t) \in \mathcal{X}(S_t) \qquad \forall t \in T, \label{eqn:feasibility}
+\end{alignat}
+where $\alpha \in [0,1]$ is the tolerated inequality and $\mathbf{w}^{\pi}$ the end-of-day hourly earnings induced by $\pi$. The day is finite, so no discounting is applied. Eq.~\eqref{eqn:fair_const} is written on an end-of-day quantity, not per decision point; this is deliberate and is what the equity history makes controllable. In the computational study we report, besides the mean of $\FG$, the fraction of realisations in which $\FG \le \alpha$ holds, which is the operational reading of the guarantee. A minimum-wage constraint $\mathbb{E}[w_c^{\pi}] \ge w^*$ for all couriers could be added to Eqs.~\eqref{eqn:objective} - \eqref{eqn:feasibility}; we do not impose it because the platform guarantees no hourly pay and 92\% of couriers earn below $w^*$ in the field data, so it would be infeasible on every instance. It is instead pursued through $\FD$ by the pay-setting policy (Section~\ref{sec:paybrkga}) and reported for every policy.
+
+The formulation contains three familiar models as special cases. With $\alpha = 1$, Eq.~\eqref{eqn:fair_const} is void and Eqs.~\eqref{eqn:objective} - \eqref{eqn:feasibility} reduce to the corporate, efficiency-only MDRP of \cite{reyes2018meal}. Replacing $\FG$ by $\FO$ in Eq.~\eqref{eqn:fair_const} gives the workload-balance models of \cite{wen2010dynamic} and \cite{liao2020multi}. Replacing Eq.~\eqref{eqn:fair_const} by a bound on $\FD$, or by the minimum-wage constraint alone, gives the wage-guarantee model of \cite{nair2022work4food}. Since the vehicle type of every courier is recorded, the emissions of a decision are computed at no extra data cost as $E(x_t) = \sum_{(c,s) \in x_t} b_{c,s}\, \epsilon(v_c) \dist(s)$, with $\epsilon(v)$ a per-kilometre emission factor (zero for walking and bicycles); $E$ is a diagnostic reported alongside the frontiers, not a constraint.
+
+Even in the two-courier example of \ref{sec:example}, the challenge becomes evident: a policy that equalises the pay offered within every window can end the day with a Gini coefficient of $0.5$ between two equally connected couriers where $0$ was attainable at the same coverage, because the per-window statistic is computed on a changing subset of couriers and ignores what each has already earned. A policy therefore needs $\Hist_t$ in its state to control Eq.~\eqref{eqn:fair_const}. The next section presents three policies that do so, and a benchmark that does not.
+
+\section{Method}
+\label{sec:method}
+
+In this section, we present our policies. We first give a motivation and overview of the shared architecture and then present the individual policies in detail.
+
+\subsection{Motivation and overview}
+\label{sec:motivation_method}
+
+Effective decision making is challenging for two reasons.
+
+\begin{compactitem}
+    \item \textbf{Search:} A round decides, for up to a few hundred free couriers and a few hundred ready orders, which courier receives which of the candidate routes (singletons and bundles) and what the offer pays. The assignment part alone is a large matching problem that must be solved within the two-minute window, and the pay part adds a continuous decision per pair.
+    \item \textbf{Evaluate:} The value of a decision has two components that are revealed at different times. Whether a route is accepted is revealed within seconds and depends on the pay; whether the end-of-day guarantee is met is revealed only at the end of the day and depends on every subsequent round. The second component cannot be evaluated per window: as the example of \ref{sec:example} shows, two decisions that are indistinguishable by any statistic of the current window can lead to end-of-day Gini coefficients of $0$ and $0.5$.
+\end{compactitem}
+
+We address these challenges as follows. All policies, proposed and benchmark, are implemented as the assignment step of one discrete-event simulator and share (i) a round every two minutes; (ii) the same candidate routes, namely every singleton and one bundle per store with its $Q$ most urgent ready orders, filtered by route feasibility and by a prefilter of the $k$ nearest available couriers per route; (iii) the acceptance model of Eq.~\eqref{eqn:acceptance} and the flat tariff; and (iv) the same metrics, computed on the end-of-day history $\Hist_T$. Let $K_t$ denote the set of candidate (courier, route) pairs at round $t$. Each policy returns a subset of $K_t$ with at most one route per courier and one route per order, together with a pay offer per pair, that is, a feasible decision $x_t$ in the sense of Eq.~\eqref{eqn:decision}. The shared architecture is what makes the frontiers of the three policies comparable with each other and with the benchmarks.
+
+The three policies differ in how they use $\Hist_t$ to steer the current round towards the end-of-day guarantee, and in which lever they move. \textbf{BRKGA-Fair} keeps the population and fitness of a coverage-maximising genetic algorithm and biases its decoder: among decodings of equal coverage, routes are redirected to couriers whose hourly earnings so far fall below the mean, by a weight $w$. \textbf{MIP-Fair} reads the constraint literally: in every round it solves a mixed-integer programme that maximises coverage first and then minimises the amount by which the projected end-of-round Gini coefficient exceeds $\alpha$, with the constraint linearised exactly. \textbf{Pay-BRKGA} moves the other lever: it keeps the decoder of \textbf{BRKGA-Fair} without the deficit bias and adds one pay gene per courier, so that the offer can rise for couriers below the minimum wage and fall where acceptance is not at stake, within a band around the tariff; its fitness trades expected coverage, projected minimum-wage deficit and pay excess with a weight $\lambda_{\text{pay}}$. In terms of the framework of \cite{powell2021reinforcement}, the three are cost function approximations: the per-round problem is modified by terms computed from the state, the deficit, the projected Gini excess and the pay excess, rather than by a learned value of the future. We do not learn these terms because the quantity they anticipate, the end-of-day Gini coefficient, is a deterministic function of $\Hist_t$ and of the remaining decisions, and the parameters $w$, $\alpha$ and $\lambda_{\text{pay}}$ are precisely the knobs whose frontier the platform needs to see. Algorithm~\ref{alg:round} summarises a round for the three policies; the following sections detail each component.
+
+\begin{algorithm}[t]
+\begin{algorithmic}[1]
+\FOR{$t = 0, \dots, t_{\max}$}
+\STATE{build the candidate routes $\mathcal{S}_t$ (singletons and one bundle per store) from the ready orders in $\mathcal{O}_t$}
+\STATE{build the candidate pairs $K_t$ by route feasibility and the $k$-nearest prefilter}
+\STATE{compute from $\Hist_t$ (Eq.~\eqref{eqn:history}) the hourly earnings so far $w_c(t)$ of every connected courier}
+\IF{\textbf{BRKGA-Fair} or \textbf{Pay-BRKGA}}
+\STATE{run the BRKGA for $G$ generations with decoder of Algorithm~\ref{alg:decoder} and score of Eq.~\eqref{eqn:brkgafair} (fitness of Eq.~\eqref{eqn:paybrkga} for \textbf{Pay-BRKGA})}
+\ELSIF{\textbf{MIP-Fair}}
+\STATE{solve the three-stage programme of Eqs.~\eqref{eqn:mipfair_w} - \eqref{eqn:mipfair_lex} over $K_t$}
+\ENDIF
+\STATE{offer the selected pairs with pay $\pi_{c,s}$; draw acceptance from Eq.~\eqref{eqn:acceptance}}
+\STATE{execute accepted routes, return rejected orders to the pool, update $\Hist_{t+1}$}
+\ENDFOR
+\end{algorithmic}
+\caption{Dispatching round shared by the three proposed policies}
+\label{alg:round}
+\end{algorithm}
+
+\subsection{Detailed description of the policies}
+
+In this section, we provide details of every component. We first describe the coverage-maximising BRKGA that \textbf{BRKGA-Fair} and \textbf{Pay-BRKGA} extend, then the three policies, and finally their verification.
+
+\paragraph{Coverage BRKGA and decoder} The biased random-key genetic algorithm \citep{goncalves2011biased} with rolling horizon is ported from our earlier work on the MDRP \citep{giraldo2026brkga}. The chromosome has one key per ready order and one per available courier. The decoder (Algorithm~\ref{alg:decoder}) visits stores in the order of their highest-key order; at each store it takes the head order, evaluates its candidate routes (singleton and bundle) against the $K$ highest-key couriers among those that can feasibly serve the route, and keeps the pair with the best score. Fitness is coverage, with mean travel time as a tie-breaker. Two decoder scores are available: $\text{score}_{\text{finish}}(s, c)$, the time at which the courier finishes the route, under which a bundle never beats the singleton with the same head order, and $\text{score}_{\text{fpo}}(s, c) = \text{score}_{\text{finish}}(s, c)/|s|$, the travel time per order, under which bundles compete. The paper reports the latter so that the comparison with the \textbf{ILP} and the \textbf{Hierarchical} policy, which bundle, is like for like; the original rule is an ablation in \ref{sec:App_add_results}. We note that the decoder selects the $K$ couriers among the candidates of the route, not among all free couriers; the earlier variant, which selected among all free couriers and then looked them up in the prefilter, collapsed at the scale of Bogot\'a (coverage 0.16 against 0.44 for \textbf{Greedy}) because with more than two thousand free couriers the two sets rarely intersected.
+
+\begin{algorithm}[t]
+\textbf{Input:} keys $\kappa_o$ for ready orders, $\kappa_c$ for available couriers, candidate pairs $K_t$, score function $\text{score}(s, c)$\\
+\textbf{Output:} assignment $A$
+\begin{algorithmic}[1]
+\STATE{$A \gets \emptyset$; mark all couriers free}
+\FOR{each store $r$ in decreasing order of $\max_{o: r_o = r} \kappa_o$}
+  \FOR{each order $o$ of $r$ in decreasing order of $\kappa_o$, not yet assigned}
+    \STATE{$\mathcal{S}_o \gets$ candidate routes headed by $o$ (singleton and the store bundle containing $o$)}
+    \STATE{$\mathcal{C}_o \gets$ the $K$ free couriers with highest $\kappa_c$ among $\{c : (c,s) \in K_t,\ s \in \mathcal{S}_o\}$}
+    \IF{$\mathcal{C}_o \neq \emptyset$}
+      \STATE{$(s^*, c^*) \gets \argmin \{\text{score}(s, c) : s \in \mathcal{S}_o,\ c \in \mathcal{C}_o,\ (c,s) \in K_t\}$}
+      \STATE{$A \gets A \cup \{(c^*, s^*)\}$; mark $c^*$ busy and the orders of $s^*$ assigned}
+    \ENDIF
+  \ENDFOR
+\ENDFOR
+\RETURN{$A$}
+\end{algorithmic}
+\caption{BRKGA decoder shared by \textbf{BRKGA}, \textbf{BRKGA-Fair} and \textbf{Pay-BRKGA}}
+\label{alg:decoder}
+\end{algorithm}
+
+\paragraph{BRKGA-Fair}
+\label{sec:brkgafair}
+\textbf{BRKGA-Fair} is the coverage BRKGA with a decoder that reads the equity deficit from $\Hist_t$. Only the score changes:
+\begin{equation}
+\text{score}_{\text{fair}}(s, c) = \text{score}(s, c) - w \cdot \text{deficit}_c, \qquad
+\text{deficit}_c = \frac{\max(0,\; \bar w_t - w_c(t))}{\bar w_t} \in [0,1],
+\label{eqn:brkgafair}
+\end{equation}
+where $w_c(t) = \earn_c(t)/\act_c(t)$ is the courier's hourly earnings so far (zero if no active time yet), $\bar w_t$ is the mean over the free couriers of the round, and $w$ is a weight in minutes: a courier with full deficit is treated as if every route of theirs finished $w$ minutes earlier. The fitness that ranks the population is unchanged, so the deficit redirects routes among decodings of equal coverage and the population retains its maximum-coverage members. With $w = 0$ the policy is identical to the coverage BRKGA for the same seed, which isolates the value of the deficit term. The hourly basis is chosen for coherence with Eq.~\eqref{eqn:gini}; a total-earnings basis would penalise connecting late rather than being under-served, and is reported as an ablation.
+
+\paragraph{MIP-Fair}
+\label{sec:mipfair}
+\textbf{MIP-Fair} solves, at each round, a mixed-integer programme over $K_t$ with the Gini constraint of Eq.~\eqref{eqn:fair_const} written on the projected end-of-round values of $\Hist_t$. Let $x_{cs} \in \{0,1\}$ indicate that pair $(c,s) \in K_t$ is dispatched and $y_o \in \{0,1\}$ that order $o$ is covered. Because a courier takes at most one route per round, the projected hourly earnings of a free courier are linear in $x$:
+\begin{equation}
+w_c = w_c^0 \Bigl(1 - \sum_{s} x_{cs}\Bigr) + \sum_{s} x_{cs}\, w_c(s), \qquad
+w_c(s) = \frac{\earn_c(t) + \pay(s)}{(\act_c(t) + \tau_s)/60},
+\label{eqn:mipfair_w}
+\end{equation}
+where $\tau_s$ is the route's travel-plus-service time in minutes. Busy and recently connected couriers enter with fixed values $w_c = w_c^0$. The Gini constraint is evaluated over all connected couriers, not only the free ones of the round, because Eq.~\eqref{eqn:fair_const} is over $C$ and the free couriers are a biased subset. Writing $n = |C_t|$ for the number of connected couriers, the constraint $\FG(\mathbf{w}) \le \alpha$ is equivalent to $\sum_{i<j} |w_i - w_j| - \alpha\, n \sum_c w_c \le 0$, and since the inequality is in the direction that allows it, it is linearised exactly as
+\begin{equation}
+\sum_{i<j} d_{ij} - \alpha\, n \sum_c w_c \;\le\; n\, W_{\text{ref}}\, v, \qquad
+d_{ij} \ge w_i - w_j,\;\; d_{ij} \ge w_j - w_i,\;\; v \ge 0,
+\label{eqn:mipfair_gini}
+\end{equation}
+where $v$ is an elastic, dimensionless \enquote{Gini excess} scaled by a reference $W_{\text{ref}}$ so that no round is infeasible, and $v^* > 0$ measures by how much $\alpha$ could not be met in that round. Building $d_{ij}$ for all pairs is $O(n^2)$ per round, which is prohibitive with thousands of connected couriers: with 188 connected couriers the all-pairs model did not finish two hours of Pereira in four minutes, and Bogot\'a would require 3.5 million pairs per round. The pairs are therefore handled in three blocks. Fixed--fixed pairs contribute a constant. Free--fixed pairs are linear in $x$, because the free courier's $w_i$ takes one of finitely many values ($w_i^0$ or $w_i(s)$), so $|w_i - w_j| = (1 - \sum_s x_{is})\,|w_i^0 - w_j| + \sum_s x_{is}\,|w_i(s) - w_j|$. Only free--free pairs require the variables $d_{ij}$. The reformulation is exact, which we verify against the all-pairs model on a toy instance, and reduces the round from minutes to a fraction of a second on the medium cities. The programme is solved lexicographically in three stages, each fixing the previous optimum:
+\begin{equation}
+\max \sum_o y_o \;\succ\; \min v \;\succ\; \min \Bigl(\lambda_{\text{tt}} \sum_{(c,s)} \tau_s x_{cs} + \mu \sum_o \text{late}_o\Bigr),
+\label{eqn:mipfair_lex}
+\end{equation}
+subject to each order in at most one dispatched route, each courier in at most one, $y_o \le \sum_{(c,s) \ni o} x_{cs}$, and Eqs.~\eqref{eqn:mipfair_w} - \eqref{eqn:mipfair_gini}. The complete formulation is given in \ref{sec:app_MIP}. Coverage is placed first because the alternative order (equity first) collapses from a cold start: when every courier has earned nothing, any assignment raises the projected Gini coefficient, so \enquote{assign nothing} minimises $v$ in every round and the system never starts (coverage 0.000 in the pilot). With coverage first, the Gini excess decides \emph{who} receives each route among the maximum-coverage assignments, which is the equity lever; $\alpha = 1$ recovers the coverage \textbf{ILP} and $\alpha \to 0$ minimises the projected Gini coefficient in every round. The equity-first variant is reported as an ablation.
+
+\paragraph{Pay-BRKGA}
+\label{sec:paybrkga}
+\textbf{Pay-BRKGA} decides who is paid how much, not how routes are built. The chromosome of the coverage BRKGA is extended with one pay gene per free courier, mapped to a multiplier $m_c \in [1-\delta, 1+\delta]$, and the offer is $\pi_{c,s} = \pi_0 \cdot |s| \cdot m_c$; under the affine tariff of Eq.~\eqref{eqn:tariff} the multiplier would apply to $\pi_1$ only. The decoder is Algorithm~\ref{alg:decoder}. The fitness is the scalarised objective, in coverage-fraction units and to be minimised,
+\begin{equation}
+\Bigl(1 - \frac{\mathbb{E}[\text{covered}]}{|\mathcal{O}_t|}\Bigr)
++ \lambda_{\text{def}}\, \FD^{\text{proj}}
++ \lambda_{\text{pay}} \Bigl(\frac{\sum \pay}{\sum \text{tariff}} - 1\Bigr)
++ 10^{-3}\,\frac{\bar\tau}{20},
+\label{eqn:paybrkga}
+\end{equation}
+where $\mathbb{E}[\text{covered}] = \sum_{(c,s) \in A} |s|\; p_{c,s}(\pi_{c,s})$ uses the acceptance model of Eq.~\eqref{eqn:acceptance}, so that raising pay buys coverage only if the behavioural model says it does (in the auto-accept regime pay moves only $\FD$ and cost); $\FD^{\text{proj}}$ is the fraction of free couriers whose projected hourly earnings after the round, assuming acceptance, remain below $w^*$; the third term is the relative pay excess over the tariff, the $\lambda$ of Eq.~\eqref{eqn:cost_plus}; and the last term breaks ties by mean travel time $\bar\tau$. The scalarisation is a weighted sum rather than an explicit Pareto set because a round yields one decision; sweeping $\lambda_{\text{pay}}$ traces the cost-of-fairness curve. We note that the mechanism \textbf{Pay-BRKGA} acts on is distance, not pay: under the flat tariff, a 2-km singleton pays 1{,}100 COP/km (acceptance about 0.64 at $\theta = 903$) while a 4-km one pays 550 COP/km (about 0.19), so the pay gene is the only lever that can make a long route acceptable in the manual regime.
+
+\paragraph{Verification}
+The four pieces (BRKGA port, \textbf{BRKGA-Fair}, \textbf{MIP-Fair}, \textbf{Pay-BRKGA}) are covered by unit tests against exhaustive enumeration on a toy instance of three couriers and four orders: the candidate sets coincide with those of the \textbf{ILP} and the \textbf{Hierarchical} policy (18 pairs); the $\text{score}_{\text{fpo}}$ decoder reaches the exhaustive optimum of its fitness; \textbf{MIP-Fair} with $\alpha = 0$ coincides with the exhaustive lexicographic optimum under both priorities and both earnings bases, and with $\alpha = 1$ covers 4 of 4 orders like the \textbf{ILP}; the block linearisation reproduces the all-pairs model; and for \textbf{Pay-BRKGA}, with $\lambda_{\text{pay}}$ alone all offers fall below the tariff, with $\lambda_{\text{def}}$ alone the under-paid courier receives an offer above the tariff and leaves the deficit, and expected coverage equals coverage times the acceptance rate under a fixed-probability model. \todo{cite the test count once frozen (75 at the time of writing).}
+
+\section{Experimental setting}
+\label{sec:Experimental_setting}
+
+In the following, we outline the instances, the benchmark policies, the experimental design and the implementation details of our computational study.
+
+\subsection{Instances}
+\label{sec:instances}
+
+We test our policies on 24 full operating days (00:00--24:00) exported by a leading on-demand delivery platform operating in Colombia \todo{confirm whether the platform may be named}. Each day records every order (store, drop-off coordinates, placement, preparation and promised drop-off times) and every courier (vehicle, connection point, on and off times). Projecting the coordinates showed that the 24 days cover six cities: Bogot\'a, Medell\'in, Cali, Barranquilla, Bucaramanga and Pereira (four days each, except three for Cali and five for Bucaramanga). Full-city days range from 540 orders and 400 couriers (Pereira) to 59{,}000 orders and 16{,}800 couriers (Bogot\'a); fleet composition differs sharply, from 45\% bicycles in Bogot\'a to 90\% motorcycles in Pereira and Bucaramanga, which matters for the emissions diagnostic. The behavioural parameters come from the interviews and the survey described in Section~\ref{sec:Problem_description}; the remaining parameters are either platform practice or declared assumptions. The simulator, the policies, the instance loader and the batch scripts are available at \url{https://github.com/Danielgiraldosb/mdrp-simulator} \todo{confirm whether the instance data can be shared; otherwise state the access conditions}.
+
+\paragraph{Layout} A full city day is not the problem a dispatcher solves, nor is a per-window MIP over it computable for ten seeds and eighteen configurations. The experimental unit is therefore a \emph{zone}: the orders (by drop-off) and couriers (by connection point) within 3 km of the instance's store centroid, over the full day. Three kilometres keeps Pereira above a few hundred orders, so that end-of-day Gini coefficients are not noise, and Bogot\'a below the scale at which the per-round MIP exceeds the budget; it is also of the order of the prospecting radius of the framework of \cite{quintero2020computational}. Each day is projected on a plane centred on the store centroid; a few points hundreds of kilometres away (at most 10 per instance) are discarded. Table~\ref{tab:instances} lists the 24 instances; zone sizes range from 342 to 10{,}215 orders (mean 3{,}612), and Figure~\ref{fig:map} shows the zone of instance 0 in Bogot\'a with its stores, drop-offs and courier connection points. A pre-registered adjustment rule (radius reduced to 2 km for all six cities if the most expensive policy exceeded a median of 20 minutes per run on Bogot\'a) was not triggered by the pilot.
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.1}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{cl|rrrr|c}
+\hline
+\textbf{Inst.} & \textbf{City} & \textbf{Orders} & \textbf{Couriers} & \textbf{Stores} & \textbf{Orders/courier} & \textbf{Vehicle mix (full city, \%: bike/moto/walk/car)} \\
+\hline
+0 & Bogot\'a & 10{,}215 & 2{,}650 & 926 & 3.9 & 45/39/9/7 \\
+6 & Bogot\'a & 9{,}743 & 2{,}489 & 997 & 3.9 & 43/39/10/8 \\
+12 & Bogot\'a & 5{,}618 & 1{,}967 & 859 & 2.9 & 44/41/6/9 \\
+18 & Bogot\'a & 5{,}875 & 1{,}931 & 912 & 3.0 & 39/39/11/11 \\
+2 & Medell\'in & 6{,}169 & 1{,}692 & 602 & 3.6 & 16/72/6/7 \\
+8 & Medell\'in & 5{,}778 & 1{,}773 & 628 & 3.3 & 15/71/7/7 \\
+14 & Medell\'in & 3{,}953 & 1{,}244 & 614 & 3.2 & 15/72/5/8 \\
+20 & Medell\'in & 3{,}918 & 1{,}259 & 587 & 3.1 & 15/70/7/8 \\
+5 & Barranquilla & 7{,}773 & 1{,}442 & 470 & 5.4 & 21/64/4/10 \\
+11 & Barranquilla & 7{,}116 & 1{,}532 & 474 & 4.6 & 22/63/4/11 \\
+17 & Barranquilla & 3{,}606 & 1{,}168 & 4{,}014$^{a}$ & 3.1 & 19/66/3/13 \\
+23 & Barranquilla & 3{,}612 & 1{,}046 & 431 & 3.5 & 20/59/5/15 \\
+7 & Cali & 1{,}813 & 745 & 269 & 2.4 & 21/72/2/5 \\
+13 & Cali & 1{,}262 & 488 & 260 & 2.6 & 21/73/2/5 \\
+19 & Cali & 1{,}292 & 476 & 264 & 2.7 & 22/71/2/5 \\
+1 & Bucaramanga & 1{,}851 & 574 & 216 & 3.2 & 9/89/1/1 \\
+3 & Bucaramanga & 1{,}851 & 574 & 216 & 3.2 & 9/89/1/1 \\
+9 & Bucaramanga & 1{,}527 & 610 & 218 & 2.5 & 9/89/1/1 \\
 15 & Bucaramanga & 976 & 536 & 202 & 1.8 & 7/90/1/1 \\
 21 & Bucaramanga & 948 & 498 & 204 & 1.9 & 9/87/2/1 \\
 4 & Pereira & 568 & 253 & 135 & 2.2 & 5/91/2/2 \\
 10 & Pereira & 498 & 277 & 140 & 1.8 & 6/90/2/2 \\
 16 & Pereira & 342 & 268 & 401$^{a}$ & 1.3 & 5/90/2/3 \\
 22 & Pereira & 374 & 246 & 122 & 1.5 & 6/89/3/3 \\
-\bottomrule
-\multicolumn{7}{l}{\footnotesize $^{a}$ One store record per order in the export; does not affect the simulation. Instances 1 and 3 are different days with identical counts.}
+\hline
+\multicolumn{7}{l}{$^{a}$ One store record per order in the export; does not affect the simulation. Instances 1 and 3 are different days with identical counts.} \\
 \end{tabular}
+\end{adjustbox}
+\caption{The 24 instances: orders, couriers and stores in the 3-km zone, and vehicle mix of the full city}
+\label{tab:instances}
 \end{table}
 
-\subsection{Behavioural evidence from couriers in Bogot\'a}
+\paragraph{Couriers and travel} Travel time is Euclidean distance times a circuity factor of $\kappa = 1.3$, standard for an urban street network relative to the straight line (1.0 in a sensitivity run), divided by the vehicle speed: 15 km/h for bicycles, 25 for motorcycles, 5 for walking and 20 for cars, declared as assumptions of the same order as the 320 m/min of the public MDRP instances \citep{reyes2018meal}. Couriers connect and disconnect at the recorded on and off times; repositioning of idle couriers is switched off because most surveyed couriers wait in place. A courier decides on an offer after a delay of $16 \pm 8$ seconds.
 
-Two field studies inform the behavioural side of the model. (i) Forty-four semi-structured interviews with couriers of the platform in Bogot\'a (2020--2021), coded by independent readers; 32 acceptance decisions by 11 couriers were used to estimate the acceptance model. (ii) An intercept survey of 135 couriers at delivery hot spots in Bogot\'a (May--June 2021), analysed with logit and OLS models with HC1 robust errors. Neither source is inferential to the population (intercept sampling, self-report); we grade every item used in the model as A (consistent across at least 15 interviewees or clear convergence of both sources), B (5--14 interviewees or a single solid source) or C (fewer than 5, ambiguous, or a small-$n$ estimate with a wide interval). The evidence that shapes the model is as follows.
+\paragraph{Orders and service} In-store service takes 20 minutes with a purchased order (60 minutes in a stress run) and drop-off service 4 minutes, the default of the public instances. The hard deadline is the promised drop-off time plus $\Delta^{\max} = 30$ minutes, the slack the interviews describe as tolerated. Route capacity is $Q = 3$. Customer cancellations are switched off because there is no field evidence on them.
 
-\begin{itemize}
-\item \textbf{Acceptance responds to pay per kilometre (grade B for the form, C for the parameters).} Couriers reason in pay per kilometre (``nobody takes 4.1 km for 3\,300''). A logit on $\ln(\text{pay/km})$ fitted to the 32 interview decisions gives an indifference threshold $\theta = 903$ COP/km (95\% interval [615; 1\,242]) and slope $b = 2.89$ ([2.02; 5.23]). In the survey, pay (importance 5.71/7) and distance (5.65) are the dominant factors, in that order.
-\item \textbf{Two decision regimes (grade A).} In 2020 interviews no courier auto-accepted (0/12) and rejection was common (13/14); by 2021, 23/25 auto-accepted and 2/12 rejected. In the survey 64\% auto-accept always or almost always and 21 never do; more hours connected (OR 1.30 per 10 h) and less weight on pay (OR 0.61) predict auto-accepting. Behind the shift are platform sanctions for rejecting: 60\% of surveyed couriers had been blocked (median 24 h), and auto-accepting (OR 2.76) protects against it.
-\item \textbf{The tariff is flat in distance (grade C).} The per-kilometre rate estimated from interviews is 155 COP/km with a 95\% interval [$-103$; 413] and $R^2 = 0.02$; the survey reports 2\,200 COP per order outside the bonus ladder (\emph{racha}) and up to 5\,000 inside it. We therefore model a flat tariff and treat the per-kilometre lever as a policy instrument, not as a description.
-\item \textbf{Earnings and the minimum wage (grade B).} Median hourly earnings while connected were 2\,622 COP in the survey (P25 1\,931, P75 3\,405) and 3\,957 COP in the interviews; 91.9\% of surveyed couriers earned less than the 2021 statutory minimum wage per hour (4\,368 COP). The platform guarantees no hourly pay.
-\item \textbf{Inequality and its temporal structure (grade A/B).} The daily-income Gini among surveyed couriers is 0.39 outside the bonus ladder and 0.26 inside it; the bonus ladder concentrates orders (4 $\to$ 14.5 per day) and pay per order (2\,300 $\to$ 5\,000 COP). The ladder is a multi-day mechanism; our equity history is intraday, which we state as a limitation.
-\item \textbf{Service and decision times (grade B/C).} Median in-store wait with a purchased order is 20 min (IQR 15--30; 60 min in the stressed interview accounts); couriers take a median of 16 s (IQR 9--28) to decide on an offer that the app displays for 20 s.
-\end{itemize}
+\paragraph{Tariff, acceptance and wage} The flat tariff pays $\pi_0 = 2{,}200$ COP per order (survey, $n = 132$); the pay band of \textbf{Pay-BRKGA} is $\delta = 0.30$. The logit of Eq.~\eqref{eqn:acceptance} uses $\theta = 903$ COP/km and $b = 2.89$, the model estimated on the 32 interview decisions under the 2020 manual regime: acceptance is 0.57, 0.81 and 0.91 at 1{,}000, 1{,}500 and 2{,}000 COP/km. Figure~\ref{fig:acceptance} shows the curve with its interval and the two regimes; the full estimation is in the online supplement. The statutory minimum hourly wage is $w^* = 4{,}367.91$ COP (2021 monthly minimum divided by $48 \times 4.33$ hours). Emission factors are 0.114 kg CO$_2$e/km for motorcycles and 0.167 for cars \citep{defra2023factors}, zero for bicycles and walking; local factors by vehicle type do not exist. Table~\ref{tab:parameters} summarises the parameters with their sources and, for the behavioural ones, the evidence grade (A: consistent across at least 15 interviewees or clear convergence of both sources; B: 5--14 interviewees or a single solid source; C: fewer than 5, or a small-$n$ estimate with a wide interval).
 
-The full assumption-versus-evidence table (22 rows) is in the online supplement. The evidence is from Bogot\'a; its use for the other five cities is a declared transfer assumption (Section~\ref{sec:limitations}).
-
-% ============================================================================================
-\section{The constrained MDP}
-\label{sec:model}
-
-We formalise the MDRP as a constrained Markov decision process \citep{altman1999constrained} with the state--exogenous-information--transition notation of \citet{powell2011approximate}. The decision epochs $t = 0, 1, \dots, T$ are the window boundaries of the rolling horizon (two minutes apart).
-
-\subsection{Sets, orders, couriers and routes}
-
-$U$ is the set of users, $R$ the set of stores with pick-up locations $\ell_r$, and $O$ the set of orders; order $o$ is linked to a store $r_o$ and a user $u_o$ with drop-off $\ell_{u_o}$, has placement time $a_o$, ready time $e_o$ and target drop-off time $d_o$, and requires service times $s_r$ at the store and $s_u$ at the user. $C$ is the set of couriers; courier $c$ has on-time $e_c$, off-time $l_c > e_c$, initial location $\ell_c$ and vehicle type $v_c \in \{\text{walking, bicycle, motorcycle, car}\}$. A route $s$ collects at most $Q$ orders from a single store and is served by a single courier; $\dist(s)$ is its length. Travel times are deterministic, $\tau(\ell,\ell') = \kappa_{\text{circ}}\, \|\ell - \ell'\| / v(v_c)$, with a circuity factor and a vehicle-dependent speed (Section~\ref{sec:platform}). Each user places at most one order per day, and a cancelled order does not re-enter the system.
-
-\subsection{State}
-
-At epoch $t$ the state is
-\begin{equation}
-s_t = \bigl(\mathcal{L}_t,\; \mathcal{O}_t,\; \mathcal{P}_t,\; \Hist_t\bigr),
-\label{eq:state}
-\end{equation}
-where $\mathcal{L}_t$ gives for each courier the position $\ell_c(t)$, status $\sigma_c(t) \in \{\text{idle, picking-up, in-transit, dropping-off, offline}\}$ and time to next availability $\eta_c(t)$; $\mathcal{O}_t$ is the set of unassigned orders with their attributes; $\mathcal{P}_t$ holds the estimated remaining preparation time $\hat p_o(t)$ of each unassigned order; and $\Hist_t$ is the \emph{equity history},
-\begin{equation}
-h_c(t) = \bigl(\earn_c(t),\; \text{orders}_c(t),\; \act_c(t)\bigr), \qquad c \in C,
-\label{eq:history}
-\end{equation}
-the earnings, orders delivered and active time accumulated by courier $c$ up to $t$.
-
-\begin{definition}[Equity history]
-$\Hist_t$ is the component of the state that enables dynamic fairness control: a policy that reads $\Hist_t$ can prevent inequities from compounding across windows. It is absent from existing MDRP formulations.
-\end{definition}
-
-\subsection{Exogenous information and actions}
-
-Between $t$ and $t+1$ the exogenous information $\xi_{t+1} = (\Delta\mathcal{O}_{t+1}, \Delta\mathcal{P}_{t+1}, \Delta\mathcal{A}_{t+1})$ reveals the new orders, the realised preparation times and the courier log-ins and log-outs. The action at $t$ is an assignment-and-pay decision
-\begin{equation}
-a_t = \bigl\{(c, s, \pi_{c,s}) : c \in C_t^{\text{avail}},\; s \in S_t\bigr\},
-\label{eq:action}
-\end{equation}
-where $C_t^{\text{avail}}$ are the available couriers, $S_t$ the feasible routes buildable from $\mathcal{O}_t$ (feasible: every order can be picked up after its ready time and dropped off before its hard deadline $d_o + \Delta^{\max}$ given the courier's position and speed), each courier receives at most one route, each order appears in at most one route, and $\pi_{c,s}$ is the pay offered for the pair.
-
-\subsection{Tariff and acceptance}
-
-The pay offer follows the platform's tariff, an affine function of route distance,
-\begin{equation}
-\pi_{c,s} = \pi_0 + \pi_1 \cdot \dist(s),
-\label{eq:tariff}
-\end{equation}
-with $\pi_0$ a base fee per order and $\pi_1$ a per-kilometre rate. The field evidence of Section~\ref{sec:setting} gives $\pi_1$ statistically indistinguishable from zero, so the baseline tariff is flat ($\pi_0 = 2\,200$ COP per order, $\pi_1 = 0$). Pay-setting policies may scale the offer within a bounded band $[1-\delta, 1+\delta]$ around the tariff; they do not set pay arbitrarily.
-
-Courier $c$ accepts route $s$ offered at pay $\pi_{c,s}$ with probability
-\begin{equation}
-p_{c,s}(\pi_{c,s}, s_t) =
-\begin{cases}
-\sigma\!\bigl(b\,[\ln(\pi_{c,s}/\dist(s)) - \ln\theta]\bigr) & \text{manual regime},\\[2pt]
-1 & \text{auto-accept regime},
-\end{cases}
-\label{eq:acceptance}
-\end{equation}
-where $\sigma$ is the logistic function, $\theta$ is the pay per kilometre at which acceptance is even and $b$ the slope on log pay per kilometre. Equation~\eqref{eq:acceptance} replaces the linear-in-pay-and-distance specification of the general CMDP by the form the field evidence supports: couriers evaluate offers by pay per kilometre, and the pay offered by the platform enters the decision directly, which distinguishes it from the distance-only acceptance of \citet{quintero2020computational}. In the auto-accept regime the courier's decision is whether to be connected at all, which the data record as on/off times. The transition is
-\begin{equation}
-s_{t+1} = f\bigl(s_t, a_t, \xi_{t+1}, \mathbf{b}_t\bigr),
-\label{eq:transition}
-\end{equation}
-with $\mathbf{b}_t \in \{0,1\}^{|a_t|}$ the vector of Bernoulli acceptance realisations drawn from \eqref{eq:acceptance}. A rejected route returns its orders to $\mathcal{O}_{t+1}$.
-
-\subsection{Cost}
-
-The per-epoch operational cost penalises undelivered orders and lateness,
-\begin{equation}
-c(s_t, a_t, \xi_{t+1}) = w_1 \sum_{o \in \mathcal{O}_t} \ind[o \text{ not delivered}] + w_2 \sum_{o \text{ delivered}} \max\bigl(0,\; \tau_{\text{drop}}(o) - d_o\bigr),
-\label{eq:cost}
-\end{equation}
-and its extension with a payment term, used by the pay-setting policy, is
-\begin{equation}
-c^+(s_t, a_t, \xi_{t+1}) = c(s_t, a_t, \xi_{t+1}) + \lambda \sum_{(c,s) \in a_t} \pay(c, s, \pi_{c,s}),
-\label{eq:cost_plus}
-\end{equation}
-where $\pay(c,s,\pi_{c,s})$ is the amount actually paid for an accepted route and $\lambda > 0$ trades platform cost against coverage; sweeping $\lambda$ traces the cost-of-fairness curve. \todo{state the values of $w_1$ and $w_2$ used (the simulator reports coverage and lateness separately; the lexicographic reading coverage $\succ$ lateness corresponds to $w_1 \gg w_2$).}
-
-\subsection{Fairness function}
-
-Let $\earn_c(T)$ and $\act_c(T)$ be the earnings and active time of courier $c$ at the end of the day and $w_c = \earn_c(T)/\act_c(T)$ the hourly earnings. The primary fairness metric is the Gini coefficient of hourly earnings,
-\begin{equation}
-\FG(\mathbf{w}) = \frac{\sum_{c} \sum_{c'} |w_c - w_{c'}|}{2\,|C| \sum_{c} w_c},
-\qquad \mathbf{w} = (w_c)_{c \in C},
-\label{eq:gini}
-\end{equation}
-with $\FG \in [0,1]$ and $0$ perfect equality. Normalising by active time makes \eqref{eq:gini} an input-adjusted statistic rather than a description of total pay. Three secondary metrics are reported: max--min fairness $\FM = \min_c w_c$; order-count balance $\FO$, the Gini coefficient of orders delivered per active hour; and the minimum-wage deficit $\FD = |\{c : w_c < w^*\}| / |C|$, with $w^*$ the statutory minimum hourly wage.
-
-\subsection{Constrained objective}
-
-The platform seeks a policy $\pi$ that minimises expected cumulative cost subject to an end-of-day fairness guarantee:
-\begin{align}
-\min_{\pi}\;\; & \E_{\xi}\!\left[\sum_{t=0}^{T} c(s_t, a_t, \xi_{t+1})\right] \label{eq:obj}\\
-\text{s.t.}\;\; & \FG(\mathbf{w}^{\pi}) \le \alpha, \label{eq:fair_const}\\
-& \E[w_c^{\pi}] \ge w^* \quad \forall c \in C, \label{eq:minwage}\\
-& a_t \in \mathcal{A}(s_t) \quad \forall t, \label{eq:feasibility}
-\end{align}
-where $\alpha \in [0,1]$ is the tolerated inequality and \eqref{eq:feasibility} collects route feasibility and assignment validity. The day is finite, so no discounting is applied. Constraints \eqref{eq:fair_const} and \eqref{eq:minwage} are written on end-of-day quantities, not per epoch; this is deliberate and is what the equity history makes controllable. In this paper \eqref{eq:fair_const} is the operative constraint; \eqref{eq:minwage} is not imposed as a hard constraint because the platform guarantees no hourly pay and 92\% of couriers earn below $w^*$ in the field data, so it would be infeasible on every instance. It is instead pursued through $\FD$ by the pay-setting policy (Section~\ref{sec:paybrkga}) and reported for every method. The route-balancing constraint of the general framework (a cap on the share of high-value routes a courier may receive per window) is omitted because the flat tariff removes the within-window pay heterogeneity it was designed to control.
-
-\begin{proposition}[Special cases]
-\label{prop:special}
-The formulation \eqref{eq:obj}--\eqref{eq:feasibility} contains (i) the corporate, efficiency-only model, obtained with $\alpha = 1$ and without \eqref{eq:minwage}; (ii) workload-balance models, obtained by replacing $\FG$ in \eqref{eq:fair_const} by $\FO$; and (iii) minimum-wage guarantee models, obtained by replacing \eqref{eq:fair_const} by a bound on $\FD$ or by \eqref{eq:minwage} alone.
-\end{proposition}
-
-\begin{remark}[Per-window fairness does not imply end-of-day fairness]
-\label{rem:window}
-Let a policy equalise, within every window, the earnings of the couriers available in that window. If couriers connect at different times, or if the routes dispatched in different windows differ in value, the end-of-day hourly earnings $w_c$ can be arbitrarily unequal: the per-window statistic is computed on a different and changing subset of $C$ and on a different base of active time at each epoch. A policy therefore needs $\Hist_t$ in its state to control \eqref{eq:fair_const}. The hierarchical baseline of Section~\ref{sec:baselines} is the empirical counterpart of this remark. \todo{optionally add a two-courier, two-window numerical example.}
-\end{remark}
-
-\subsection{Emissions proxy}
-
-Since the vehicle type of every courier is recorded, the emissions of an action are computed at no extra data cost as
-\begin{equation}
-E(a_t) = \sum_{(c,s) \in a_t} \epsilon(v_c)\cdot \dist(s),
-\label{eq:emissions}
-\end{equation}
-with $\epsilon(v)$ a per-kilometre emission factor (zero for walking and bicycles). $E$ is a diagnostic reported alongside the Pareto frontiers, not a constraint.
-
-\subsection{Choosing $\alpha$}
-\label{sec:alpha}
-
-Three complementary criteria are used. \emph{Criterion A (historical anchor)}: $\alpha$ equals the end-of-day Gini coefficient observed under the corporate policy, so the fair policy must be no less equal than the status quo. \emph{Criterion B (inequality bands)}: $\alpha$ is the upper bound of a conventional severity band (Gini below about 0.30 read as low and above about 0.40 as high); the survey anchors are 0.26 (inside the bonus ladder) and 0.39 (outside it). \emph{Criterion C (Pareto knee)}: $\alpha$ is swept and the point of maximum distance from the chord between the extremes of the coverage--Gini frontier is selected. Section~\ref{sec:results} reports $\alpha$ under all three.
-
-% ============================================================================================
-\section{Solution methods}
-\label{sec:methods}
-
-\subsection{Shared architecture}
-\label{sec:shared}
-
-All policies, proposed and baseline, are implemented as the assignment step of one discrete-event simulator and share: (i) a dispatch round every two minutes; (ii) the same route candidates, namely every singleton and one bundle per store with its $Q = 3$ most urgent ready orders, filtered by route feasibility (hard deadline per order, service times, vehicle speed) and by a prefilter of the $k$ nearest available couriers per route ($k = 25$; $k = 8$ for MIP-Fair for budget reasons, Section~\ref{sec:design}); (iii) the acceptance model \eqref{eq:acceptance} and the flat tariff; (iv) the same metrics, computed on the end-of-day $\Hist_T$. Let $K_t$ denote the set of candidate (courier, route) pairs at round $t$. Each policy returns a set of pairs from $K_t$ with at most one route per courier and one route per order, together with a pay offer per pair.
-
-\subsection{Baselines}
-\label{sec:baselines}
-
-\paragraph{Corporate greedy.} Orders are processed by urgency; each is assigned to the nearest available courier whose route is feasible. This is the platform's current practice and the reference for all paired comparisons.
-
-\paragraph{Coverage ILP.} A per-round integer programme over $K_t$ that maximises the number of orders covered, with a secondary term for travel time; it is the exact corporate dispatcher and the model that MIP-Fair extends.
-
-\paragraph{BRKGA-Coverage.} A biased random-key genetic algorithm \citep{goncalves2011biased} with rolling horizon, ported from our earlier work \citep{giraldo2026brkga}. The chromosome has one key per ready order and one per available courier. The decoder (Algorithm~\ref{alg:decoder}) visits stores in the order of their highest-key order; at each store it takes the head order, evaluates its candidate routes (singleton and bundle) against the $K = 3$ highest-key couriers among those that can feasibly serve the route, and keeps the pair with the best score. Fitness is coverage, with mean travel time as a tie-breaker. Population 10, 10 generations per round, elite and mutant fractions 20\%, elite bias 0.7. Two decoder scores are available: \texttt{finish}, the original rule (time at which the courier finishes the route), under which a bundle never beats the singleton with the same head order, and \texttt{finish\_per\_order} (travel time per order in the route), under which bundles compete. The paper reports the latter so that the comparison with the ILP and the hierarchical policy, which bundle, is like for like; the original rule is an ablation in the supplement.
-
-\begin{algorithm}[ht]
-\caption{BRKGA decoder shared by BRKGA-Coverage, BRKGA-Fair and Pay-BRKGA (round $t$)}
-\label{alg:decoder}
-\begin{algorithmic}[1]
-\Require keys $\kappa_o$ for ready orders, $\kappa_c$ for available couriers, candidate pairs $K_t$, score function $\text{score}(s, c)$
-\State $A \gets \emptyset$; mark all couriers free
-\For{each store $r$ in decreasing order of $\max_{o: r_o = r} \kappa_o$}
-  \For{each order $o$ of $r$ in decreasing order of $\kappa_o$, not yet assigned}
-    \State $\mathcal{S}_o \gets$ candidate routes headed by $o$ (singleton and the store bundle containing $o$)
-    \State $\mathcal{C}_o \gets$ the $K$ free couriers with highest $\kappa_c$ among $\{c : (c,s) \in K_t,\ s \in \mathcal{S}_o\}$
-    \If{$\mathcal{C}_o \neq \emptyset$}
-      \State $(s^*, c^*) \gets \arg\min \{\text{score}(s, c) : s \in \mathcal{S}_o,\ c \in \mathcal{C}_o,\ (c,s) \in K_t\}$
-      \State $A \gets A \cup \{(c^*, s^*)\}$; mark $c^*$ busy and the orders of $s^*$ assigned
-    \EndIf
-  \EndFor
-\EndFor
-\State \Return $A$
-\end{algorithmic}
-\end{algorithm}
-
-\paragraph{Hierarchical coverage $\succ$ lateness $\succ$ equity $\succ$ cost.} A per-round lexicographic policy that first maximises coverage, then minimises lateness, then balances earnings among the couriers of the round, then minimises cost. It is fair within each window and ignores $\Hist_t$; it is the empirical instance of Remark~\ref{rem:window} (``myopic-fair'').
-
-\subsection{BRKGA-Fair}
-\label{sec:brkgafair}
-
-BRKGA-Fair is BRKGA-Coverage with a decoder that reads the equity deficit from $\Hist_t$ (``dynamic-fair''). Only the score changes:
-\begin{equation}
-\text{score}_{\text{fair}}(s, c) = \text{score}(s, c) - w \cdot \text{deficit}_c, \qquad
-\text{deficit}_c = \frac{\max(0,\; \bar w_t - w_c(t))}{\bar w_t} \in [0,1],
-\label{eq:brkgafair}
-\end{equation}
-where $w_c(t) = \earn_c(t)/\act_c(t)$ is the courier's hourly earnings so far (zero if no active time yet), $\bar w_t$ is the mean over the free couriers of the round, and $w$ is a weight in minutes: a courier with full deficit is treated as if every route of theirs finished $w$ minutes earlier. The fitness that ranks the population is unchanged, so the deficit redirects routes among decodings of equal coverage and the population retains its maximum-coverage members. With $w = 0$ the policy is identical to BRKGA-Coverage for the same seed. The hourly basis is chosen for coherence with \eqref{eq:gini}; a total-earnings basis would penalise connecting late rather than being under-served.
-
-\subsection{MIP-Fair}
-\label{sec:mipfair}
-
-MIP-Fair solves, at each round, a mixed-integer programme over $K_t$ with the Gini constraint \eqref{eq:fair_const} written on the projected end-of-round values of $\Hist_t$. Let $x_{cs} \in \{0,1\}$ indicate that pair $(c,s) \in K_t$ is dispatched and $y_o \in \{0,1\}$ that order $o$ is covered. Because a courier takes at most one route per round, the projected hourly earnings of a free courier are linear in $x$:
-\begin{equation}
-w_c = w_c^0 \Bigl(1 - \sum_{s} x_{cs}\Bigr) + \sum_{s} x_{cs}\, w_c(s), \qquad
-w_c(s) = \frac{\earn_c(t) + \pay(s)}{(\act_c(t) + \tau_s)/60},
-\label{eq:mipfair_w}
-\end{equation}
-where $\tau_s$ is the route's travel-plus-service time in minutes. Busy and recently connected couriers enter with fixed values $w_c = w_c^0$; the Gini constraint is evaluated over all connected couriers, not only the free ones of the round, because \eqref{eq:fair_const} is over $C$ and the free couriers are a biased subset. Writing $n = |C_t|$, the constraint $\FG(\mathbf{w}) \le \alpha$ is equivalent to $\sum_{i<j} |w_i - w_j| - \alpha\, n \sum_c w_c \le 0$, and since the inequality is in the direction that allows it, it is linearised exactly as
-\begin{equation}
-\sum_{i<j} d_{ij} - \alpha\, n \sum_c w_c \;\le\; n\, W_{\text{ref}}\, v, \qquad
-d_{ij} \ge w_i - w_j,\;\; d_{ij} \ge w_j - w_i,\;\; v \ge 0,
-\label{eq:mipfair_gini}
-\end{equation}
-where $v$ is an elastic, dimensionless ``Gini excess'' scaled by a reference $W_{\text{ref}}$ so that no round is infeasible and $v^* > 0$ measures by how much $\alpha$ could not be met in that window. Building $d_{ij}$ for all pairs is $O(n^2)$ per round, which is prohibitive with thousands of connected couriers. The pairs are therefore handled in three blocks: fixed--fixed pairs contribute a constant; free--fixed pairs are linear in $x$ because the free courier's $w_i$ takes one of finitely many values ($w_i^0$ or $w_i(s)$), so $|w_i - w_j| = (1 - \sum_s x_{is})\,|w_i^0 - w_j| + \sum_s x_{is}\,|w_i(s) - w_j|$; and only free--free pairs require the variables $d_{ij}$. The reformulation is exact (verified against brute force on a toy instance) and reduces the round from minutes to a fraction of a second on the medium cities. The programme is solved lexicographically in three stages, each fixing the previous optimum:
-\begin{equation}
-\max \sum_o y_o \;\succ\; \min v \;\succ\; \min \Bigl(\lambda_{\text{tt}} \sum_{(c,s)} \tau_s x_{cs} + \mu \sum_o \text{late}_o\Bigr),
-\label{eq:mipfair_lex}
-\end{equation}
-subject to each order in at most one dispatched route, each courier in at most one, $y_o \le \sum_{(c,s) \ni o} x_{cs}$, and \eqref{eq:mipfair_w}--\eqref{eq:mipfair_gini}. Coverage is placed first because the alternative order (equity first) collapses from a cold start: when every courier has earned nothing, any assignment raises the projected Gini, so ``assign nothing'' minimises $v$ in every round and the system never starts (coverage 0.000 in the pilot). With coverage first, the Gini excess decides \emph{who} receives each route among the maximum-coverage assignments, which is the equity lever; $\alpha = 1$ recovers the coverage ILP and $\alpha \to 0$ minimises the projected Gini in every round. The equity-first variant is reported as an ablation. Algorithm~\ref{alg:mipfair} summarises the round.
-
-\begin{algorithm}[ht]
-\caption{MIP-Fair round $t$}
-\label{alg:mipfair}
-\begin{algorithmic}[1]
-\Require $\Hist_t$ for all connected couriers, candidate pairs $K_t$ (top-$k$ prefilter), threshold $\alpha$
-\State Compute $w_c^0$ for all connected couriers and $w_c(s)$ for every $(c,s) \in K_t$ by \eqref{eq:mipfair_w}
-\State Build \eqref{eq:mipfair_gini} by blocks: constant for fixed--fixed pairs, linear in $x$ for free--fixed, $d_{ij}$ for free--free
-\State Stage 1: maximise $\sum_o y_o$; record $y^*$
-\State Stage 2: fix $\sum_o y_o = y^*$; minimise $v$; record $v^*$
-\State Stage 3: fix $v = v^*$; minimise travel time and lateness
-\State Log coverage, $v^*$, Gini before and after, solve time
-\State \Return dispatched pairs with the tariff pay
-\end{algorithmic}
-\end{algorithm}
-
-\subsection{Pay-BRKGA}
-\label{sec:paybrkga}
-
-Pay-BRKGA decides who is paid how much, not how routes are built. The chromosome of BRKGA-Coverage is extended with one pay gene per free courier, mapped to a multiplier $m_c \in [1-\delta, 1+\delta]$ ($\delta = 0.30$), and the offer is $\pi_{c,s} = \pi_0 \cdot |s| \cdot m_c$; under the affine tariff \eqref{eq:tariff} the multiplier would apply to $\pi_1$ only. The decoder is Algorithm~\ref{alg:decoder}. The fitness is the scalarised objective, in coverage-fraction units and to be minimised,
-\begin{equation}
-\Bigl(1 - \frac{\E[\text{covered}]}{|\mathcal{O}_t|}\Bigr)
-+ \lambda_{\text{def}}\, \FD^{\text{proj}}
-+ \lambda_{\text{pay}} \Bigl(\frac{\sum \pay}{\sum \text{tariff}} - 1\Bigr)
-+ 10^{-3}\,\frac{\bar\tau}{20},
-\label{eq:paybrkga}
-\end{equation}
-where $\E[\text{covered}] = \sum_{(c,s) \in A} |s|\; p_{c,s}(\pi_{c,s})$ uses the simulator's own acceptance model \eqref{eq:acceptance}, so that raising pay buys coverage only if the behavioural model says it does (in the auto-accept regime pay moves only $\FD$ and cost); $\FD^{\text{proj}}$ is the fraction of free couriers whose projected hourly earnings after the round, assuming acceptance, remain below $w^*$; and the third term is the relative pay excess over the tariff, the $\lambda$ of \eqref{eq:cost_plus}. The scalarisation is a weighted sum rather than an explicit Pareto set because a round yields one action; sweeping $\lambda_{\text{pay}}$ traces the cost-of-fairness curve. On the toy instance, with $\lambda_{\text{pay}}$ alone all offers fall below the tariff; with $\lambda_{\text{def}}$ alone the under-paid courier receives an offer above the tariff and leaves the deficit; and expected coverage equals coverage times the acceptance rate under a fixed-probability model.
-
-\subsection{Verification}
-
-The four pieces (BRKGA port, BRKGA-Fair, MIP-Fair, Pay-BRKGA) are covered by unit tests against exhaustive enumeration on a toy instance of three couriers and four orders: the candidate sets coincide with those of the ILP and the hierarchical policy (18 pairs); the \texttt{finish\_per\_order} decoder reaches the exhaustive optimum of its fitness; MIP-Fair with $\alpha = 0$ coincides with the exhaustive lexicographic optimum under both priorities and both earnings bases, and with $\alpha = 1$ covers 4/4 like the ILP; the block linearisation reproduces the all-pairs model. \todo{cite the test count once frozen (75 at the time of writing).}
-
-% ============================================================================================
-\section{Simulation platform and calibration}
-\label{sec:platform}
-
-\subsection{Engine}
-
-A discrete-event simulator advances the day in two-minute dispatch rounds. At each round it builds the candidate pairs of Section~\ref{sec:shared}, calls the policy, draws the acceptance of every offer from \eqref{eq:acceptance} after a courier decision delay of $16 \pm 8$ s, executes accepted routes with vehicle-dependent speeds and service times, returns rejected orders to the pool, cancels orders whose hard deadline can no longer be met, and updates $\Hist_t$. Repositioning of idle couriers and customer cancellations are switched off in the base experiments (most surveyed couriers wait in place; there is no field evidence on cancellations). Couriers connect and disconnect at the recorded on/off times. The engine logs per-round solve times and end-of-day per-courier tables (payment, hourly earnings, active hours, distance, vehicle).
-
-\subsection{Instance loader}
-
-Each day is projected on a plane centred on the instance's store centroid; a few points hundreds of kilometres away ($\le 10$ per instance) are discarded. Travel time is Euclidean distance times a circuity factor of 1.3 (standard for an urban street network relative to the straight line; 1.0 in a sensitivity run) divided by the vehicle speed: bicycle 15, motorcycle 25, walking 5, car 20 km/h, declared as assumptions of the same order as the 320 m/min of mdrplib \citep{reyes2018meal}. The hard deadline is the promised drop-off time plus 30 min, the slack the interviews describe as tolerated. Table~\ref{tab:parameters} (T2) lists the parameters and their sources.
-
-\begin{table}[ht]
-\centering\small
-\caption{T2. Parameters, values, sources and evidence grade. Grades as in Section~\ref{sec:setting}; ``assumption'' marks values without a local source.}
-\label{tab:parameters}
-\begin{tabular}{llll}
-\toprule
-Parameter & Value & Source & Grade \\
-\midrule
-Acceptance threshold $\theta$ & 903 COP/km (95\% [615; 1\,242]) & interviews, 32 decisions / 11 couriers & C \\
+\begin{table}[htbp]
+\centering
+\scriptsize
+\renewcommand{\arraystretch}{1.1}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{l|l|l|c}
+\hline
+\textbf{Parameter} & \textbf{Value} & \textbf{Source} & \textbf{Grade} \\
+\hline
+Acceptance threshold $\theta$ & 903 COP/km (95\% [615; 1{,}242]) & interviews, 32 decisions / 11 couriers & C \\
 Acceptance slope $b$ & 2.89 (95\% [2.02; 5.23]) & interviews & C \\
 Acceptance regime & manual / auto-accept & interviews (A), survey 64\% & A \\
-Tariff $\pi_0$ & 2\,200 COP per order, flat & survey (n = 132) & B \\
-Minimum wage $w^*$ & 4\,367.91 COP/h & SMMLV 2021 / (48 h $\times$ 4.33) & -- \\
+Tariff $\pi_0$ & 2{,}200 COP per order, flat & survey ($n = 132$) & B \\
+Minimum wage $w^*$ & 4{,}367.91 COP/h & statutory 2021 / (48 h $\times$ 4.33) & -- \\
 In-store service & 20 min (base), 60 min (stress) & survey / interviews & B / C \\
-Drop-off service & 4 min & mdrplib default & -- \\
+Drop-off service & 4 min & public instances & -- \\
 Decision delay & $16 \pm 8$ s & interviews (IQR 9--28 s) & C \\
 Speeds (bike/moto/walk/car) & 15 / 25 / 5 / 20 km/h & assumption & -- \\
-Circuity & 1.3 (1.0 sensitivity) & assumption & -- \\
-Hard deadline & promised time + 30 min & assumption (interviews) & -- \\
+Circuity $\kappa$ & 1.3 (1.0 sensitivity) & assumption & -- \\
+Hard deadline $\Delta^{\max}$ & promised time + 30 min & assumption (interviews) & -- \\
 Route capacity $Q$ & 3 & simulator default & C \\
 Window & 2 min & platform practice & -- \\
-Emission factors & moto 0.114, car 0.167, bike/walk 0 kg CO$_2$e/km & DEFRA/BEIS 2023 \citep{defra2023factors} & -- \\
-\bottomrule
+Emission factors & moto 0.114, car 0.167, bike/walk 0 kg CO$_2$e/km & \cite{defra2023factors} & -- \\
+\hline
 \end{tabular}
+\end{adjustbox}
+\caption{Parameters, values, sources and evidence grade}
+\label{tab:parameters}
 \end{table}
 
-\subsection{Acceptance calibration}
-
-The logit in \eqref{eq:acceptance} is the model estimated on the 32 interview decisions under the 2020 manual regime: with $\theta = 903$ COP/km and $b = 2.89$, acceptance is 0.57, 0.81 and 0.91 at 1\,000, 1\,500 and 2\,000 COP/km, matching the estimation sheet. Figure~\ref{fig:acceptance} (F2) shows the curve with its interval and the two regimes. The flat tariff of 2\,200 COP per order means that, in the manual regime, a 2-km singleton pays 1\,100 COP/km (acceptance about 0.64) while a 4-km one pays 550 COP/km (about 0.19): distance, not pay, drives rejection, which is the mechanism Pay-BRKGA acts on.
-
-\begin{figure}[ht]
-\centering
-\placeholderfig{6cm}{F2. Acceptance probability vs pay per km: logit with $\theta=903$ COP/km, $b=2.89$, 95\% band from $\theta \in [615; 1\,242]$; auto-accept regime as $p=1$. \todo{generate from simulator/acceptance.py; script in output/paper/figs/.}}
-\caption{F2. Logit acceptance curve on pay per kilometre with its confidence band and the two regimes.}
-\label{fig:acceptance}
+\begin{figure}[t]
+  \centering
+  \begin{minipage}[b]{0.495\textwidth}
+    \centering
+    \figorph{../figures/F1_zone_map.pdf}{\textwidth}{5cm}{F1: map of the 3-km zone of Bogot\'a (instance 0): stores, drop-offs and courier connection points. \todo{python simulator/figures\_paper.py --fig f1}}
+    \caption{A 3-km dispatching zone in Bogot\'a}
+    \label{fig:map}
+  \end{minipage}
+  \begin{minipage}[b]{0.495\textwidth}
+    \centering
+    \figorph{../figures/F2_acceptance_curve.pdf}{\textwidth}{5cm}{F2: logit acceptance curve on pay per km, $\theta = 903$, $b = 2.89$, 95\% band, auto-accept as $p = 1$. \todo{python simulator/figures\_paper.py --fig f2}}
+    \caption{Acceptance probability as a function of pay per kilometre}
+    \label{fig:acceptance}
+  \end{minipage}
 \end{figure}
 
-\begin{figure}[ht]
-\centering
-\placeholderfig{6cm}{F1. Map of a 3-km zone in Bogot\'a (instance 0): stores, drop-offs and courier connection points. \todo{plot from the instance CSV.}}
-\caption{F1. A 3-km operating zone in Bogot\'a with stores, deliveries and courier connections.}
-\label{fig:map}
-\end{figure}
+\subsection{Benchmark policies}
+\label{sec:Benchmark}
 
-% ============================================================================================
-\section{Experimental design}
+We compare the three proposed policies against four benchmarks designed to isolate the value of the equity history, of the exact constraint and of the pay lever. All benchmarks share the round, the candidate routes, the acceptance model and the tariff of Section~\ref{sec:motivation_method}.
+
+\begin{compactitem}
+    \item \textbf{Greedy}: Orders are processed by urgency; each is assigned to the nearest available courier whose route is feasible. This is the platform's current practice and the reference for all paired comparisons. Its end-of-day Gini coefficient is the historical anchor for $\alpha$.
+
+    \item \textbf{ILP}: A per-round integer programme over $K_t$ that maximises the number of orders covered, with a secondary term for travel time. It is the exact corporate dispatcher and the model that \textbf{MIP-Fair} extends; comparing the two isolates the value of the Gini constraint.
+
+    \item \textbf{BRKGA}: The coverage BRKGA of Section~\ref{sec:method} with $w = 0$ and the tariff pay. Comparing it with \textbf{BRKGA-Fair} isolates the deficit term, and with \textbf{Pay-BRKGA} the pay gene.
+
+    \item \textbf{Hierarchical}: A per-round lexicographic policy that first maximises coverage, then minimises lateness, then balances earnings among the couriers of the round, then minimises cost. It is fair within each window and ignores $\Hist_t$; it is the empirical counterpart of the example in \ref{sec:example}, and comparing it with \textbf{BRKGA-Fair} and \textbf{MIP-Fair} isolates the value of carrying the history in the state.
+\end{compactitem}
+
+\subsection{Experimental design}
 \label{sec:design}
 
-\subsection{Experimental unit: the 3-km zone}
+Table~\ref{tab:factors} lists the factors and levels. Eighteen policy configurations (four benchmarks, four weights of \textbf{BRKGA-Fair}, six thresholds of \textbf{MIP-Fair} and four pay weights of \textbf{Pay-BRKGA}) are crossed with the two acceptance regimes, the 24 instances and ten seeds. Seeds are common random numbers: every comparison between policies is paired by (instance, seed), and the seed drives the acceptance draws, the decision delays and the BRKGA. The $\alpha$ grid is centred on the inequality band of Section~\ref{sec:Problem_description}; a pre-registered recentring rule (if the corporate end-of-day Gini fell outside $[0.35; 0.55]$, the grid would become $\{0.5, \dots, 0.9\}$ times the corporate value) was checked on the pilot, where \textbf{Greedy} gives a mean of 0.419 over the six cities (0.409 with circuity 1.3), so the grid is kept.
 
-A full city day (up to 59\,000 orders and 16\,800 couriers in Bogot\'a) is not the problem a dispatcher solves, nor is a per-window MIP over it computable 10 seeds $\times$ 18 configurations. The experimental unit is a \emph{zone}: the orders (by drop-off) and couriers (by connection point) within 3 km of the instance centre, over the full day. Three kilometres keeps Pereira above a few hundred orders (so that end-of-day Gini coefficients are not noise) and Bogot\'a below the scale at which the per-round MIP exceeds the budget; it is also of the order of the prospecting radius of the mdrp-sim framework \citep{quintero2020computational}. Zone sizes are in Table~\ref{tab:instances} (mean 3\,612 orders). A pre-registered adjustment rule (radius to 2 km for all six cities if the most expensive method exceeds a median of 20 min per run on Bogot\'a) was not triggered.
-
-\subsection{Factors}
-
-Table~\ref{tab:factors} lists the factors. All 18 method configurations share the two-minute round, the candidate routes, the acceptance model and the flat tariff. Seeds are common random numbers: every comparison between methods is paired by (instance, seed).
-
-\begin{table}[ht]
-\centering\small
-\caption{Factors and levels.}
-\label{tab:factors}
-\begin{tabular}{lll}
-\toprule
-Factor & Levels & Acts on \\
-\midrule
-Method & 4 baselines; BRKGA-Fair $w \in \{5, 10, 20, 40\}$ min; MIP-Fair $\alpha \in \{0.20, 0.25, 0.30, 0.35, 0.40, 1.00\}$; & policy \\
- & Pay-BRKGA $\lambda_{\text{pay}} \in \{0.1, 0.2, 0.5, 1.0\}$ ($\lambda_{\text{def}} = 0.5$, $\delta = 0.30$) & \\
-Acceptance regime & manual, auto-accept & \eqref{eq:acceptance} \\
-Logit threshold (X2 only) & 615 / 903 / 1\,242 COP/km, slope fixed at 2.89 & \eqref{eq:acceptance} \\
-Instance & 24 (6 cities $\times$ 4 days), 3-km zone & block \\
-Seed & 10, the same 1--10 in every cell & acceptance draws, decision delays, BRKGA \\
-\bottomrule
+\begin{table}[htbp]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{l|l|l}
+\hline
+\textbf{Factor} & \textbf{Levels} & \textbf{Acts on} \\
+\hline
+Policy & \textbf{Greedy}, \textbf{ILP}, \textbf{BRKGA}, \textbf{Hierarchical}; \textbf{BRKGA-Fair} $w \in \{5, 10, 20, 40\}$ min; & round \\
+ & \textbf{MIP-Fair} $\alpha \in \{0.20, 0.25, 0.30, 0.35, 0.40, 1.00\}$; \textbf{Pay-BRKGA} $\lambda_{\text{pay}} \in \{0.1, 0.2, 0.5, 1.0\}$ & \\
+Acceptance regime & manual, auto-accept & Eq.~\eqref{eqn:acceptance} \\
+Logit threshold $\theta$ (X2 only) & 615 / 903 / 1{,}242 COP/km, slope fixed at 2.89 & Eq.~\eqref{eqn:acceptance} \\
+Instance & 24 (six cities), 3-km zone & block \\
+Seed & 10, the same in every cell & acceptance, delays, BRKGA \\
+\hline
 \end{tabular}
+\end{adjustbox}
+\caption{Factors and levels of the computational study}
+\label{tab:factors}
 \end{table}
 
-The $\alpha$ grid is centred on the band of Section~\ref{sec:alpha}; a pre-registered recentring rule (if the corporate end-of-day Gini falls outside [0.35; 0.55], the grid becomes $\{0.5, \dots, 0.9\} \times$ the corporate Gini) was checked on the pilot (Pereira, greedy, manual: 0.387). \todo{confirm with the six-city pilot X0.}
-
-\subsection{Experiments}
-
-\begin{itemize}
-\item \textbf{X0, pilot}: one instance per city $\times$ 7 methods at default settings $\times$ manual $\times$ seed 1 (42 runs): run times, corporate Gini, the radius and $\alpha$ rules.
-\item \textbf{X1, main}: 18 configurations $\times$ 2 regimes $\times$ 24 instances $\times$ 10 seeds (8\,640 runs): Pareto frontiers, cost of the guarantee, compliance, regime loss.
-\item \textbf{X2, threshold}: five selected configurations (greedy, hierarchical, BRKGA-Fair $w = 10$, MIP-Fair at the knee $\alpha^*$, Pay-BRKGA $\lambda_{\text{pay}} = 0.2$) $\times$ $\theta \in \{615, 1\,242\}$ $\times$ 2 regimes $\times$ 24 $\times$ 5 seeds (2\,400 runs); launched after X1 because $\alpha^*$ comes from it.
-\item \textbf{X3, supplement}: ablations under the manual regime, 24 instances $\times$ 5 seeds (840 runs): BRKGA with the \texttt{finish} score; MIP-Fair on free couriers only; total-earnings basis in BRKGA-Fair and MIP-Fair; MIP-Fair equity-first; MIP-Fair with $k = 25$; BRKGA $20 \times 20$.
-\end{itemize}
-In total 11\,922 runs, about 475 CPU-hours (three quarters of them MIP-Fair), run with a 10-s limit per MIP round and a 60-min timeout per run.
+The study consists of four experiments. \textbf{X0}, the pilot, runs one instance per city for the seven policies at default settings under the manual regime with one seed (42 runs) to measure run times, the corporate Gini coefficient and the radius and $\alpha$ rules. \textbf{X1}, the main experiment, runs the 18 configurations for both regimes on the 24 instances with ten seeds (8{,}640 runs) and produces the frontiers, the cost of the guarantee, the compliance and the regime loss. \textbf{X2}, the threshold experiment, runs five selected configurations (\textbf{Greedy}, \textbf{Hierarchical}, \textbf{BRKGA-Fair} with $w = 10$, \textbf{MIP-Fair} at the knee $\alpha^*$ of X1, \textbf{Pay-BRKGA} with $\lambda_{\text{pay}} = 0.2$) at the bounds of the threshold's confidence interval for both regimes with five seeds (2{,}400 runs). \textbf{X3} runs the ablations under the manual regime with five seeds (840 runs): the $\text{score}_{\text{finish}}$ decoder, \textbf{MIP-Fair} on free couriers only, the total-earnings basis in \textbf{BRKGA-Fair} and \textbf{MIP-Fair}, the equity-first priority, the prefilter $k = 25$ and a BRKGA with population 20 and 20 generations. In total 11{,}922 runs, about 320 CPU-hours, three quarters of them \textbf{MIP-Fair}.
 
 \subsection{Metrics and analysis}
+\label{sec:metrics}
 
-Per run we record coverage, number delivered; mean and total lateness, number of late orders, click-to-door mean and 90th percentile; the end-of-day $\FG$, $\FM$, $\FO$ and $\FD$ (against $w^*$); total payment, active couriers, mean bundle size; mean hourly earnings and the per-courier table; mean and maximum solve time per round and wall-clock time. Derived: emissions by \eqref{eq:emissions} from per-courier distances by vehicle; compliance $\ind[\FG \le \alpha]$ per (instance, seed); regime loss as the paired difference manual minus auto-accept. The reported Gini is one and the same for all methods (hourly earnings of active couriers); the scope used inside MIP-Fair affects what it optimises, not what is measured.
+For every run we record the two components of the cost of Eq.~\eqref{eqn:cost} separately, coverage (fraction of orders delivered) and mean and total lateness, the number of late orders, click-to-door mean and 90th percentile, the end-of-day $\FG$, $\FM$, $\FO$ and $\FD$, total payment, the number of active couriers, the mean bundle size, the mean and maximum solve time per round, and the wall-clock time; emissions follow from the per-courier distances by vehicle. The reported Gini coefficient is one and the same for all policies (hourly earnings of the couriers active during the day); the scope used inside \textbf{MIP-Fair} affects what it optimises, not what is measured. To compare the policies, we compute for each policy $\pi$ and instance $i$ the average $\bar y_i^{\pi}$ of a metric over the ten seeds and report the mean over the 24 instances together with its standard error, $\mathrm{SE} = \mathrm{SD}/\sqrt{N}$ with $N = 24$ and SD the sample standard deviation across instances. The cost of the guarantee is the paired difference $\bar y_i^{\pi} - \bar y_i^{\textbf{Greedy}}$ with a 95\% bootstrap interval over the 24 instances (instance as block, seeds averaged within), complemented by a paired Wilcoxon test. Compliance is the fraction of (instance, seed) pairs with $\FG \le \alpha$ by policy and $\alpha$. The regime loss is the paired difference manual minus auto-accept. Frontiers are the mean over (instance, seed) of $(\FG, \text{coverage})$ and $(\FG, \text{lateness})$ at each level of the swept parameter, with the non-dominated envelope and the knee selected by the maximum distance from the chord between the extremes, applied identically to the three policies.
 
-The analysis is: (i) \emph{Pareto frontiers} per method and regime, mean over (instance, seed) of $(\FG, \text{coverage})$ and $(\FG, \text{lateness})$ at each level of the swept parameter, non-dominated envelope and knee by the maximum-chord-distance rule applied identically to the three methods; (ii) \emph{cost of the guarantee} as the paired difference to greedy with a 95\% bootstrap interval over the 24 instances (instance as block, seeds averaged within), with a paired Wilcoxon test as a complement; (iii) \emph{compliance} as the fraction of (instance, seed) with $\FG \le \alpha$ by method and $\alpha$, the first half of the research question; (iv) \emph{regime loss}; (v) \emph{threshold sensitivity} from X2; (vi) \emph{selection of $\alpha$} by criteria A--C; (vii) \emph{myopia of the hierarchical policy} through its per-window versus end-of-day Gini and the intraday trajectory.
+\subsection{Implementation details}
+\label{sec:implementation}
 
-\subsection{Pilot}
+The parameters of the policies were tuned in preliminary experiments. The BRKGA uses a population of 10 and 10 generations per round, elite and mutant fractions of 20\%, elite bias 0.7 and $K = 3$ couriers per order in the decoder; a population of 20 with 20 generations is an ablation. The candidate prefilter keeps the $k = 25$ nearest available couriers per route for all policies except \textbf{MIP-Fair}, which uses $k = 8$ for budget reasons: with $k = 25$ a two-hour window of Bogot\'a did not finish within seven minutes, while with $k = 8$ it takes 4.5 minutes and covers 0.443 against 0.437 for \textbf{Greedy}; $k = 25$ is an ablation. \textbf{Pay-BRKGA} uses $\lambda_{\text{def}} = 0.5$. Mixed-integer programmes are solved with a limit of 10 seconds per round, and each run has a 60-minute timeout. All experiments were conducted on a computer equipped with an Intel Core i9-14900K processor with turbo disabled, running Windows 10, with 4 parallel processes \todo{update if X1 runs on another machine}. The implementation was carried out in Python 3.10, and Gurobi 11.0 was used for the \textbf{ILP}, \textbf{MIP-Fair} and \textbf{Hierarchical} policies.
 
-On Pereira (instance 4, full day, manual, seed 1) all methods run the day in 9--36 s; coverage is 0.73--0.74 for every method, the end-of-day Gini ranges from 0.37 (BRKGA-Fair $w=10$) to 0.46 (hierarchical) against 0.39 for greedy, and $\FD$ is above 0.99 everywhere, consistent with the 92\% of surveyed couriers below the minimum wage. On the Bogot\'a zone over 12:00--14:00, BRKGA-type methods take 30--35 s, the hierarchical policy 39 s, greedy 116 s and MIP-Fair ($k = 8$) 268 s, with coverage 0.44--0.45 for all. The pilot drove three changes recorded in Section~\ref{sec:methods}: the block linearisation of the Gini constraint, the coverage-first priority of MIP-Fair, and a correction of the decoder's courier selection without which BRKGA collapsed at Bogot\'a's scale (coverage 0.16 against 0.44). \todo{replace with the six-city X0 numbers from output/paper/pilot.csv.}
+\section{Computational study}
+\label{sec:computational_study}
 
-% ============================================================================================
-\section{Results}
-\label{sec:results}
-% TODO: all tables and figures in this section are placeholders. Sources: output/paper/main.csv (X1),
-% output/paper/threshold.csv (X2), output/paper/supp.csv (X3), output/paper/couriers/<run_id>.csv,
-% summarised by simulator/analyze_paper.py.
+In this section, we present our computational study. We first compare the policies with respect to coverage, punctuality and the end-of-day Gini coefficient, and report whether they comply with the guarantee. Then, we perform an in-depth analysis of the equity history: how the Gini coefficient evolves within the day under the per-window policy and under the policies that read $\Hist_t$, and how the three policies change who receives which route and what it pays. Finally, we examine how policy performance changes across operational settings: the acceptance regime, the behavioural threshold, the tolerated inequality and the fleet composition of the six cities.
 
-\subsection{Cost of the guarantee by method and regime}
+\todo{All numbers in this section come from X1--X3 (output/paper/main.csv, threshold.csv, supp.csv via simulator/analyze\_paper.py) unless labelled as the X0 pilot. The pilot values are one seed, one zone per city, circuity 1.0, manual regime, and are to be replaced.}
 
-\todo{Prose for T3 and F3/F4: best configuration per method, paired differences to greedy with bootstrap intervals, the shape of the frontier in $\alpha$ (MIP-Fair), $w$ (BRKGA-Fair) and $\lambda_{\text{pay}}$ (Pay-BRKGA). Source: output/paper/main.csv via analyze\_paper.py (pareto, paired diffs, knee).}
+\subsection{Solution quality and compliance}
+\label{sec:results_quality}
 
-\begin{table}[ht]
-\centering\small
-\caption{T3. Main results by method (best configuration) and acceptance regime: mean $\pm$ 95\% CI over the 24 instances of coverage, mean lateness, end-of-day Gini, minimum-wage deficit, total payment, active couriers and solve time per round. \todo{fill from output/paper/main.csv.}}
-\label{tab:main}
-\begin{tabular}{llccccccc}
-\toprule
-Method & Regime & Coverage & Lateness (min) & $\FG$ & $\FD$ & Payment (kCOP) & Active couriers & s/round \\
-\midrule
-Greedy & manual & \todo{} & & & & & & \\
-Coverage ILP & manual & & & & & & & \\
-Hierarchical & manual & & & & & & & \\
-BRKGA-Coverage & manual & & & & & & & \\
-BRKGA-Fair ($w^*$) & manual & & & & & & & \\
-MIP-Fair ($\alpha^*$) & manual & & & & & & & \\
-Pay-BRKGA ($\lambda^*$) & manual & & & & & & & \\
-\midrule
-Greedy & auto & & & & & & & \\
-\multicolumn{9}{l}{\todo{remaining auto-accept rows}} \\
-\bottomrule
+To assess the solution quality of the policies, we use the \textbf{Greedy} dispatcher as the base benchmark, since it reproduces the platform's practice, and report for each policy its best configuration per regime (the configuration that satisfies the band criterion $\alpha = 0.30$ on most instances at the least coverage cost, or, where none does, the one with the lowest Gini coefficient). Table~\ref{tab:benchmark} presents the comparative performance of the policies. The policies are listed vertically, the metrics horizontally, and the mean over the 24 instances is reported with its standard error; the best value per column is in bold. \todo{replace the pilot values with X1; add the lateness, payment and auto-accept columns.}
+
+\begin{table}[htbp]
+\centering
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{l|cc|cc|c|c}
+\hline
+\multirow{2}{*}{\textbf{Policy}} & \multicolumn{2}{c|}{\textbf{Coverage}} & \multicolumn{2}{c|}{\textbf{End-of-day Gini}} & \textbf{Minimum-wage} & \textbf{CPU time} \\
+ & \textbf{mean} & \textbf{SE} & \textbf{mean} & \textbf{SE} & \textbf{deficit $\FD$} & \textbf{(min/run)} \\
+\hline
+\textbf{Greedy} & 0.752 & \todo{} & 0.418 & \todo{} & 0.98--1.00 & 11.6$^{b}$ \\
+\textbf{ILP} & 0.741 & & 0.389 & & & 2.1 \\
+\textbf{Hierarchical} & 0.754 & & 0.466 & & & 3.8 \\
+\textbf{BRKGA} & 0.754 & & 0.431 & & & 2.8 \\
+\hline
+\textbf{BRKGA-Fair} ($w = 10$) & \textbf{0.755} & & 0.444 & & & 2.8 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.753 & & 0.406 & & & 4.9 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.2$) & 0.751 & & 0.414 & & & 3.2 \\
+\hline
+\multicolumn{7}{l}{\footnotesize $^{b}$ Before the spatial-grid correction of the greedy dispatcher (34.8 min on Bogot\'a); 10.7 min after it.} \\
 \end{tabular}
+\end{adjustbox}
+\caption{Comparison of the policies under the manual regime. \todo{Pilot X0: one seed, one zone per city, six cities, circuity 1.0; to be replaced by X1 (24 instances, 10 seeds, both regimes).}}
+\label{tab:benchmark}
 \end{table}
 
-\begin{figure}[ht]
+\todo{Prose for the X1 table, in this order: (i) the upper part, the four benchmarks: coverage and Gini of \textbf{Greedy} as the base, what the exact \textbf{ILP} gains, whether \textbf{Hierarchical} lowers or raises the end-of-day Gini; (ii) the lower part, the three policies: the Gini reduction each achieves at its best configuration and the paired coverage and lateness cost with bootstrap intervals; (iii) the CPU column; (iv) the auto-accept block and the regime loss.} In the pilot, coverage is essentially flat across policies: the seven policies lie within $0.741$ and $0.755$ over the six zones, with the exact \textbf{ILP} one point below the rest because it maximises coverage per round without regard to the next round. The end-of-day Gini coefficient of \textbf{Greedy} is $0.418$ on average and varies from $0.361$ in Bucaramanga to $0.528$ in Cali. \textbf{Hierarchical}, which equalises earnings within every round, \emph{raises} the end-of-day Gini coefficient to $0.466$, above \textbf{Greedy} in five of the six cities; this is the empirical content of the example in \ref{sec:example} and a first answer to the first research question. \textbf{MIP-Fair} with $\alpha = 0.30$ lowers the Gini coefficient to $0.406$ with no loss of coverage, but does not reach $0.30$ in any zone with one seed; \textbf{BRKGA-Fair} with $w = 10$ does not lower it in the pilot (0.444), which suggests that the weight must be larger or that the deficit must act on the fitness rather than only on the decoder \todo{resolve with the $w$ sweep of X1}. \textbf{Pay-BRKGA} keeps coverage at $0.751$ with 8--18\% less total pay than the tariff, because the offers it lowers remain above the acceptance threshold in pay per kilometre. The minimum-wage deficit is between $0.98$ and $1.00$ under every policy, consistent with the 92\% of surveyed couriers below the statutory minimum.
+
+Table~\ref{tab:compliance} reports the compliance with the guarantee, the fraction of (instance, seed) pairs with $\FG \le \alpha$, by policy and $\alpha$; this is the first half of the research question of Section~\ref{sec:introduction}. \todo{fill from main.csv; prose: which policies satisfy the constraint, at which $\alpha$, on what fraction of days; the gap between the $\alpha$ that \textbf{MIP-Fair} targets and the $\alpha$ it attains, i.e., the distribution of the Gini excess $v^*$ across rounds.}
+
+\begin{table}[htbp]
 \centering
-\placeholderfig{7cm}{F3. Pareto frontiers coverage vs end-of-day Gini by method; panels: manual / auto-accept. \todo{output/paper/figs/F3\_pareto\_coverage.pdf from main.csv.}}
-\caption{F3. Coverage versus end-of-day Gini frontiers by method, manual (left) and auto-accept (right) regimes.}
-\label{fig:pareto_cov}
-\end{figure}
-
-\begin{figure}[ht]
-\centering
-\placeholderfig{7cm}{F4. Pareto frontiers lateness vs end-of-day Gini by method. \todo{output/paper/figs/F4\_pareto\_lateness.pdf from main.csv.}}
-\caption{F4. Lateness versus end-of-day Gini frontiers by method.}
-\label{fig:pareto_late}
-\end{figure}
-
-\subsection{Compliance with the end-of-day constraint}
-
-\todo{Prose for T4: fraction of (instance, seed) with $\FG \le \alpha$ by method and $\alpha$; which methods satisfy the constraint and at which $\alpha$; this answers the first half of the research question.}
-
-\begin{table}[ht]
-\centering\small
-\caption{T4. Compliance $\FG \le \alpha$ (\% of instance--seed pairs) by $\alpha$ and method, manual regime (auto-accept in the supplement). \todo{fill from output/paper/main.csv.}}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{l|cccccc}
+\hline
+\textbf{Policy} & $\boldsymbol{\alpha = 0.20}$ & $\boldsymbol{0.25}$ & $\boldsymbol{0.30}$ & $\boldsymbol{0.35}$ & $\boldsymbol{0.40}$ & $\boldsymbol{1.00}$ \\
+\hline
+\textbf{Greedy} & \todo{} & & & & & \\
+\textbf{Hierarchical} & & & & & & \\
+\textbf{BRKGA} & & & & & & \\
+\textbf{BRKGA-Fair} ($w$ best per $\alpha$) & & & & & & \\
+\textbf{MIP-Fair} (at that $\alpha$) & & & & & & \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}}$ best per $\alpha$) & & & & & & \\
+\hline
+\end{tabular}
+\end{adjustbox}
+\caption{Compliance with the end-of-day guarantee (\% of instance--seed pairs with $\FG \le \alpha$), manual regime}
 \label{tab:compliance}
-\begin{tabular}{lcccccc}
-\toprule
-Method & $\alpha=0.20$ & $0.25$ & $0.30$ & $0.35$ & $0.40$ & $1.00$ \\
-\midrule
-Greedy & \todo{} & & & & & \\
-Hierarchical & & & & & & \\
-BRKGA-Coverage & & & & & & \\
-BRKGA-Fair ($w$ best per $\alpha$) & & & & & & \\
-MIP-Fair (at that $\alpha$) & & & & & & \\
-Pay-BRKGA ($\lambda$ best per $\alpha$) & & & & & & \\
-\bottomrule
-\end{tabular}
 \end{table}
 
-\subsection{Loss attributable to the acceptance regime}
+Figures~\ref{fig:pareto} and \ref{fig:pareto_late} show the frontiers traced by the three policies in their own parameter: $\alpha$ for \textbf{MIP-Fair}, $w$ for \textbf{BRKGA-Fair} and $\lambda_{\text{pay}}$ for \textbf{Pay-BRKGA}. The x-axis is the end-of-day Gini coefficient, the y-axis coverage (Figure~\ref{fig:pareto}) and mean lateness (Figure~\ref{fig:pareto_late}), each point is a configuration averaged over the 24 instances and ten seeds, and the benchmarks appear as single points. \todo{prose: the shape of each frontier, the knee of each, which policy dominates in which region, and the lateness frontier; from F3/F4.}
 
-\todo{Prose for F5: paired difference manual minus auto-accept in coverage and Gini by method; where the pay lever of Pay-BRKGA recovers coverage in the manual regime.}
-
-\begin{figure}[ht]
-\centering
-\placeholderfig{6cm}{F5. Paired differences manual $-$ auto-accept (coverage, Gini) with 95\% bootstrap CI, by method. \todo{output/paper/figs/F5\_regime\_loss.pdf.}}
-\caption{F5. Loss by acceptance regime: paired differences with confidence intervals, by method.}
-\label{fig:regime}
+\begin{figure}[t]
+  \centering
+  \begin{minipage}[b]{0.495\textwidth}
+    \centering
+    \figorph{../figures/F3_pareto_coverage.pdf}{\textwidth}{5cm}{F3: coverage vs end-of-day Gini frontiers by policy, manual and auto-accept. \todo{from main.csv}}
+    \caption{Coverage against end-of-day Gini by policy}
+    \label{fig:pareto}
+  \end{minipage}
+  \begin{minipage}[b]{0.495\textwidth}
+    \centering
+    \figorph{../figures/F4_pareto_lateness.pdf}{\textwidth}{5cm}{F4: lateness vs end-of-day Gini frontiers by policy. \todo{from main.csv}}
+    \caption{Lateness against end-of-day Gini by policy}
+    \label{fig:pareto_late}
+  \end{minipage}
 \end{figure}
 
-\subsection{Sensitivity to the acceptance threshold}
+\subsection{The equity history within the day}
+\label{sec:results_history}
 
-\todo{Prose for T5: coverage and Gini at $\theta \in \{615, 903, 1\,242\}$ for the five selected configurations; whether the ranking of methods changes within the confidence interval of the logit.}
+One of our main modelling contributions is the equity history in the state. In this section, we analyse how the Gini coefficient evolves within the day under the policies that read $\Hist_t$ and under the policy that does not. Figure~\ref{fig:intraday} shows the trajectory of the Gini coefficient of hourly earnings so far, computed every round over the couriers active up to that round, for \textbf{Greedy}, \textbf{Hierarchical} and \textbf{MIP-Fair} at $\alpha^*$ on one Bogot\'a day. The x-axis is the time of day, the y-axis the Gini coefficient; the dashed line marks $\alpha^*$. \todo{prose from the round snapshots: the early-day peak when few couriers have earned anything, the per-window Gini of \textbf{Hierarchical} (which is low by construction) against its end-of-day trajectory, the point at which \textbf{MIP-Fair} brings the trajectory below $\alpha^*$ and the rounds with $v^* > 0$.} The comparison answers the first research question: the per-window statistic that \textbf{Hierarchical} controls and the end-of-day statistic of Eq.~\eqref{eqn:fair_const} move in different directions, because the first is computed on the couriers of the round and the second on the couriers of the day.
 
-\begin{table}[ht]
-\centering\small
-\caption{T5. Sensitivity to the logit threshold: coverage and end-of-day Gini at $\theta = 615$, 903 and 1\,242 COP/km, manual regime. \todo{fill from output/paper/threshold.csv.}}
-\label{tab:threshold}
-\begin{tabular}{lcccccc}
-\toprule
- & \multicolumn{3}{c}{Coverage} & \multicolumn{3}{c}{$\FG$} \\
-\cmidrule(lr){2-4}\cmidrule(lr){5-7}
-Method & 615 & 903 & 1\,242 & 615 & 903 & 1\,242 \\
-\midrule
-Greedy & \todo{} & & & & & \\
-Hierarchical & & & & & & \\
-BRKGA-Fair ($w=10$) & & & & & & \\
-MIP-Fair ($\alpha^*$) & & & & & & \\
-Pay-BRKGA ($\lambda_{\text{pay}}=0.2$) & & & & & & \\
-\bottomrule
+\begin{figure}[t]
+    \centering
+    \figorph{../figures/F6_intraday_gini.pdf}{0.7\textwidth}{5cm}{F6: intraday trajectory of the Gini coefficient for \textbf{Greedy}, \textbf{Hierarchical} and \textbf{MIP-Fair} at $\alpha^*$ on a Bogot\'a day. \todo{from round snapshots}}
+    \caption{Intraday trajectory of the Gini coefficient on one Bogot\'a day}
+    \label{fig:intraday}
+\end{figure}
+
+\subsection{Decision making}
+\label{sec:results_decisions}
+
+We next analyse how the three policies change the dispatching decision compared to \textbf{Greedy}: who receives which route, and what it pays. Figure~\ref{fig:violin} compares the distribution of end-of-day hourly earnings per courier under \textbf{Greedy} and under each policy at its best configuration on the 24 instances; the x-axis lists the policies, the y-axis the hourly earnings, and the horizontal line marks $w^*$. \todo{prose from output/paper/couriers/: whether the policies compress the distribution from above (fewer high earners) or from below (fewer idle couriers), the share of couriers that cross $w^*$ under \textbf{Pay-BRKGA}, and the mean bundle size per policy.} For \textbf{Pay-BRKGA} we further report where the pay goes: the distribution of the multiplier $m_c$ across couriers and its relation to the deficit, and the total payment relative to the tariff by regime; in the manual regime the multiplier buys acceptance on long routes, in the auto-accept regime it moves only $\FD$ and cost \todo{from main.csv, multiplier logs}.
+
+\begin{figure}[t]
+    \centering
+    \figorph{../figures/F7_earnings_violin.pdf}{0.7\textwidth}{5cm}{F7: distribution of end-of-day hourly earnings per courier, \textbf{Greedy} vs each policy at its best configuration. \todo{from output/paper/couriers/}}
+    \caption{Distribution of hourly earnings per courier by policy}
+    \label{fig:violin}
+\end{figure}
+
+\subsection{Sensitivity analysis across operational settings}
+\label{sec:results_sensitivity}
+
+Finally, we study how different operational conditions affect the performance and relative advantages of the policies. We vary one factor at a time around the base case (manual regime, $\theta = 903$ COP/km, the $\alpha$ grid, circuity 1.3) and report, for three representative policies, the relative difference over the base-case value of the policy, following the one-factor-at-a-time design. Table~\ref{tab:sensitivity} reports the results. \todo{fill from main.csv (regime, $\alpha$), threshold.csv ($\theta$) and the per-city blocks (fleet composition).}
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\begin{adjustbox}{max width=\textwidth}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{l|cc|ccc|ccc|cc}
+\hline
+\multicolumn{1}{c}{} & \multicolumn{10}{c}{\textbf{Relative difference over the base-case setting (in \%)}} \\
+\hline
+\multirow{2}{*}{\textbf{Policy\textbackslash Setting}}
+& \multicolumn{2}{c|}{\textbf{Regime}}
+& \multicolumn{3}{c|}{\textbf{Threshold} $\theta$ (COP/km)}
+& \multicolumn{3}{c|}{\textbf{Tolerated inequality} $\alpha$}
+& \multicolumn{2}{c}{\textbf{Circuity}} \\
+\cline{2-11}
+& \textbf{manual} & \textbf{auto} & \textbf{615} & \textbf{903} & \textbf{1,242} & \textbf{0.20} & \textbf{0.30} & \textbf{0.40} & \textbf{1.0} & \textbf{1.3} \\
+\hline
+\textbf{Greedy} & 0.0 & \todo{} & & 0.0 & & -- & -- & -- & & 0.0 \\
+\textbf{Hierarchical} & 0.0 & & & 0.0 & & -- & -- & -- & & 0.0 \\
+\textbf{MIP-Fair} & 0.0 & & & 0.0 & & & 0.0 & & & 0.0 \\
+\textbf{Pay-BRKGA} & 0.0 & & & 0.0 & & -- & -- & -- & & 0.0 \\
+\hline
 \end{tabular}
+\end{adjustbox}
+\caption{Sensitivity analysis across operational settings (coverage; the Gini coefficient in \ref{sec:App_add_results})}
+\label{tab:sensitivity}
 \end{table}
 
-\subsection{Selecting $\alpha$ and the recommended policy}
+\paragraph{Acceptance regime} \todo{Prose for the regime loss (F5): the paired difference manual minus auto-accept in coverage and Gini by policy with bootstrap intervals; whether the loss is larger than any difference between policies; where the pay lever of \textbf{Pay-BRKGA} recovers coverage in the manual regime.} We expect the regime to matter more than the policy in the manual world: with a flat tariff and a threshold of 903 COP/km, a 4-km singleton is accepted with probability 0.19, so coverage under manual acceptance is bounded by behaviour rather than by dispatching, and auto-accept removes that bound by moving the courier's decision to connection time.
 
-\todo{Prose for T6: $\alpha$ under criterion A (corporate end-of-day Gini from X1), B (0.26 / 0.39 survey anchors, band 0.30), C (knee from F3); the policy that satisfies it at least coverage cost; the operating recommendation.}
+\paragraph{Behavioural threshold} The threshold $\theta$ is a grade-C parameter estimated from 32 decisions. \todo{Prose for X2: coverage and Gini at $\theta \in \{615, 903, 1{,}242\}$ for the five selected configurations; whether the ranking of policies changes within the confidence interval of the logit; the Gini coefficient is expected to be less sensitive than coverage because it is normalised by active time.}
 
-\begin{table}[ht]
-\centering\small
-\caption{T6. $\alpha$ under the three criteria and the recommended policy. \todo{fill from output/paper/main.csv and the survey anchors.}}
-\label{tab:alpha}
-\begin{tabular}{llll}
-\toprule
-Criterion & $\alpha$ & Policy satisfying it at least cost & Coverage cost vs greedy \\
-\midrule
-A: historical (corporate Gini) & \todo{} & & \\
+\paragraph{Tolerated inequality and the choice of $\alpha$} Three complementary criteria are used to choose $\alpha$. Criterion A (historical anchor) sets $\alpha$ equal to the end-of-day Gini coefficient observed under \textbf{Greedy}, so the fair policy must be no less equal than the status quo; in the pilot this is 0.42 on average and ranges from 0.36 to 0.53 across cities. Criterion B (inequality bands) sets $\alpha$ at the upper bound of a conventional severity band, a Gini coefficient below about 0.30 read as low and above about 0.40 as high; the survey anchors are 0.26 inside the bonus ladder and 0.39 outside it, so $\alpha = 0.30$. Criterion C (Pareto knee) sweeps $\alpha$ and selects the point of maximum distance from the chord between the extremes of the coverage--Gini frontier. Table~\ref{tab:alpha} reports $\alpha$ under the three criteria, the policy that satisfies each at the least coverage cost, and that cost. \todo{fill from main.csv; prose: whether the three criteria agree, and the recommended operating point.}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{l|c|l|c}
+\hline
+\textbf{Criterion} & $\boldsymbol{\alpha}$ & \textbf{Policy satisfying it at least cost} & \textbf{Coverage cost vs. Greedy (pts)} \\
+\hline
+A: historical (corporate Gini) & 0.42 (pilot) & \todo{} & \\
 B: inequality band & 0.30 (anchors 0.26 / 0.39) & & \\
 C: Pareto knee & \todo{} & & \\
-\bottomrule
+\hline
 \end{tabular}
+\end{adjustbox}
+\caption{The tolerated inequality $\alpha$ under the three criteria and the recommended policy}
+\label{tab:alpha}
 \end{table}
 
-\subsection{Intraday dynamics}
+\paragraph{Fleet composition and emissions} Fairness in hourly earnings is neutral to vehicle type by construction; any emissions effect comes from which couriers receive distance, so the diagnostic is informative precisely where fleets are mixed. \todo{One paragraph on F8 (\ref{sec:App_add_results}): emissions by $\alpha$ and city, driven by fleet composition (45\% bicycles in Bogot\'a versus 90\% motorcycles in Pereira); whether fair policies shift distance between vehicle types.} Additionally, \ref{sec:App_add_results} reports the results by city and the ablations of X3: the decoder score, the scope of the Gini constraint, the earnings basis, the equity-first priority, the candidate prefilter and the BRKGA size.
 
-\todo{Prose for F6: the per-window Gini of the hierarchical policy versus its end-of-day Gini; the trajectory of MIP-Fair at $\alpha^*$; the empirical content of Remark~\ref{rem:window}.}
+\section{Findings and Discussion}
+\label{sec:findings_discussion}
 
-\begin{figure}[ht]
-\centering
-\placeholderfig{6cm}{F6. Intraday trajectory of the Gini coefficient (greedy, hierarchical, MIP-Fair $\alpha^*$) on a Bogot\'a day. \todo{from round snapshots of selected runs.}}
-\caption{F6. Intraday trajectory of the end-of-day Gini coefficient for greedy, the hierarchical policy and MIP-Fair at $\alpha^*$ on one Bogot\'a day.}
-\label{fig:intraday}
-\end{figure}
+This section synthesises the computational results, addresses the three research questions, and discusses their implications for dispatching problems in which a platform is accountable for a distributional outcome over a horizon longer than its decision window. \todo{Rewrite each paragraph with the numbers of X1--X3; the structure and the claims the design is built to support are given.}
 
-\subsection{Emissions}
+We begin by addressing the first research question concerning whether an end-of-day guarantee requires the equity history in the state. The results show that fairness enforced within each window does not deliver, and can worsen, fairness at the end of the day: the \textbf{Hierarchical} policy equalises the pay offered among the couriers of every round and still ends the day with a higher Gini coefficient than the corporate dispatcher in most cities, because the per-window statistic is computed on a changing subset of couriers and ignores what each has already earned and worked. The policies that read $\Hist_t$ control the end-of-day statistic directly, and the intraday trajectories show when they do so. The equity history is therefore not a modelling refinement but the ingredient that makes the constraint of Eq.~\eqref{eqn:fair_const} controllable; its cost is one vector of three numbers per courier, which every platform already records.
 
-\todo{One paragraph on F8 (supplement): emissions by $\alpha$ and city, driven by fleet composition (45\% bicycles in Bogot\'a versus 90\% motorcycles in Pereira); whether fair policies shift distance between vehicle types.}
+We next address the second research question concerning which lever satisfies the guarantee at the lowest cost. \textbf{MIP-Fair} reads the constraint literally and traces the frontier in $\alpha$ at the highest computational cost; \textbf{BRKGA-Fair} reaches a similar region at a fraction of the cost by redirecting routes within maximum-coverage decodings; \textbf{Pay-BRKGA} is the only policy that moves pay, and therefore the only one with a lever in the manual regime, at a direct platform cost \todo{quantify from Table~\ref{tab:benchmark} and the frontiers}. Because coverage is flat across policies at the scale of a dispatching zone, the cost of the guarantee is paid mainly in lateness and in who receives the routes, which is the quantity the platform can explain to its couriers. We also find that dispatching alone cannot lift couriers to the statutory minimum wage at the current tariff; what dispatching can do is distribute the shortfall evenly, which is the practical content of using $\FG$ as the constraint and $\FD$ as a diagnostic.
 
-% ============================================================================================
-\section{Discussion}
-\label{sec:discussion}
+Finally, we address the third research question concerning the operational conditions under which the guarantee is affordable. The acceptance regime matters more than the policy in the manual world, where coverage is bounded by behaviour; the sanctions that moved the workforce to auto-accept are the platform's way of removing that bound, and our results quantify what the bound costs. Within the confidence interval of the behavioural threshold the ranking of policies \todo{does / does not} change. The three criteria for $\alpha$ give an interval rather than a point; the recommendation is the policy that satisfies the band criterion on most days at the least coverage cost, with the historical anchor as the fallback where the band is not reachable. From a managerial perspective, the central implication is that a fairness guarantee should be stated, measured and enforced on the day, not on the window, and that the pay lever and the assignment lever are complements: the first buys acceptance where couriers reject, the second distributes work where they do not.
 
-\todo{Rewrite once results exist. Points the design is built to support:}
-\begin{itemize}
-\item \textbf{The guarantee is a property of the day, not of the window.} If the hierarchical policy's end-of-day Gini is no better than greedy's while its per-window Gini is, Remark~\ref{rem:window} is confirmed empirically, and the equity history is the ingredient that makes the constraint controllable. \todo{confirm with F6 and T4.}
-\item \textbf{Where the three methods sit.} MIP-Fair reads \eqref{eq:fair_const} literally and traces the frontier in $\alpha$ at the highest computational cost; BRKGA-Fair reaches a similar region at a fraction of the cost by redirecting routes within maximum-coverage decodings; Pay-BRKGA is the only one that moves pay, and therefore the only one with a lever in the manual regime, at a direct platform cost. \todo{quantify from T3.}
-\item \textbf{The regime matters more than the method in the manual world.} With a flat tariff and a threshold of 903 COP/km, long singletons are rejected with high probability, so coverage under manual acceptance is bounded by behaviour rather than by dispatching; auto-accept removes that bound by moving the decision to connection time, and sanctions explain why platforms moved there. \todo{confirm with F5.}
-\item \textbf{Which $\alpha$ is sustainable.} The three criteria give an interval rather than a point; the recommendation is the policy that satisfies the band criterion on most days at the least coverage cost. \todo{from T6.}
-\item \textbf{Minimum wage.} With $\FD$ near one under every policy, the data say that dispatching alone cannot lift couriers to the statutory minimum at the current tariff; what dispatching can do is distribute the shortfall evenly. This is the practical content of using $\FG$ as the constraint and $\FD$ as a diagnostic.
-\item \textbf{Emissions.} Fairness in hourly earnings is neutral to vehicle type by construction; any emissions effect comes from which couriers receive distance, so the diagnostic is informative precisely where fleets are mixed (Bogot\'a). \todo{from F8.}
-\end{itemize}
+\section{Conclusion}
+\label{sec:Conclusion}
 
-% ============================================================================================
-\section{Limitations}
-\label{sec:limitations}
+In this paper, we study a dispatching problem in which a platform repeatedly offers work and pay to self-employed agents who may reject it, and in which the platform is accountable for the distribution of the agents' earnings at the end of the day. We examine this structure in meal delivery, where we formulate the problem as a constrained Markov decision process with an equity history in the state, an end-of-day Gini constraint on hourly earnings and acceptance that responds to pay per kilometre in one of two regimes. As a methodological contribution, we develop three cost function approximations that read the equity history in every round, including a block-exact linearisation of the Gini constraint, and we evaluate them against four benchmarks on 24 real operating days from six Colombian cities with field-calibrated behaviour. The computational results show that fairness enforced window by window does not deliver fairness at the end of the day, that the policies which carry the history can control the guarantee at a small cost in coverage, and that the acceptance regime bounds what any dispatching policy can achieve in the manual world. \todo{two sentences with the headline numbers and the recommended operating point.} From a managerial perspective, the central implication is that a fairness guarantee is a property of the day: it should be measured on hourly earnings, enforced through what every courier has earned so far, and complemented by the pay lever where couriers reject.
 
-\begin{itemize}
-\item \textbf{Behavioural samples.} The survey (135) used intercept sampling and self-report; the acceptance logit rests on 32 decisions by 11 interviewees, with wide intervals, and reflects the 2020 manual regime. We report the sensitivity over the interval (X2) and run both regimes, but the parameters are grade C.
-\item \textbf{Transfer across cities.} All behavioural evidence is from Bogot\'a; its use in Medell\'in, Cali, Barranquilla, Bucaramanga and Pereira is an assumption. The five cities are robustness checks, not independent calibrations.
-\item \textbf{Pay in bands and after acceptance.} The survey reports pay in bands (2\,200 COP outside the bonus ladder); 93\% of couriers report that the pay shown changes after acceptance (realised/shown ratio 0.60). The model responds to the pay shown; realised earnings may be lower.
-\item \textbf{Declared assumptions without local sources.} Circuity 1.3, vehicle speeds, the 30-min slack on the promised time and the UK emission factors \citep{defra2023factors}; local factors by vehicle type do not exist.
-\item \textbf{Scope of the model.} Intraday equity history (the bonus ladder is multi-day); no sanctions or acceptance-rate dynamics; no cash-handling constraint (couriers report a cash cap around 70--80\,000 COP); no heterogeneity by seniority or nationality, which the survey shows to matter (Venezuelan couriers: OR 8.2 of auto-accepting, 11 more hours per week); customer cancellations and repositioning switched off; constraint \eqref{eq:minwage} not imposed.
-\item \textbf{Experimental unit.} The 3-km zone is a dispatching zone, not the city; cross-zone effects are not modelled. MIP-Fair uses a candidate prefilter of 8 couriers per route for budget reasons (25 in an ablation).
-\item \textbf{Instance quality.} Two instances carry one store record per order and two Bucaramanga days share identical counts; neither affects the simulation but both should be checked at the source.
-\end{itemize}
+Beyond the meal-delivery application, our contribution concerns both the decision structure and the architecture used to address it. The equity history and the end-of-day constraint apply to any sequential assignment problem in which the agents' outcomes accumulate over a horizon and the regulator or the platform cares about their distribution at its end, such as ride-hailing, crowdsourced delivery and task platforms. Within this architecture, the fairness metric can be replaced by another inequality index, the acceptance model by another behavioural model, and the per-round problem by another cost function approximation; the block linearisation applies to any constraint in mean absolute differences in which each agent's outcome takes finitely many values per round. The per-window problem must, however, be reformulated to capture the problem-specific routing decisions and constraints.
 
-% ============================================================================================
-\section{Conclusions}
-\label{sec:conclusions}
+The study also has several limitations related to the decision environment. The behavioural evidence is from Bogot\'a, and its use in the other five cities is a transfer assumption; the five cities are robustness checks, not independent calibrations. The acceptance logit rests on 32 decisions by 11 interviewees, with wide intervals, and reflects the 2020 manual regime; we report the sensitivity over the interval and run both regimes, but the parameters are grade C. The survey reports pay in bands, and 93\% of couriers report that the pay shown changes after acceptance (realised-to-shown ratio 0.60); the model responds to the pay shown, so realised earnings may be lower. The equity history is intraday whereas the platform's bonus ladder is a multi-day mechanism, and the model has no sanctions, no acceptance-rate dynamics, no cash-handling constraint (couriers report a cash cap around 70--80 thousand COP) and no heterogeneity by seniority or nationality, which the survey shows to matter. Circuity, vehicle speeds, the 30-minute slack and the UK emission factors are declared assumptions without local sources. The 3-km zone is a dispatching zone, not the city, so cross-zone effects are not modelled. Future research could extend the history to several days, add the dynamics of sanctions and acceptance rates, and calibrate the behavioural model in a second city.
 
-\todo{Rewrite with numbers.} We formulated meal-delivery dispatching as a constrained MDP whose state remembers each courier's day, whose constraint is the end-of-day Gini coefficient of hourly earnings, and whose couriers accept offers according to pay per kilometre in one of two regimes. Three methods solve the same problem inside one simulator, against four baselines, on 24 real days from six Colombian cities with field-calibrated behaviour. The answer to the research question has two parts: which policies satisfy the guarantee on real days at which $\alpha$, and what they give up in coverage and punctuality relative to corporate dispatching by regime. \todo{two sentences with the headline numbers and the recommended operating point.} Future work includes a multi-day equity history matching the bonus ladder, the dynamics of sanctions and acceptance rates, a cash-handling constraint, courier heterogeneity by seniority and nationality, local emission factors, and the 240 Grubhub instances of mdrplib for the policies already in the simulator.
+There are also methodological limitations that motivate further research. \textbf{MIP-Fair} uses a candidate prefilter of eight couriers per route for budget reasons and a 10-second limit per round; a column-generation or a rolling subset of pairs could relax both. The three policies are tuned by enumeration over a grid; learning the deficit weight or the pay multiplier as a function of the state, as in \cite{stein2024learning}, could reduce the cost of the guarantee further, at the price of an offline training effort. The minimum-wage constraint is not imposed because it is infeasible at the current tariff; a joint design of tariff and dispatching, in which the platform's budget is a decision, is a natural extension. Finally, the 240 public instances of \cite{reyes2018meal} could be run with the policies already in the simulator to test the findings outside Colombia.
 
-% ============================================================================================
-\section*{Acknowledgements}
-\todo{funding, the platform that provided the data, the couriers who answered the survey and interviews.}
+\section*{Acknowledgment}
+\todo{funding, the platform that provided the data, the couriers who answered the survey and the interviews.}
 
-\section*{Data and code availability}
-The simulator, policies, loader, tests and batch scripts are available at \url{https://github.com/Danielgiraldosb/mdrp-simulator}. \todo{confirm the instance data can be shared; otherwise state the access conditions.}
-
-\ifelsarticle
-  \bibliographystyle{elsarticle-harv}
-\else
-  \bibliographystyle{plainnat}
-\fi
+\bibliographystyle{elsarticle-harv}
 \bibliography{references}
 
-% ============================================================================================
+\newpage
+
 \appendix
-\section{Online supplement (contents)}
-\label{app:supplement}
-The supplement contains: the 22-row assumption-versus-evidence table with grades; the full acceptance calibration (estimation sheet, interval, 2020 versus 2021 regimes); the survey instrument and the interview coding scheme; BRKGA parameters and the \texttt{finish} versus \texttt{finish\_per\_order} decoder comparison; the toy-instance verification of the four methods against exhaustive enumeration; T7 (ablations: decoder score, MIP-Fair scope, earnings basis, equity-first priority, candidate prefilter 25, BRKGA $20 \times 20$); T8 (results by city, six blocks of T3); F7 (violin plots of hourly earnings per courier, corporate versus $\alpha^*$); and F8 (emissions by $\alpha$ and fleet composition). \todo{T7 from output/paper/supp.csv; T8 from main.csv grouped by city; F7 from output/paper/couriers/; F8 derived from per-courier distances and the DEFRA factors.}
+
+\section*{Appendix}
+
+In this Appendix, we present a more detailed literature review, an illustrative example of the decision process, the complete formulation of the per-round programme of \textbf{MIP-Fair}, and additional computational results.
+
+\section{Detailed literature review}
+\label{sec:App_literature_review}
+
+This section reviews the literature related to the three components of the problem: the operational MDRP, fairness and compensation in delivery platforms, and courier behaviour. Table~\ref{tab:Litclass} in the main body provides a systematic summary of their similarities and differences relative to our work. \todo{Move the fuller review of the thesis here (operational, economic and behavioural blocks), one subsection each, closing with the gap; switch citations to \citeAppx and add ReferencesAppx.bib so that the appendix references do not count against the page limit, as in the director's manuscripts.}
+
+\subsection{Operational block}
+\label{sec:App_lit_operational}
+
+\cite{reyes2018meal} defined the MDRP as a rolling-horizon, dynamic-deterministic problem and released the Grubhub instance library; \cite{yildiz2019provably} obtained provably high-quality solutions for a deterministic variant; \cite{steever2019dynamic} revise assignments on every event; \cite{Ulmer2021} anticipate random ready times with approximate dynamic programming; and later contributions address shared logistics \citep{bi2023meal}, courier operating regions \citep{auad2023courier}, batching for crowdsourced fleets \citep{simoni2023crowdsourced}, ghost kitchens \citep{neria2024restaurant} and on-demand delivery from stores \citep{liu2021multiperiod}. In all of these, acceptance is perfect or exogenous. \todo{expand.}
+
+\subsection{Economic block}
+\label{sec:App_lit_economic}
+
+Most operational models pay a fixed amount per delivery or minimise distance as a cost proxy. \cite{reyes2018meal} and \cite{yildiz2019provably} include a shift-level guaranteed minimum set by the company; \cite{wen2010dynamic} balance workload and income opportunities within a multi-period routing model; \cite{lesmana2019balancing} trace the efficiency--fairness frontier of ride-sourcing; \cite{bajec2022strategic} use Shapley-value incentives; \cite{sobhanan2024equity} give equity--cost frontiers; \cite{gupta2022fairfoody}, \cite{nair2022work4food} and \cite{martinez2024exploring} bring fairness to food delivery. None integrates acceptance-dependent pay, a real tariff and an intertemporal guarantee within a rolling-horizon routing problem. \todo{expand.}
+
+\subsection{Behavioural block}
+\label{sec:App_lit_behavioural}
+
+\cite{liao2020multi} balance workload and argue that equitable distribution is an incentive; reinforcement-learning approaches \citep{ahamed2020deep,bozanta2022courier} include availability in the state but keep acceptance exogenous; \cite{haferkamp2023heatmap} address repositioning; \cite{quintero2020computational} makes acceptance depend on distance. The fair-machine-learning literature shows that short- and long-horizon fairness diverge \citep{corbettdavies2023measure}. \todo{expand; add \citet{rl2025fairdelivery}.}
+
+\section{Illustrative example and algorithmic details}
+\label{sec:App_alg_section}
+
+In this section, we first provide an illustrative numerical example connecting the sequential decision process to the dispatching decisions faced by the platform. We then present the complete per-round formulation of \textbf{MIP-Fair} and the tuning of the policy parameters.
+
+\subsection{Illustrative numerical example}
+\label{sec:example}
+
+We use a two-courier example to connect the components of Section~\ref{sec:SDP} with the dispatching decisions and to show why a policy that is fair within every window can be unfair at the end of the day. Couriers $A$ and $B$ are connected from 12:00 to 13:00, so $\act_A(T) = \act_B(T) = 60$ minutes whatever is dispatched; the tariff is flat at 2{,}200 COP per order; $B$ is slightly farther from the store than $A$. Four routes become available during the hour: at 12:00 a bundle of three orders from one store (pay 6{,}600 COP, duration 30 minutes including service), and at 12:30, 12:40 and 12:50 one singleton each (pay 2{,}200 COP, duration 8 minutes, so that the courier who takes one is free again before the next window). Coverage is the first priority of every policy, so all four routes are dispatched in every case; the question is to whom.
+
+At $t = $ 12:00 the state is $S_0$ with both couriers idle and $h_A(0) = h_B(0) = (0, 0, 0)$. Both the per-window policy and the history-aware policy dispatch the bundle to $A$, the nearer courier, since nothing distinguishes the two couriers yet. At $t = $ 12:30 the state contains $h_A = (6{,}600, 3, 30)$ and $h_B = (0, 0, 30)$, that is, hourly earnings so far of $w_A(t) = 13{,}200$ COP/h and $w_B(t) = 0$, and one singleton is available. Consider two decisions. The per-window policy balances the pay offered within the window among the free couriers: with a single route, the window statistic is the same whichever courier receives it (one courier is offered 2{,}200 and the other 0), so the tie is broken by distance and the singleton goes to $A$. The same happens at 12:40 and 12:50. The end-of-day hourly earnings are $w_A = 6{,}600 + 3 \times 2{,}200 = 13{,}200$ COP/h and $w_B = 0$, and by Eq.~\eqref{eqn:gini}
+\begin{equation*}
+\FG = \frac{2 \times |13{,}200 - 0|}{2 \times 2 \times 13{,}200} = 0.5.
+\end{equation*}
+The history-aware policy reads $\Hist_t$ at 12:30: $\text{deficit}_B = 1$ and $\text{deficit}_A = 0$ in Eq.~\eqref{eqn:brkgafair}, or equivalently $w_B(s) = 3{,}474$ and $w_A(s) = 13{,}895$ COP/h in Eq.~\eqref{eqn:mipfair_w} (projected to the end of the window), so the singleton goes to $B$, and likewise at 12:40 and 12:50. The end-of-day hourly earnings are $w_A = w_B = 6{,}600$ COP/h and $\FG = 0$, with the same coverage (six orders), the same active time, and a difference in travel of a few hundred metres.
+
+This example highlights two points. First, the per-window statistic cannot distinguish the two decisions: within each window after 12:00 the pay offered is $(2{,}200, 0)$ whichever courier is chosen, so a policy that is fair within the window, such as the \textbf{Hierarchical} benchmark, is indifferent between an end-of-day Gini coefficient of $0.5$ and one of $0$. Second, what distinguishes them is the component $\Hist_t$ of the state, which records that $A$ has already earned 6{,}600 COP during the same active time in which $B$ has earned nothing. The effect compounds when couriers connect at different times, when routes dispatched in different windows differ in value, and when some couriers are systematically nearer to the stores, which is why the \textbf{Hierarchical} policy raises the end-of-day Gini coefficient on real days (Section~\ref{sec:results_quality}).
+
+\subsection{Per-round formulation of MIP-Fair}
+\label{sec:app_MIP}
+
+At round $t$, let $C_t$ be the set of connected couriers, $C_t^{\text{free}} \subseteq C_t$ the free ones, $K_t$ the candidate pairs and $\mathcal{O}_t^{\text{ready}}$ the ready orders. Let $x_{cs} \in \{0,1\}$ for $(c,s) \in K_t$, $y_o \in \{0,1\}$ for $o \in \mathcal{O}_t^{\text{ready}}$, $w_c \ge 0$ for $c \in C_t$, $d_{ij} \ge 0$ for free--free pairs $i < j$, $\text{late}_o \ge 0$ and $v \ge 0$. The three stages of Eq.~\eqref{eqn:mipfair_lex} are solved over the following constraints:
+
+{\small
+\begin{alignat}{2}
+\sum_{(c,s) \in K_t : o \in s} x_{cs} & \ge y_o, & \quad & \forall o \in \mathcal{O}_t^{\text{ready}} \label{eqn:app_cover} \\
+\sum_{(c,s) \in K_t : o \in s} x_{cs} & \le 1, & & \forall o \in \mathcal{O}_t^{\text{ready}} \label{eqn:app_once} \\
+\sum_{s : (c,s) \in K_t} x_{cs} & \le 1, & & \forall c \in C_t^{\text{free}} \label{eqn:app_courier} \\
+w_c & = w_c^0 \Bigl(1 - \sum_{s} x_{cs}\Bigr) + \sum_{s} x_{cs}\, w_c(s), & & \forall c \in C_t^{\text{free}} \label{eqn:app_w} \\
+w_c & = w_c^0, & & \forall c \in C_t \setminus C_t^{\text{free}} \label{eqn:app_wfixed} \\
+d_{ij} & \ge w_i - w_j, \quad d_{ij} \ge w_j - w_i, & & \forall i < j \in C_t^{\text{free}} \label{eqn:app_d} \\
+\sum_{i<j \in C_t^{\text{free}}} d_{ij} + \sum_{i \in C_t^{\text{free}},\, j \notin C_t^{\text{free}}} \Bigl[\bigl(1 - \textstyle\sum_s x_{is}\bigr)|w_i^0 - w_j^0| + \sum_s x_{is} |w_i(s) - w_j^0|\Bigr] & & & \nonumber \\
++ \sum_{i<j \notin C_t^{\text{free}}} |w_i^0 - w_j^0| - \alpha\, n \sum_{c \in C_t} w_c & \le n\, W_{\text{ref}}\, v & & \label{eqn:app_gini} \\
+\text{late}_o & \ge \sum_{(c,s) \in K_t : o \in s} x_{cs}\, \max(0, \hat\tau_{\text{drop}}(c, s, o) - d_o), & & \forall o \in \mathcal{O}_t^{\text{ready}} \label{eqn:app_late} \\
+x_{cs} \in \{0,1\},\; y_o \in \{0,1\},\; d_{ij}, w_c, \text{late}_o, v & \ge 0. & & \label{eqn:app_dom}
+\end{alignat}
+}%
+
+Eq.~\eqref{eqn:app_cover} links coverage to dispatched routes and Eqs.~\eqref{eqn:app_once} - \eqref{eqn:app_courier} ensure that each order is in at most one dispatched route and each courier receives at most one. Eqs.~\eqref{eqn:app_w} - \eqref{eqn:app_wfixed} give the projected hourly earnings, linear in $x$ for free couriers and fixed for the others. Eq.~\eqref{eqn:app_d} defines the pairwise differences for free--free pairs only, and Eq.~\eqref{eqn:app_gini} is the Gini constraint of Eq.~\eqref{eqn:mipfair_gini} with the free--fixed block written out as linear terms and the fixed--fixed block as a constant; $n = |C_t|$ and $W_{\text{ref}}$ is the mean of $w_c^0$ over $C_t$ (or $w^*$ when that mean is zero). Eq.~\eqref{eqn:app_late} computes the projected lateness of each order under its dispatched route, and Eq.~\eqref{eqn:app_dom} defines the domains. Stage 1 maximises $\sum_o y_o$; stage 2 fixes that value and minimises $v$; stage 3 fixes $v^*$ and minimises $\lambda_{\text{tt}} \sum_{(c,s)} \tau_s x_{cs} + \mu \sum_o \text{late}_o$. \todo{state $\lambda_{\text{tt}}$ and $\mu$.}
+
+\subsection{Tuning of the policy parameters}
+\label{sec:app_tuning}
+
+\todo{Table of the BRKGA size (10 $\times$ 10 vs 20 $\times$ 20) and the prefilter ($k = 8$ vs 25 for \textbf{MIP-Fair}) against coverage, Gini and CPU time per round on Pereira and on the Bogot\'a window, from the pilot and X3; one paragraph explaining the choice as the trade-off between solution quality and execution time.} In the pilot, the BRKGA-type policies take 9--10 seconds for a full day of Pereira and 30--35 seconds for a two-hour window of Bogot\'a, the \textbf{Hierarchical} policy 16 and 39 seconds, and \textbf{MIP-Fair} with $k = 8$ 36 seconds and 4.5 minutes, respectively; a BRKGA with population 20 and 20 generations did not change coverage on Pereira.
+
+\section{Additional results of the experiments}
+\label{sec:App_add_results}
+
+In this section, we provide additional computational analyses that complement the main results: the results by city, the ablations of X3, the Gini coefficient under the sensitivity settings, and the emissions diagnostic.
+
+\subsection{Results by city}
+\label{sec:App_by_city}
+
+\todo{Table with the six blocks of Table~\ref{tab:benchmark} by city (from main.csv grouped by city) and one paragraph: where the guarantee is cheap (Bucaramanga, Pereira, low corporate Gini) and where it is expensive (Cali, Barranquilla, high corporate Gini).} In the pilot, the corporate Gini coefficient is 0.468 in Barranquilla, 0.372 in Bogot\'a, 0.361 in Bucaramanga, 0.528 in Cali, 0.394 in Medell\'in and 0.387 in Pereira (0.457, 0.418, 0.326, 0.539, 0.321 and 0.392 with circuity 1.3).
+
+\subsection{Ablations}
+\label{sec:App_ablations}
+
+\todo{Table from supp.csv with one row per ablation (decoder $\text{score}_{\text{finish}}$; \textbf{MIP-Fair} on free couriers only; total-earnings basis in \textbf{BRKGA-Fair} and \textbf{MIP-Fair}; equity-first priority; prefilter $k = 25$; BRKGA 20 $\times$ 20) against its base configuration, and one paragraph per row.} The equity-first priority is expected to reproduce the pilot's collapse (coverage 0.000); the free-only scope is expected to reach a lower projected Gini coefficient per round but a higher end-of-day one, because the free couriers are a biased subset; the total-earnings basis is expected to penalise late connection.
+
+\subsection{Gini coefficient under the sensitivity settings and emissions}
+\label{sec:App_sens_gini}
+
+\todo{Companion of Table~\ref{tab:sensitivity} for the end-of-day Gini coefficient, and F8: emissions by $\alpha$ and city from the per-courier distances and the emission factors of Table~\ref{tab:parameters}.}
+
+%% \bibliographystyleAppx{elsarticle-harv}
+%% \bibliographyAppx{ReferencesAppx}
 
 \end{document}
