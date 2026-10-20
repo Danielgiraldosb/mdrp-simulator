@@ -196,7 +196,7 @@ Los cuatro métodos (porte BRKGA, BRKGA-Fair, MIP-Fair, Pay-BRKGA) corren bajo `
 - **E4 Gini de MIP-Fair sobre todos los conectados** (`mipfair_scope=all`, nuevo `H_all` en el estado; los
   ocupados entran con ingresos fijos). eq:fair_const es sobre C; los libres de una ronda son los que menos
   llevan y su Gini aparte es sesgado.
-- **E5 MIP-Fair con prioridad equidad › cobertura, sin eq:minwage ni eq:routebalance.** Es la lectura de
+- **E5 (revisada el 20 oct, E5': cobertura › exceso de Gini › desempate; ver sección 14). Texto original:** MIP-Fair con prioridad equidad › cobertura, sin eq:minwage ni eq:routebalance. Es la lectura de
   eq:fair_const como restricción dura y la única que traza la curva Pareto al barrer α. El salario mínimo lo
   ataca Pay-BRKGA y se reporta como F_Deficit; el balance de rutas es extensión de tesis.
 - **E6 Pay-BRKGA como suma ponderada**, rango ±30 % provisional, λ_def = 0,5, barrido λ_pay ∈ {0,1; 0,2; 0,5; 1}.
@@ -205,3 +205,72 @@ Los cuatro métodos (porte BRKGA, BRKGA-Fair, MIP-Fair, Pay-BRKGA) corren bajo `
 
 Abiertas para el autor: las decisiones de la Etapa 1 (tarifa, circuidad, velocidades, holgura SLA, seis
 ciudades, emisiones, semillas) en `docs/paper-cmdp/modelo-vs-evidencia.md` §4.
+
+## 12. Etapa 4: diseño experimental (2026-10-20, slide 14)
+
+Diseño cerrado en `docs/paper-cmdp/diseno-experimental.md`; malla y lanzador en `simulator/batch_paper.py`.
+
+- **Unidad experimental: zona de 3 km** alrededor del centro de cada instancia, día completo. Bogotá
+  10.215 pedidos y 2.650 repartidores; Pereira 568 y 253; media 3.612 pedidos por zona. Regla: si el
+  método más caro supera 20 min por corrida en Bogotá, 2 km para las seis ciudades.
+- **Factores:** método (18 configuraciones) × régimen (manual / autoaccept) × 24 instancias × 10 semillas
+  comunes; α ∈ {0,20; 0,25; 0,30; 0,35; 0,40; 1} en MIP-Fair; w ∈ {5, 10, 20, 40} min en BRKGA-Fair;
+  λ_pay ∈ {0,1; 0,2; 0,5; 1} en Pay-BRKGA; umbral del logit 615 / 903 / 1.242 COP/km en X2.
+- **Experimentos:** X0 piloto (42), X1 principal (8.640), X2 umbral (2.400), X3 suplemento (840):
+  11.922 corridas.
+- **Métricas:** cobertura, atraso, F_Gini de fin de día, F_Deficit, pago total, repartidores activos,
+  segundos por ronda; derivadas: cumplimiento 1[Gini ≤ α], pérdida por régimen, emisiones por vehículo.
+- **Salidas cerradas:** T1–T6 y F1–F6 en el cuerpo, T7–T8 y F7–F8 en el suplemento.
+- **Presupuesto:** ≈ 475 h de CPU (cota superior), 1,2 días con 16 procesos; MIP-Fair es tres cuartos.
+
+## 13. Piloto local: resultados y hallazgos (2026-10-20, slide 15)
+
+Pereira, día completo (568 pedidos, 253 repartidores), manual, semilla 1:
+
+| Método | Cobertura | Gini | s por corrida |
+|---|---|---|---|
+| greedy / ilp / hier | 0,734 / 0,732 / 0,736 | 0,387 / 0,387 / 0,459 | 16 / 22 / 16 |
+| brkga / brkga_fair_w10 | 0,734 / 0,734 | 0,405 / 0,475 | 10 / 10 |
+| paybrkga_l02 | 0,731 (antes del arreglo 0,555) | 0,412 | 14 |
+| mipfair_a030 | 0,739 (equidad-primero: 0,000) | 0,382 | 36 (antes > 240) |
+
+Bogotá, 12:00–14:00 (2.995 pedidos, 2.266 repartidores):
+
+| Método | Cobertura | Gini | s por ventana |
+|---|---|---|---|
+| greedy / hier | 0,437 / 0,452 | 0,102 / 0,338 | 116 / 39 |
+| brkga | 0,446 (antes 0,155) | 0,313 | 30 (antes 92) |
+| paybrkga_l02 | 0,446 | 0,371 | 35 |
+| mipfair_a030 top-k 8 | 0,443 (top-k 25 no termina en 7 min) | 0,324 | 268 |
+
+Hallazgos: H1 MIP-Fair era O(n²) por ronda (reformulado, exacto); H2 equidad-primero entrega cobertura 0
+desde el arranque en frío (E5'); H3 MIP-Fair con top-k 8 en la malla; H4 el decodificador BRKGA tomaba los
+K = 3 repartidores de mayor clave entre todos y los buscaba en el prefiltro de la ruta (corregido: pieza
+1b); H5 la pérdida de Pay-BRKGA era H4; H6 la instancia 3 trae ids con prefijo `c`; H7 greedy tarda 2 s
+por ronda en Bogotá (no bloquea). X0 (42 corridas) en curso.
+
+## 14. Decisiones revisadas y de la Etapa 1 (2026-10-20, slide 16)
+
+- **E4' Gini de MIP-Fair por bloques, exacto** (fijo–fijo constante, libre–fijo lineal en x, libre–libre
+  con d_ij). Todos los pares era O(n²); 8 tests contra fuerza bruta en verde.
+- **E5' Prioridad de MIP-Fair: cobertura › exceso de Gini › desempate.** Equidad-primero entrega
+  cobertura 0 desde el arranque en frío; la variante va al suplemento.
+- **D1 Tarifa plana 2.200 COP.** **D2 Circuidad 1,3** (1,0 en sensibilidad). **D3 Velocidades** bici 15,
+  moto 25, a pie 5, carro 20 km/h como supuesto. **D4 SLA duro** hora prometida + 30 min. **D5 Seis
+  ciudades**, Bogotá calibrada y las otras como robustez. **D6 Emisiones** moto 0,114 y carro 0,167
+  kg CO₂e/km (DEFRA/BEIS 2023), bici y a pie 0, moto pequeña 0,083 en sensibilidad. **D7 Diez semillas
+  comunes.** Detalle y justificación en `docs/paper-cmdp/modelo-vs-evidencia.md` §4.
+
+## 15. Esquema de desarrollo y avance (2026-10-20, slide 17)
+
+| Etapa | Contenido | Estado |
+|---|---|---|
+| E0 Insumos y alcance | EJOR; pregunta y contribuciones v2; un simulador; GRASP citado | hecho |
+| E1 Modelo contra evidencia | 22 supuestos con grado; D1–D7 | hecho |
+| E2 Simulador y datos | loader 24 instancias, logit pago/km, velocidad por vehículo; validación de cara sin correr | casi |
+| E3 Métodos | BRKGA, BRKGA-Fair, MIP-Fair, Pay-BRKGA; 77 tests; E1–E6, E4', E5'; pieza 1b | hecho |
+| E4 Diseño experimental | zona 3 km, 18 configuraciones, X0–X3, batch_paper.py, piloto local | hecho |
+| E5 Corridas y análisis | X0 en curso; X1, X3, X2; Pareto, cumplimiento, régimen, umbral, α | en curso |
+| E6 Escritura | 35 páginas + suplemento | pendiente |
+
+Pendiente del autor: visto bueno a E5' y D1–D7; verificar las instancias 16 y 17 (una tienda por pedido).

@@ -331,7 +331,7 @@ if __name__ == '__main__':
                         help='logit_ppk: pay per km at which P(accept)=0.5 (default 903; CI 615-1242)')
     parser.add_argument('--ppk-slope', type=float, default=2.89, metavar='B',
                         help='logit_ppk: slope on ln(pay/km) (default 2.89; CI 2.02-5.23)')
-    parser.add_argument('--circuity', type=float, default=1.0, metavar='K',
+    parser.add_argument('--circuity', type=float, default=1.3, metavar='K',
                         help='Real instances: multiply projected distances by K (1.0 haversine, ~1.3 street)')
     parser.add_argument('--speeds', type=str, nargs='+', default=None, metavar='VEH=KMH',
                         help='Real instances: per-vehicle speed, e.g. bicycle=15 motorcycle=25')

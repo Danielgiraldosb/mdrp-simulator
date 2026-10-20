@@ -75,21 +75,19 @@ limitación declarada.
    heterogeneidad por nacionalidad y antigüedad, racha multi-día, recorte de pago tras aceptar,
    cancelaciones.
 
-## 4. Decisiones pendientes del autor
+## 4. Decisiones de la Etapa 1 (tomadas el 2026-10-20 por encargo del autor: "toma las decisiones")
 
-- [ ] Tarifa: plana 2.200 COP (recomendado) o π₀ + π₁·d.
-- [ ] Circuidad de distancias: 1,0 (haversine) o 1,3 (aproximación a red vial). Recomendación: 1,3 como
-      base y 1,0 en sensibilidad; sin OSRM el paper lo declara.
-- [ ] Velocidades por vehículo (km/h). Valores de trabajo: bici 15, moto 25, a pie 5, carro 20. Hace
-      falta una fuente citable (p. ej., Secretaría de Movilidad de Bogotá, o literatura de MDRP con
-      velocidades urbanas) o declararlas como supuesto.
-- [ ] SLA duro: `expected_drop_off_time` + 30 min. Alternativa: × 1,5.
-- [ ] Alcance geográfico: las 24 instancias cubren seis ciudades (sección 5). ¿El paper usa las seis
-      (más general, pero la calibración conductual es de Bogotá) o solo las 4 de Bogotá (más coherente,
-      menos instancias)? Recomendación: las seis, con Bogotá como caso calibrado y las otras cinco como
-      prueba de robustez bajo transferencia declarada.
-- [ ] Factores de emisión por vehículo (fuente externa).
-- [ ] Número de semillas por celda: la aceptación es Bernoulli; propuesta 10.
+| # | Decisión | Tomada | Justificación | Dónde |
+|---|---|---|---|---|
+| D1 | Tarifa | **Plana, 2.200 COP por pedido** | Es lo que reporta la encuesta (bandas); π₀ + π₁·d no tiene soporte en los datos y Pay-BRKGA ya introduce la variación por oferta (±30 %) | `config.real_pay_per_order_cop` |
+| D2 | Circuidad | **1,3 como base; 1,0 en sensibilidad (suplemento)** | Sin OSRM, 1,3 es el factor estándar de red vial urbana frente a haversine; se declara como supuesto. El piloto X0 corrió con 1,0 (solo tiempos); X0 se repite con 1,3 para la regla de α | `config.real_circuity = 1.3`, `batch_paper.py --circuity` |
+| D3 | Velocidades por vehículo | **Bici 15, moto 25, a pie 5, carro 20 km/h, declaradas como supuesto** | Del mismo orden que los 320 m/min (19 km/h) de mdrplib (Reyes et al. 2018) y que los tiempos de las entrevistas; no hay fuente local citable por vehículo. Sensibilidad ±20 % solo si queda tiempo | `config.real_speeds_kmh` |
+| D4 | SLA duro | **`expected_drop_off_time` + 30 min** | Mantiene la lectura del dato real (hora prometida) con la holgura que las entrevistas describen como tolerada; × 1,5 castiga de forma desigual pedidos cortos y largos | `config.real_max_ctd_extra_min` |
+| D5 | Alcance geográfico | **Las seis ciudades: Bogotá como caso calibrado, las otras cinco como robustez bajo transferencia declarada** | 24 instancias en vez de 4; la calibración conductual es de Bogotá y así se dice en limitaciones | diseño §1 (T1, T8) |
+| D6 | Factores de emisión | **Moto 0,114 y carro 0,167 kg CO₂e/km (DEFRA/BEIS 2023, "average motorbike" y "average car"); bici y a pie 0; moto pequeña 0,083 (DEFRA 2024) como sensibilidad** | Fuente pública y citable; factores locales no existen por tipo de vehículo y quedan como trabajo futuro | diseño §5, `batch_paper.EMISSION_KG_PER_KM` |
+| D7 | Semillas por celda | **10, comunes a todas las celdas** | Aceptación Bernoulli y BRKGA estocástico; comparación pareada por (instancia, semilla) | diseño §2 |
+
+Siguen siendo supuestos declarados en el paper (sección de limitaciones): D2, D3 y D6.
 
 ## 5. Las instancias reales no son solo Bogotá
 

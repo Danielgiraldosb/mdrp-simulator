@@ -81,7 +81,7 @@ def test_discovery():
 
 @pytest.fixture
 def loaded():
-    cfg = Config(seed=1)
+    cfg = Config(seed=1, real_circuity=1.0)   # tests fixed at haversine; D2 default is 1.3
     inst = load_real_instance('Instancia_T', FIX, cfg)
     return cfg, inst
 
@@ -168,7 +168,7 @@ def test_time_window_filter():
 
 
 def test_circuity_scales_distances():
-    cfg_a, cfg_b = Config(seed=1), Config(seed=1, real_circuity=1.3)
+    cfg_a, cfg_b = Config(seed=1, real_circuity=1.0), Config(seed=1, real_circuity=1.3)
     a = load_real_instance('Instancia_T', FIX, cfg_a)
     b = load_real_instance('Instancia_T', FIX, cfg_b)
     oa = next(o for o in a['orders'] if o.order_id == 1)

@@ -1051,11 +1051,90 @@ svg .bn.hi{font-weight:600;fill:var(--ink)}
         <tr><td class="d">E2</td><td>Base del déficit (BRKGA-Fair)</td><td>ingresos por hora · ingresos totales</td><td><b>Por hora activa</b> (<span class="mono">hourly</span>).</td><td>Es la base de <span class="m">F<sub>Gini</sub></span> (eq:gini) y de la restricción eq:fair_const: el método debe empujar la misma magnitud que luego se mide. «Total» castiga a quien se conectó tarde, no a quien fue mal servido.</td><td><span class="pill ok">default</span></td></tr>
         <tr><td class="d">E3</td><td>Peso del déficit (BRKGA-Fair)</td><td>fijo · barrido</td><td><b>10 min por defecto; barrido {0, 5, 10, 20, 40} min</b> en la Etapa 4. Control myopic-fair = <span class="mono">brkga</span> liso.</td><td>Una ruta típica dura 15–25 min: 10 min de crédito pesa como media ruta, suficiente para redirigir sin anular la cercanía. El barrido es lo que pide la tesis (curva costo-de-la-equidad), no un número.</td><td><span class="pill ok">default + Etapa 4</span></td></tr>
         <tr><td class="d">E4</td><td>Sobre quién se evalúa el Gini (MIP-Fair)</td><td>solo libres de la ronda · todos los conectados</td><td><b>Todos los conectados</b> (<span class="mono">mipfair_scope=all</span>): los libres se mueven, los ocupados entran con ingresos fijos. Nuevo <span class="mono">H_all</span> en el estado.</td><td>eq:fair_const es sobre <span class="m">C</span>, no sobre un subconjunto. Los libres de una ronda son, por construcción, los que menos pedidos llevan: su Gini aparte es sesgado y cambia de ronda en ronda.</td><td><span class="pill ok">implementado</span></td></tr>
-        <tr><td class="d">E5</td><td>Prioridad y restricciones extra (MIP-Fair)</td><td>equidad › cobertura · cobertura › equidad; añadir eq:minwage, eq:routebalance</td><td><b>Equidad › cobertura</b>; sin eq:minwage ni eq:routebalance en el paper.</td><td>Es la lectura literal de eq:fair_const como restricción dura, y la única que produce la curva Pareto al barrer <span class="m">α</span> (con cobertura primero la cobertura no se mueve). El salario mínimo lo ataca Pay-BRKGA y se reporta como <span class="m">F<sub>Deficit</sub></span>; el balance de rutas es extensión de tesis, no del paper.</td><td><span class="pill ok">default</span></td></tr>
+        <tr><td class="d">E5</td><td>Prioridad y restricciones extra (MIP-Fair)</td><td>equidad › cobertura · cobertura › equidad; añadir eq:minwage, eq:routebalance</td><td><b>Revisada el 20 oct (E5'): cobertura › exceso de Gini › desempate</b>; sin eq:minwage ni eq:routebalance en el paper. La variante equidad-primero va al suplemento.</td><td>El piloto de la Etapa 4 mostró que equidad-primero entrega <b>cobertura 0,000</b>: desde el arranque en frío todos tienen 0 COP y cualquier asignación sube el Gini, así que "no asignar" minimiza el exceso en cada ronda. Con cobertura primero, el exceso de Gini decide <i>quién</i> recibe cada ruta entre las asignaciones de cobertura máxima; <span class="m">α</span> = 1 recupera al ILP corporativo. El salario mínimo lo ataca Pay-BRKGA (<span class="m">F<sub>Deficit</sub></span>).</td><td><span class="pill warn">revisada</span></td></tr>
         <tr><td class="d">E6</td><td>Pay-BRKGA: forma y pesos</td><td>frente Pareto explícito · suma ponderada; rango de pago; λ</td><td><b>Suma ponderada</b>; rango ±30 % provisional; <span class="m">λ<sub>def</sub></span> = 0,5; barrido <span class="m">λ<sub>pay</sub></span> ∈ {0,1; 0,2; 0,5; 1}.</td><td>Cada ronda de 2 min debe despachar UNA acción: un frente por ronda no es accionable. La tesis pide el barrido de <span class="m">λ</span> (eq:cost_plus), que es exactamente lo que una suma ponderada traza. El ±30 % se ajustará con la dispersión de pago por pedido de la encuesta (V116) en la Etapa 4.</td><td><span class="pill warn">default · ajustar en Etapa 4</span></td></tr>
       </tbody>
     </table>
-    <div class="nphard" style="margin-top:10px"><div class="big">→</div><div><b>Qué sigue:</b> Etapa 4, diseño experimental (factores, niveles, semillas, 24 instancias en 6 ciudades) sin corridas; las corridas van a otra máquina. Quedan abiertas para el autor las decisiones de la Etapa 1 (tarifa plana o <span class="m">π<sub>0</sub>+π<sub>1</sub>d</span>, circuidad, velocidades, holgura SLA, seis ciudades, emisiones, semillas).</div></div>
+    <div class="nphard" style="margin-top:10px"><div class="big">→</div><div><b>Qué siguió:</b> Etapa 4 (slides 14–15) con piloto local, que obligó a revisar E4 y E5 (slide 16); las decisiones de la Etapa 1 se tomaron el mismo día (slide 16); esquema de desarrollo y avance en la slide 17.</div></div>
+  </div>
+</section>
+
+<!-- ================= 14 · ETAPA 4: DISEÑO EXPERIMENTAL ================= -->
+<section class="slide" id="s11f" data-title="Etapa 4: diseño experimental" data-time="150">
+  <div class="eyebrow"><span class="sec">14</span> Paper CMDP · Etapa 4 · diseño cerrado el 20 oct (<span class="mono">docs/paper-cmdp/diseno-experimental.md</span>, <span class="mono">simulator/batch_paper.py</span>)</div>
+  <h2>Qué se corre: zonas de 3 km, 18 configuraciones, 10 semillas comunes, 11.922 corridas</h2>
+  <div class="dec" style="margin-top:12px">
+    <table class="t">
+      <thead><tr><th>elemento</th><th>decisión</th><th>por qué</th></tr></thead>
+      <tbody>
+        <tr><td class="d">Unidad</td><td><b>Zona de 3 km</b> alrededor del centro de cada instancia, día completo. Bogotá: 10.215 pedidos y 2.650 repartidores; Pereira: 568 y 253; media 3.612 pedidos.</td><td>La ciudad entera (56.000 pedidos, 16.700 repartidores) no es el problema del paper ni es computable con MIP por ronda. Regla: si el método más caro supera 20 min en Bogotá, 2 km para las seis ciudades.</td></tr>
+        <tr><td class="d">Factores</td><td>Método (18) × régimen (manual / autoaccept) × 24 instancias × 10 semillas; α ∈ {0,20…0,40; 1} en MIP-Fair, w ∈ {5,10,20,40} min en BRKGA-Fair, λ<sub>pay</sub> ∈ {0,1; 0,2; 0,5; 1} en Pay-BRKGA; umbral del logit 615 / 903 / 1.242 COP/km en X2.</td><td>Semillas comunes → comparación pareada por (instancia, semilla). Regla de recentrado de α si el Gini corporativo sale de [0,35; 0,55].</td></tr>
+        <tr><td class="d">Experimentos</td><td><b>X0</b> piloto 42 · <b>X1</b> principal 8.640 · <b>X2</b> umbral 2.400 · <b>X3</b> suplemento 840.</td><td>X1 traza los frentes de Pareto y el costo de la garantía; X2 la sensibilidad al IC del logit; X3 las ablaciones (finish, idle, total, equidad-primero, top-k 25, BRKGA 20×20).</td></tr>
+        <tr><td class="d">Métricas</td><td>Cobertura, atraso (overage, c2d p90), F<sub>Gini</sub> de fin de día, F<sub>Deficit</sub>, pago total, repartidores activos, s por ronda; derivadas: cumplimiento 1[Gini ≤ α], pérdida por régimen, emisiones por vehículo.</td><td>Una sola métrica de Gini para todos los métodos; lo que cada uno optimiza es su asunto.</td></tr>
+        <tr><td class="d">Salidas</td><td>T1–T6 y F1–F6 en el cuerpo; T7–T8 y F7–F8 en el suplemento (lista cerrada).</td><td>Para que la Etapa 6 escriba contra una lista, no contra lo que aparezca.</td></tr>
+        <tr><td class="d">Presupuesto</td><td><b>≈ 475 h de CPU</b> (cota superior con los s/pedido de Bogotá): 1,2 días con 16 procesos. MIP-Fair es ¾ del total.</td><td><span class="mono">batch_paper.py</span>: un proceso por corrida, reintentos, timeout, reanudable por <span class="mono">run_id</span>, <span class="mono">--estimate</span> desde el piloto.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= 15 · PILOTO LOCAL Y HALLAZGOS ================= -->
+<section class="slide" id="s11g" data-title="Piloto local: resultados y hallazgos" data-time="180">
+  <div class="eyebrow"><span class="sec">15</span> Paper CMDP · piloto local del 20 oct (i9-14900K sin turbo, Gurobi 11) · lo que se rompió y lo que se arregló</div>
+  <h2>El piloto encontró tres defectos que el toy no veía; los tres quedaron resueltos la misma noche</h2>
+  <div class="dec" style="margin-top:10px">
+    <table class="t">
+      <thead><tr><th>zona · ventana</th><th>método</th><th>cobertura</th><th>Gini</th><th>s por corrida</th><th>lectura</th></tr></thead>
+      <tbody>
+        <tr><td class="d" rowspan="4">Pereira · día completo<br><small>568 pedidos · 253 rep.</small></td><td>greedy / ilp / hier</td><td>0,734 / 0,732 / 0,736</td><td>0,387 / 0,387 / 0,459</td><td>16 / 22 / 16</td><td>Los corporativos empatan; el jerárquico sube el Gini de fin de día (miopía por ventana).</td></tr>
+        <tr><td>brkga / brkga_fair_w10</td><td>0,734 / 0,734</td><td>0,405 / 0,475</td><td>10 / 10</td><td>Una semilla; el peso de equidad aún no se lee (X1 lo hará con 10).</td></tr>
+        <tr><td>paybrkga_l02</td><td>0,731 <small>(antes 0,555)</small></td><td>0,412</td><td>14</td><td>La pérdida de 18 pts era el defecto H4, no el gen de pago.</td></tr>
+        <tr><td>mipfair_a030</td><td>0,739 <small>(equidad-primero: 0,000)</small></td><td>0,382</td><td>36 <small>(antes &gt; 240)</small></td><td>H1 y H2 resueltos: O(n²) → exacto por bloques; prioridad cobertura › Gini.</td></tr>
+        <tr><td class="d" rowspan="4">Bogotá · 12:00–14:00<br><small>2.995 pedidos · 2.266 rep.</small></td><td>greedy / hier</td><td>0,437 / 0,452</td><td>0,102 / 0,338</td><td>116 / 39</td><td>Greedy recorre 2.266 repartidores por pedido (2 s por ronda); no bloquea.</td></tr>
+        <tr><td>brkga</td><td>0,446 <small>(antes 0,155)</small></td><td>0,313</td><td>30 <small>(antes 92)</small></td><td><b>H4:</b> el decodificador tomaba los K = 3 de mayor clave entre <i>todos</i> y los buscaba en el prefiltro de 25 de la ruta; casi nunca coincidían. Ahora los toma entre los candidatos de la ruta.</td></tr>
+        <tr><td>paybrkga_l02</td><td>0,446</td><td>0,371</td><td>35</td><td>Hereda el arreglo.</td></tr>
+        <tr><td>mipfair_a030 top-k 8</td><td>0,443 <small>(top-k 25: no termina en 7 min)</small></td><td>0,324</td><td>268</td><td><b>H3:</b> la malla usa top-k 8; top-k 25 queda como ablación.</td></tr>
+      </tbody>
+    </table>
+    <div class="nphard" style="margin-top:8px"><div class="big">→</div><div><b>X0 (42 corridas, 6 ciudades × 7 métodos)</b> en curso en la máquina del autor con circuidad 1,0 (solo tiempos); se repite con 1,3 (D2) para la regla de α. Resultados en la siguiente versión de esta slide.</div></div>
+  </div>
+</section>
+
+<!-- ================= 16 · DECISIONES REVISADAS Y DE LA ETAPA 1 ================= -->
+<section class="slide" id="s11h" data-title="Decisiones E4', E5' y D1–D7" data-time="150">
+  <div class="eyebrow"><span class="sec">16</span> Paper CMDP · decisiones del 20 oct por encargo del autor ("toma las decisiones") · <span class="mono">modelo-vs-evidencia.md §4</span>, <span class="mono">porte-brkga.md</span></div>
+  <h2>Dos decisiones de la Etapa 3 revisadas por el piloto y las siete de la Etapa 1 tomadas</h2>
+  <div class="dec" style="margin-top:10px">
+    <table class="t">
+      <thead><tr><th>#</th><th>decisión</th><th>tomada</th><th>por qué</th></tr></thead>
+      <tbody>
+        <tr><td class="d">E4'</td><td>Linealización del Gini en MIP-Fair</td><td><b>Por bloques, exacta</b>: fijo–fijo constante, libre–fijo lineal en x, libre–libre con d<sub>ij</sub></td><td>Todos los pares era O(n²) por ronda: 188 repartidores no terminaban dos horas; Bogotá serían 3,5 M de pares. 8 tests contra fuerza bruta en verde.</td></tr>
+        <tr><td class="d">E5'</td><td>Prioridad de MIP-Fair</td><td><b>Cobertura › exceso de Gini › desempate</b></td><td>Equidad-primero entrega cobertura 0 desde el arranque en frío (slide 13).</td></tr>
+        <tr><td class="d">D1</td><td>Tarifa</td><td><b>Plana, 2.200 COP</b></td><td>Es lo que reporta la encuesta; la variación por oferta la pone Pay-BRKGA (±30 %).</td></tr>
+        <tr><td class="d">D2</td><td>Circuidad</td><td><b>1,3 base; 1,0 en sensibilidad</b></td><td>Sin OSRM, factor estándar de red vial frente a haversine; declarado como supuesto.</td></tr>
+        <tr><td class="d">D3</td><td>Velocidades</td><td><b>Bici 15, moto 25, a pie 5, carro 20 km/h</b> (supuesto)</td><td>Del orden de los 320 m/min de mdrplib y de las entrevistas; no hay fuente local por vehículo.</td></tr>
+        <tr><td class="d">D4</td><td>SLA duro</td><td><b>Hora prometida + 30 min</b></td><td>× 1,5 castiga de forma desigual pedidos cortos y largos.</td></tr>
+        <tr><td class="d">D5</td><td>Alcance</td><td><b>Seis ciudades</b>: Bogotá calibrada, cinco como robustez bajo transferencia declarada</td><td>24 instancias en vez de 4; limitación explícita.</td></tr>
+        <tr><td class="d">D6</td><td>Emisiones</td><td><b>Moto 0,114 · carro 0,167 kg CO₂e/km</b> (DEFRA/BEIS 2023); bici y a pie 0; moto pequeña 0,083 en sensibilidad</td><td>Fuente pública citable; factores locales = trabajo futuro.</td></tr>
+        <tr><td class="d">D7</td><td>Semillas</td><td><b>10, comunes</b></td><td>Aceptación Bernoulli y BRKGA estocástico; pareado por (instancia, semilla).</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= 17 · ESQUEMA DE DESARROLLO Y AVANCE ================= -->
+<section class="slide" id="s11i" data-title="Esquema de desarrollo y avance" data-time="120">
+  <div class="eyebrow"><span class="sec">17</span> Paper CMDP · plan por etapas (<span class="mono">docs/paper-cmdp/plan.md</span>) · estado al 20 oct de 2026, noche</div>
+  <h2>Etapas 0–4 cerradas en un día de trabajo; quedan correr, analizar y escribir</h2>
+  <div class="sprints" style="margin-top:12px">
+    <div class="sprint"><span class="s">E0</span><span class="t"><b>Insumos y alcance.</b> EJOR Innovative Applications; pregunta y tres contribuciones (v2); un solo simulador; GRASP citado</span><span class="pill ok">hecho</span></div>
+    <div class="sprint"><span class="s">E1</span><span class="t"><b>Modelo contra evidencia.</b> 22 supuestos con grado de evidencia; decisiones D1–D7 tomadas (slide 16)</span><span class="pill ok">hecho</span></div>
+    <div class="sprint"><span class="s">E2</span><span class="t"><b>Simulador y datos.</b> Loader de las 24 instancias (6 ciudades), aceptación logit sobre pago/km, velocidad por vehículo; validación de cara pendiente de correr</span><span class="pill warn">casi</span></div>
+    <div class="sprint"><span class="s">E3</span><span class="t"><b>Métodos.</b> Porte BRKGA, BRKGA-Fair, MIP-Fair, Pay-BRKGA en <span class="mono">Policy.assign</span>; 77 tests; E1–E6 más E4' y E5'; decodificador corregido (pieza 1b)</span><span class="pill ok">hecho</span></div>
+    <div class="sprint"><span class="s">E4</span><span class="t"><b>Diseño experimental.</b> Zona 3 km, 18 configuraciones, X0–X3, métricas, T1–T8 / F1–F8, <span class="mono">batch_paper.py</span>, presupuesto ≈ 475 h CPU; piloto local</span><span class="pill ok">hecho</span></div>
+    <div class="sprint"><span class="s">E5</span><span class="t"><b>Corridas y análisis.</b> X0 en curso; luego X1 (8.640), X3 (840), X2 (2.400); frentes de Pareto, cumplimiento, régimen, umbral, α por tres criterios</span><span class="pill warn">en curso</span></div>
+    <div class="sprint"><span class="s">E6</span><span class="t"><b>Escritura.</b> 35 páginas EJOR + suplemento; estructura ya fijada en el plan</span><span class="pill no">pendiente</span></div>
+    <div class="nphard" style="margin-top:8px"><div class="big">→</div><div><b>Calendario:</b> el plan original daba hasta el 26 ene 2027 para E3 y el 23 mar 2027 para E6; E0–E4 se cerraron el 20 oct 2026. <b>Condición:</b> máquina estable (turbo apagado hoy; BIOS 4505 y RMA pendientes) o máquina de cómputo con Gurobi. <b>Pendiente del autor:</b> visto bueno a E5' y a D1–D7, verificar las instancias 16 y 17 (una tienda por pedido).</div></div>
   </div>
 </section>
 

@@ -171,7 +171,7 @@ class Config:
     # distance.py's Euclidean formula applies unchanged; real_circuity
     # rescales those meters (1.0 = great-circle/haversine-equivalent,
     # ~1.3 = Manhattan-like street network approximation).
-    real_circuity: float = 1.0
+    real_circuity: float = 1.3  # D2 (2026-10-20): 1.3 base, 1.0 sensitivity
     # Per-vehicle speed (km/h). The CSV vehicle column holds bicycle /
     # motorcycle / walking / car. External urban-Bogota assumptions, not from
     # the survey (declare in the paper); override with --speeds.

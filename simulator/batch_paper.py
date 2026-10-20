@@ -36,6 +36,11 @@ THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_INSTANCES_DIR = os.path.normpath(os.path.join(THIS_DIR, '..', 'real_instancies'))
 INSTANCE_TABLE = os.path.normpath(os.path.join(THIS_DIR, '..', 'docs', 'paper-cmdp', 'instancias_reales.csv'))
 
+# Decision D6 (2026-10-20): kg CO2e per km by vehicle, DEFRA/BEIS 2023 "average motorbike"
+# and "average car"; applied post hoc to the per-courier dist_km (diseno-experimental.md section 5).
+EMISSION_KG_PER_KM = {'motorcycle': 0.114, 'car': 0.167, 'bicycle': 0.0, 'walking': 0.0}
+EMISSION_KG_PER_KM_SMALL_MOTO = 0.083  # DEFRA 2024 "small motorbike", sensitivity
+
 PPK_THRESHOLD_POINT = 903.0          # COP/km, logit fit (n = 32 decisions)
 PPK_THRESHOLD_CI = (615.0, 1242.0)   # 95 % CI of the fit
 PILOT_INSTANCES = ['Instancia_0', 'Instancia_1', 'Instancia_2', 'Instancia_4', 'Instancia_5', 'Instancia_7']
@@ -328,7 +333,7 @@ def main() -> None:
     ap.add_argument('--mipfair-knee', type=float, default=None, help='alpha at the knee (threshold exp.)')
     ap.add_argument('--solver', default='GUROBI', choices=['GUROBI', 'CBC', 'CPLEX'])
     ap.add_argument('--ilp-time-limit', type=float, default=10.0, help='seconds per round for the MIPs')
-    ap.add_argument('--circuity', type=float, default=1.0)
+    ap.add_argument('--circuity', type=float, default=1.3)   # D2
     ap.add_argument('--speeds', nargs='+', default=None, metavar='VEH=KMH')
     ap.add_argument('--from', dest='sim_from', default='00:00')
     ap.add_argument('--until', dest='sim_until', default='24:00')
