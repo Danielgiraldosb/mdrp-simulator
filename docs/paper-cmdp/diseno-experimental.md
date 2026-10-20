@@ -294,3 +294,9 @@ Pendiente del autor (no bloquea X0): circuidad, velocidades, SLA, factores de em
 `modelo-vs-evidencia.md`), y el visto bueno a E5'. Pendiente de código antes de X1: H4 (BRKGA a escala de
 Bogotá) y la revisión de H5. Pendiente del piloto X0 en la máquina de cómputo: tiempo real por corrida en
 las seis ciudades y confirmación de la malla de α.
+
+**Nota de ejecución (2026-10-21, 01:15).** Con 4 procesos X1 avanzaba a 20 corridas por hora (las primeras
+celdas son las de Bogotá). El tiempo medio real por corrida en X0 es 3,3 min sin el greedy (≈ 4 min con el
+greedy ya optimizado), es decir ≈ 500 h de CPU para X1, más que la cota por pedido de §9 porque el costo
+por ronda crece con los repartidores conectados y no con los pedidos. Relanzado con 12 procesos (reanudable):
+≈ 1,7 días de pared; la primera pasada (semilla 1, 864 celdas) en ≈ 4 h.
