@@ -238,8 +238,8 @@ O(n²) por ronda y no terminaba (reformulado, exacto, tests verdes); la priorida
 entrega cobertura 0 desde el arranque en frío (default ahora cobertura › Gini, E5'); MIP-Fair en la malla
 con top-k 8; el loader tolera los ids con prefijo `c` de la instancia 3.
 
-**Bloqueo antes de X1:** BRKGA-Coverage cubre 0,16–0,21 en Bogotá frente a 0,44 del greedy (en Pereira
-iguala). BRKGA-Fair y Pay-BRKGA heredan el decodificador. Hay que diagnosticarlo (Etapa 3, pieza 1b) antes
-de lanzar las 9 configuraciones BRKGA. Pay-BRKGA además pierde 18 pts de cobertura en Pereira con
-λ_pay = 0,2 (revisar junto con lo anterior). Pendiente del autor: visto bueno a E5' y las decisiones de la
-Etapa 1. Siguiente: pieza 1b del BRKGA; luego X0 en la máquina de cómputo (o aquí, si sigue estable).
+**Bloqueo resuelto (pieza 1b, misma noche):** BRKGA-Coverage cubría 0,16–0,21 en Bogotá frente a 0,44 del greedy (en Pereira
+igualaba) porque el decodificador buscaba los K = 3 repartidores de mayor clave global dentro del prefiltro de la
+ruta; ahora los toma entre los candidatos de la ruta (`porte-brkga.md`, cambio 6). Bogotá 12–14 h: 0,446 en 30 s.
+Pay-BRKGA (0,555 en Pereira) era el mismo defecto: ahora 0,731. Presupuesto total baja a ≈ 475 h de CPU.
+Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente: X0 (42 corridas) aquí o en la máquina de cómputo.

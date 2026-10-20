@@ -41,6 +41,14 @@ tests en `simulator/tests/test_brkga.py` (12, todos verdes junto con los 42 ante
    la aceptación la decide `cfg.acceptance_mode` (incluido `logit_ppk`) y el pago es
    `cfg.pay_per_order × pedidos`, como en greedy, fair_greedy e ILP.
 
+6. **K repartidores entre los candidatos de la ruta (pieza 1b, 2026-10-20).** El porte tomaba los K = 3 repartidores de
+   mayor clave entre *todos* los libres y luego buscaba si alguno estaba en el prefiltro de 25 de la ruta; con
+   2.266 repartidores en la zona de Bogotá casi nunca lo estaba y el pedido se saltaba (cobertura 0,155 frente a
+   0,437 del greedy en 12:00–14:00; Pay-BRKGA 0,555 en Pereira por lo mismo). Ahora toma los K de mayor clave
+   entre los repartidores que pueden servir la ruta (`_Round.couriers_of`). En el original no había prefiltro,
+   así que ambas lecturas coinciden; en el toy de 3 repartidores son idénticas (tests sin cambio). Tras el
+   arreglo: Bogotá 12:00–14:00 cobertura 0,446 en 30 s (greedy 0,437 en 116 s); Pereira Pay-BRKGA 0,731.
+
 ## Hallazgo que requiere decisión del autor: el BRKGA original nunca agrupaba
 
 El decodificador original puntúa cada par (lote, repartidor) por hora de fin del lote y se queda con el

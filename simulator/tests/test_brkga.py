@@ -166,3 +166,24 @@ def test_bad_config_rejected():
     cfg, _, _, _ = _load_toy(brkga_fitness='nope')
     with pytest.raises(ValueError):
         BRKGAPolicy(cfg)
+
+
+def test_decoder_picks_k_among_route_candidates():
+    """Pieza 1b (2026-10-20): the K highest-key couriers are chosen among the couriers
+    that can serve the route, not among all free couriers. With 40 couriers and a
+    route whose only candidate has the LOWEST key, the old reading (K = 3 global
+    keys, then look them up in the route prefilter) skipped the order; Bogota's
+    zone has 2,266 couriers against a 25-courier prefilter, so coverage fell to 0.15."""
+    from types import SimpleNamespace
+    import numpy as np
+    from brkga_policy import _Round
+    pol = BRKGAPolicy(Config())
+    n_c = 40
+    couriers = [SimpleNamespace(courier_id=i) for i in range(n_c)]
+    orders = [SimpleNamespace(order_id=100, store_loc=SimpleNamespace(x=0.0, y=0.0))]
+    rkey = (100,)
+    cands = {(n_c - 1, rkey): {'total_tt': 5.0, 'n_orders': 1, 'sequence': [100], 'lateness': 0.0}}
+    rnd = _Round(couriers, orders, cands)
+    chrom = np.concatenate([[0.5], np.linspace(1.0, 0.0, n_c)])   # courier 39 has key 0.0
+    assignments, covered, tt = pol.decode(chrom, rnd, t=0.0)
+    assert assignments == [(n_c - 1, rkey)] and covered == 1 and tt == 5.0

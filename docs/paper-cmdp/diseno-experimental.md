@@ -189,12 +189,16 @@ Bogotá, instancia 0, ventana 12:00–14:00 (2.995 pedidos, 2.266 repartidores),
 
 | Método | s por ventana | s por ronda (media / máx) | Cobertura | Gini | Día completo estimado (× 3,4) |
 |---|---|---|---|---|---|
+| brkga (10 × 10, decodificador corregido) | 30 | 0,5 / — | 0,446 | 0,313 | 1,7 min |
+| paybrkga_l02 (corregido) | 35 | 0,6 / — | 0,446 | 0,371 | 2,0 min |
 | hier | 39 | 0,66 / 1,2 | 0,452 | 0,338 | 2,2 min |
-| brkga (10 × 10) | 92 | 1,5 / 3,1 | 0,155 | 0,211 | 5,2 min |
 | greedy | 116 | 2,0 / 3,9 | 0,437 | 0,102 | 6,6 min |
-| brkga 20 × 20 | 117 | 2,0 / 3,6 | 0,210 | 0,206 | 6,6 min |
 | mipfair_a030 top-k 8 | 268 | 4,5 / 12,5 | 0,443 | 0,324 | 15 min |
 | mipfair_a030 top-k 25 | > 420 (timeout) | — | — | — | descartado |
+| brkga antes del arreglo (10 × 10 / 20 × 20) | 92 / 117 | 1,5 / 2,0 | 0,155 / 0,210 | 0,211 / 0,206 | (H4) |
+
+Pereira tras el arreglo del decodificador: brkga 0,734 (10 s), brkga_fair_w10 0,734 (10 s), paybrkga_l02
+0,731 (14 s); sustituyen a las filas BRKGA de la primera tabla.
 
 ## 9. Presupuesto de cómputo y plan de corridas
 
@@ -205,13 +209,13 @@ conectados) aplicados a las 24 zonas (media 3.612 pedidos; 480 corridas por conf
 |---|---|---|
 | greedy, ilp | 0,039 | 38 h |
 | hier | 0,013 | 6 h |
-| brkga + brkga_fair (5) | 0,031 | 75 h |
-| pay_brkga (4) | 0,039 | 75 h |
+| brkga + brkga_fair (5) | 0,010 | 24 h |
+| pay_brkga (4) | 0,012 | 23 h |
 | mip_fair (6, top-k 8) | 0,090 | 260 h |
-| **X1 total (cota superior)** | | **≈ 455 h** |
+| **X1 total (cota superior)** | | **≈ 350 h** |
 
-X2 y X3 añaden ≈ 35 % (3.240 corridas): **≈ 615 h de CPU en total**, es decir 1,6 días con 16 procesos o
-0,8 días con 32. La cota es holgada: las zonas medianas cuestan menos por pedido que Bogotá. Salvaguardas
+X2 y X3 añaden ≈ 35 % (3.240 corridas): **≈ 475 h de CPU en total**, es decir 1,2 días con 16 procesos o
+0,6 días con 32. MIP-Fair es tres cuartos del presupuesto. La cota es holgada: las zonas medianas cuestan menos por pedido que Bogotá. Salvaguardas
 en el script: límite de 10 s por ronda para los MIP (`--ilp-time-limit`), timeout por corrida
 (`--timeout-min 60`), reintento ×2, reanudación por `run_id`, fallos a `<out>.failed.jsonl`.
 
@@ -240,8 +244,8 @@ Salida: una fila por corrida en el CSV del experimento (métricas + columnas de 
 | H1 | MIP-Fair construía d_ij para **todos los pares** de repartidores conectados (O(n²) por ronda): con 188 conectados no terminó dos horas de Pereira en 4 min; en Bogotá serían 3,5 millones de pares por ronda | Reformulación exacta por bloques (fijo–fijo constante, libre–fijo lineal en x, libre–libre con d_ij) en `mip_fair.py::_solve`; `get_solver` usa `pulp.GUROBI` (API) en vez de `GUROBI_CMD` (archivos LP). Los 8 tests contra fuerza bruta siguen verdes; Pereira día completo pasa a 36 s | resuelto (E4') |
 | H2 | Con prioridad **equidad › cobertura** (E5) MIP-Fair entregó cobertura 0,000: desde el arranque en frío cualquier asignación sube el Gini, así que "no asignar" minimiza el exceso en cada ronda | Default `mipfair_priority = coverage` (E5'); la variante equidad-primero queda como ablación `mipfair_a030_fairfirst` | resuelto |
 | H3 | MIP-Fair con top-k 25 no termina dos horas de Bogotá en 7 min; con top-k 8 tarda 4,5 min y cubre 0,443 (greedy 0,437) | Malla X1 con top-k 8; `mipfair_a030_k25` en X3 | resuelto en la malla; vigilar en X0 |
-| H4 | **BRKGA-Coverage colapsa en Bogotá**: cobertura 0,155 (10 × 10) y 0,210 (20 × 20) frente a 0,437 del greedy, mientras en Pereira iguala al greedy. BRKGA-Fair y Pay-BRKGA heredan el decodificador | Nada todavía. Diagnóstico pendiente (Etapa 3, pieza 1b): el decodificador prueba K = 3 repartidores por lote y la población no cubre 50 pedidos por ronda; candidatos a revisar: K, orden de decodificación, semilla con la solución greedy | **bloquea X1** para las 9 configuraciones BRKGA |
-| H5 | Pay-BRKGA pierde 18 pts de cobertura en Pereira (0,555 vs 0,734) con λ_pay = 0,2 | Nada todavía; el barrido de λ_pay en X1 lo mostrará, pero conviene revisar antes si el gen de pago está bajando el pago (y la aceptación) más de lo que el término de cobertura esperada compensa | revisar con H4 |
+| H4 | **BRKGA-Coverage colapsaba en Bogotá**: cobertura 0,155 (10 × 10) y 0,210 (20 × 20) frente a 0,437 del greedy, mientras en Pereira igualaba al greedy | Causa (pieza 1b): el decodificador tomaba los K = 3 repartidores de mayor clave entre *todos* los libres y luego los buscaba en el prefiltro de 25 de la ruta; con 2.266 repartidores casi nunca coincidían y el pedido se saltaba. Ahora toma los K entre los candidatos de la ruta (`porte-brkga.md`, cambio 6). Bogotá 12:00–14:00: cobertura 0,446 en 30 s (greedy 0,437 en 116 s); Pereira sin cambio (0,734) | resuelto |
+| H5 | Pay-BRKGA perdía 18 pts de cobertura en Pereira (0,555 vs 0,734) | Era el mismo defecto de H4 (comparte el decodificador): tras el arreglo 0,731 en Pereira y 0,446 en Bogotá 12:00–14:00 | resuelto |
 | H6 | Instancia 3 trae `order_id` con prefijo `c` y el loader fallaba | `loader_real._id_int` tolera cualquier prefijo; 17 tests verdes | resuelto |
 | H7 | Greedy cuesta 2 s por ronda en Bogotá (recorre 2.266 repartidores por pedido); no bloquea pero domina su presupuesto | Nada; una rejilla espacial lo bajaría a < 0,2 s si hiciera falta | opcional |
 

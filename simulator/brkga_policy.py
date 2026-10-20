@@ -36,6 +36,7 @@ equity deficit of H_t and leave everything else untouched.
 """
 from __future__ import annotations
 
+import heapq
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -139,6 +140,10 @@ class _Round:
                     self.routes_of[oid].append(rkey)
         for oid in self.order_ids:
             self.routes_of[oid].sort(key=len)
+        # couriers that can serve each route (the top-k prefilter of build_candidates)
+        self.couriers_of: Dict[RouteKey, List[int]] = {}
+        for (cid, rkey) in cands:
+            self.couriers_of.setdefault(rkey, []).append(cid)
         self.chromosome_length = self.n_orders + self.n_couriers
 
 
@@ -237,6 +242,7 @@ class BRKGAPolicy(Policy):
 
         free = list(rnd.courier_ids)
         free.sort(key=lambda cid: priority[cid], reverse=True)
+        free_set = set(free)
         assignments: List[CandKey] = []
         covered = 0
         total_tt = 0.0
@@ -253,10 +259,17 @@ class BRKGAPolicy(Policy):
                 for rkey in rnd.routes_of[head]:
                     if not all(oid in pending_set for oid in rkey):
                         continue
-                    for cid in free[:self.top_k_couriers]:
-                        cand = rnd.cands.get((cid, rkey))
-                        if cand is None:
-                            continue
+                    # K highest-key couriers AMONG THOSE WHO CAN SERVE THIS ROUTE. The port
+                    # first took the K highest keys over all free couriers and then looked
+                    # them up in the route's top-25 prefilter: with 2,266 couriers in the
+                    # Bogota zone that lookup almost never hit and coverage fell to 0.15
+                    # (Etapa 4 pilot, finding H4). The original had no prefilter, so there
+                    # the two readings coincide.
+                    pool = [cid for cid in rnd.couriers_of[rkey] if cid in free_set]
+                    if len(pool) > self.top_k_couriers:
+                        pool = heapq.nlargest(self.top_k_couriers, pool, key=priority.__getitem__)
+                    for cid in pool:
+                        cand = rnd.cands[(cid, rkey)]
                         s = self._score(cand, cid, t)
                         if s < best_score:
                             best_score, best = s, (cid, rkey)
@@ -270,6 +283,7 @@ class BRKGAPolicy(Policy):
                 total_tt += rnd.cands[best]['total_tt']
                 pending = [oid for oid in pending if oid not in rkey]
                 free.remove(cid)
+                free_set.discard(cid)
         return assignments, covered, total_tt
 
     # -- Evolution (same scheme as BRKGARollingHorizon._optimize_window) ------------------
