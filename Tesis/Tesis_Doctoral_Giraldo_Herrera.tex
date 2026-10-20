@@ -1,0 +1,1442 @@
+\documentclass[12pt,a4paper]{report}
+
+% ── Packages ──────────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{rotating}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{natbib}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{lscape}
+\usepackage{pdflscape}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{placeins}
+
+\geometry{margin=2.5cm}
+\onehalfspacing
+
+% ── Theorem environments ───────────────────────────────────────────────────────
+\newtheorem{definition}{Definition}
+\newtheorem{assumption}{Assumption}
+\newtheorem{gap}{Research Gap}
+
+% ── Metadata ──────────────────────────────────────────────────────────────────
+\title{\textbf{Fairness-Constrained Optimization Models for Courier Welfare in Meal Delivery Platforms}\\[6pt]
+\large A Constrained Markov Decision Process Framework for the Meal Delivery Routing Problem\\[10pt]
+\normalsize Ph.D. Dissertation --- Working Draft}
+\author{Daniel Sebastian Giraldo Herrera\\[4pt]
+\small Advisor: David \'{A}lvarez Mart\'{i}nez, Ph.D.\\
+\small Doctorado en Ingenier\'{i}a, Universidad de los Andes, Colombia\\
+\small Grupo PyLO (Producci\'{o}n y Log\'{i}stica)}
+\date{2026}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{document}
+\maketitle
+
+\begingroup
+\small
+\noindent\textbf{Note on this draft.} This document is the direct continuation of the doctoral proposal \emph{``Optimization Models for the Fairness of Digital Platforms''}, defended and approved on July 21, 2026. Its title is a working revision made in response to the Examination Committee's observation on scope (see the Response to Committee Observations, page~\pageref{ch:response}); it is subject to confirmation by the advisor. Chapters~1--8 have been substantially rewritten to consolidate fairness as the thesis's central scientific contribution, per the Committee's observations. Chapters~9--10 (Methodology and Simulation Platform) are carried over from the approved proposal with minor updates. Chapters~11--13 (Results, Discussion, Conclusions) are structural placeholders, to be populated as Phase~5 experiments are completed.
+\endgroup
+
+\newpage
+\begin{abstract}
+\noindent
+\emph{Provisional --- to be finalized upon completion of the experimental phases.}
+
+On-demand meal-delivery platforms (e.g., Rappi, Uber Eats, DoorDash) coordinate crowdsourced couriers, restaurants, and users through algorithmic assignment and routing decisions that are typically optimized for platform efficiency alone. This dissertation develops a constrained optimization framework for the Meal Delivery Routing Problem (MDRP) that formally embeds courier fairness --- rather than treating it as an afterthought --- as a first-class scientific object: a concept is first defined and situated with respect to the neighboring notions of balance and equity (Chapter~\ref{ch:concept}), and only then operationalized as a closed-form, auditable metric embedded in a Constrained Markov Decision Process (CMDP). The framework is validated on 24 real-world instances from a Latin American food-delivery platform through an open, event-driven simulation environment. Four structural research gaps in the MDRP literature are identified and addressed: the absence of a formal fairness metric, the neglect of intertemporal (dynamic) fairness, the decoupling of economic compensation from routing decisions, and the assumption of exogenous courier acceptance. The dissertation contributes a justified conceptual and mathematical account of fairness for gig-economy routing platforms, an endogenous-acceptance CMDP formulation, and an empirically grounded set of efficiency--fairness--sustainability trade-off analyses intended to inform both platform design and labor-policy discussions in Latin America.
+\end{abstract}
+
+\newpage
+\tableofcontents
+\newpage
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter*{Response to the Examination Committee's Observations}
+\addcontentsline{toc}{chapter}{Response to the Examination Committee's Observations}
+\label{ch:response}
+
+The doctoral proposal examination held on July 21, 2026 was evaluated by Ciro Alberto Amaya Gu\'{i}o (Universidad de los Andes), Daniel Orlando Rivera Royero (Tecnol\'{o}gico de Monterrey), and John Willmer Escobar Vel\'{a}squez (Universidad del Valle). The Committee approved the proposal and recorded nine observations, reproduced below together with the section of this dissertation in which each is addressed. This chapter is intended as a navigational aid for the advisor and the Committee; it is not part of the substantive argument of the thesis.
+
+\begingroup
+\small
+\begin{longtable}{p{0.6cm}p{6.3cm}p{7.4cm}}
+\toprule
+\textbf{\#} & \textbf{Committee observation} & \textbf{Where it is addressed} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{\#} & \textbf{Committee observation} & \textbf{Where it is addressed} \\
+\midrule
+\endhead
+1 & Consolidate the fairness component as the thesis's principal scientific contribution: conceptual definition, justification, and mathematical formulation, oriented toward courier welfare, with explicit dimensions (space, time, vehicle type, etc.). &
+Chapter~\ref{ch:concept}, Sections~\ref{sec:concept-define} and~\ref{sec:concept-dimensions}; mathematical operationalization in Chapter~\ref{ch:formal}. \\
+\midrule
+2 & Revise the title and scope of the research so that they more clearly reflect this focus. &
+Revised working title (title page); Introduction (Chapter~\ref{ch:intro}); Research Question, Section~\ref{sec:research-question}. \\
+\midrule
+3 & Deepen the analysis of the relationships between fairness, balance, and equity, and their impact on worker welfare and platform performance. &
+Chapter~\ref{ch:concept}, Sections~\ref{sec:concept-define} and~\ref{sec:concept-tradeoffs}. \\
+\midrule
+4 & Carefully and thoroughly analyze the incorporation of fairness as an objective function or as a constraint. &
+Chapter~\ref{ch:concept}, Section~\ref{sec:concept-constraint}. \\
+\midrule
+5 & Analyze the trade-offs between equity, economic benefit, and operational efficiency. &
+Chapter~\ref{ch:concept}, Section~\ref{sec:concept-tradeoffs}; empirical treatment planned in Chapter~\ref{ch:discussion}. \\
+\midrule
+6 & Strengthen the justification of the parameter $\alpha$, through a formal definition and a clear, concise calculation criterion. &
+Chapter~\ref{ch:formal}, Section~\ref{sec:alpha}. \\
+\midrule
+7 & Analyze the criteria for route balancing and tariff treatment. &
+Chapter~\ref{ch:formal}, Section~\ref{sec:routebalance}. \\
+\midrule
+8 & Justify and illustrate the operational costs considered in the models. &
+Chapter~\ref{ch:formal}, Section~\ref{sec:costjustification}. \\
+\midrule
+9 & Analyze the practical implications of environmental sustainability and environmental impact on potential adoption by companies. &
+Chapter~\ref{ch:concept}, Section~\ref{sec:concept-sustainability}; empirical treatment planned in Chapter~\ref{ch:discussion}. \\
+\bottomrule
+\end{longtable}
+\endgroup
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Introduction}
+\label{ch:intro}
+
+The rapid growth of technology has created new ways of connecting people, resulting in market models focused on distributing goods and services. These models seek to satisfy consumer demands quickly and effectively, giving rise to online platforms that create interaction between customers and different establishments. Through these platforms, a virtual marketplace has emerged where users can access various products without leaving their homes and trust that their orders will be delivered promptly. This approach has transformed the consumer experience, logistics, delivery management, and employment, generating complex operational challenges.
+
+Today, companies specialized in on-demand delivery ---such as Uber Eats\textregistered, DoorDash\textregistered, Rappi\textregistered, Just Eat\textregistered, and Glovo\textregistered--- operate through digital platforms connected to stores, allowing users to browse and purchase goods simultaneously. These platforms require an external party to complete the physical delivery: the \emph{courier}; they are responsible for picking up the order from the chosen establishment and delivering it to the user's location, while the platform acts as the intermediary, coordinating tasks, assigning responsibilities, and distributing profits.
+
+Four main actors interact in every transaction: (i) the \emph{user}, who initiates the process by demanding a product; (ii) the \emph{store}, responsible for preparing and supplying the item; (iii) the \emph{digital platform}, which orchestrates all interactions, manages logistics, handles payments, and distributes profits through commission or service fees; and (iv) the \emph{crowdsourced courier}, who transports the item from the store to the user. Any failure in the courier's task ---delays, errors, or mishandling--- directly impacts user satisfaction and the platform's reputation.
+
+The logistic optimization problem of these platforms is formalized in the literature as the \emph{Meal Delivery Routing Problem} (MDRP), which encompasses assigning couriers to orders and computing delivery routes under stochastic demand, tight time windows, and heterogeneous fleets. In its simplest form, the MDRP is a variant of the Vehicle Routing Problem (VRP), which is NP-hard; in practice, the real-world version is substantially harder because courier availability, preparation times, and demand are uncertain.
+
+Platforms operate under a \emph{gig economy} model: couriers are independent contractors who choose their working hours and accept or reject assignments. While this flexibility empowers workers, it also transfers risks (lack of social security, income instability) to them and complicates the platform's capacity planning. The algorithmic decisions of the platform ---which courier gets which order, at what pay--- profoundly shape couriers' earnings and working conditions, yet most existing optimization models focus exclusively on platform efficiency and largely ignore fairness for stakeholders other than the platform itself.
+
+This dissertation aims to bridge that gap by developing computational decision-support models that optimize MDRP operations while formally guaranteeing fairness in compensation, workload distribution, and opportunities for couriers. The study uses real data from a Latin American food-delivery platform and evaluates results through an event-driven simulation environment.
+
+Following the Examination Committee's observations on the July 2026 proposal defense (see the Response to Committee Observations, p.~\pageref{ch:response}), this dissertation elevates the treatment of fairness from an embedded modeling assumption to the thesis's central scientific contribution. Before any mathematical formalization, Chapter~\ref{ch:concept} develops a conceptual account of what courier fairness means, to whom it applies, how it relates to the neighboring notions of \emph{balance} and \emph{equity}, and along which dimensions it should be analyzed. Only after this conceptual grounding is fairness operationalized as a closed-form metric embedded in a Constrained Markov Decision Process (Chapter~\ref{ch:formal}).
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Motivation}
+\label{ch:motivation}
+
+The growing demand for efficiency and sustainability in on-demand delivery services underscores the importance of improving logistics and decision-making processes. By optimizing these operations, platforms can improve profitability, reduce operational costs, and mitigate environmental impact by reducing the carbon footprint associated with delivery services --- a dimension developed further in Section~\ref{sec:concept-sustainability}.
+
+Irregularities in the contractual relationship between gig-economy platforms and their couriers have raised critical societal and regulatory debates. Unlike traditional employment, gig work is not characterized by a subordinate employment relationship, which has historically guaranteed workers' labor rights. This has led to the deregulation of labor obligations, transferring responsibilities ---social security, healthcare, minimum income--- to workers themselves.
+
+The informality and financial instability of crowdsourced work are major concerns: couriers' earnings depend exclusively on the number of deliveries made each day, which often incentivizes excessive working hours \citep{Berg2019}. Couriers are prioritized by the platform based on activity scores, so low-activity couriers face penalties that can lead to suspension \citep{canada2023}.
+
+This tension is not merely theoretical in the Colombian setting that motivates this dissertation. A socio-legal analysis of Rappi and iFood couriers in Colombia \citep{bejarano2021trabajo} documents that the contractual relationship is structured as a service-provision agreement rather than an employment contract, which shifts social-security, healthcare, and minimum-income guarantees onto the courier; drawing on a systematic review of Colombian labor-court rulings, \citet{bejarano2021trabajo} reports that the majority of decided cases nonetheless recognize a de facto employment relationship (\emph{contrato realidad}) once the platform's disciplinary and control mechanisms over the courier are examined. This regulatory ambiguity is precisely the context in which platform-internal, optimization-based fairness guarantees --- the subject of this dissertation --- have practical bite: independently of how the legal classification is eventually resolved, a policy that keeps hourly earnings and workload within an auditable equity band is a concrete, immediately implementable improvement to courier welfare.
+
+From an operations-research perspective, the problem is particularly challenging because:
+\begin{enumerate}
+    \item \textbf{Demand is stochastic.} Users place orders at any moment; the platform must react in near-real time.
+    \item \textbf{Courier availability is uncertain.} As independent contractors, couriers log in and out freely, creating randomness in the effective fleet size.
+    \item \textbf{Acceptance is strategic.} Couriers can reject assignments they find
+    unfavorable, coupling the optimization problem with a behavioral layer.
+    \item \textbf{Fairness is multi-dimensional.} Compensation, workload, opportunities, and
+    working hours interact in ways that purely efficiency-focused models cannot capture --- a claim substantiated conceptually in Chapter~\ref{ch:concept} and analyzed along explicit dimensions in Section~\ref{sec:concept-dimensions}.
+\end{enumerate}
+
+The main motivation of this research is: (i) to develop optimization models
+for the MDRP that are computationally tractable at real-world scales; (ii) to embed a conceptually justified and mathematically formal fairness criterion in those models, ensuring that improved efficiency does not come at the cost of courier welfare; and (iii) to examine whether fairness-oriented operation is compatible with the platform's own economic sustainability and with the environmental sustainability agenda increasingly demanded of logistics operators \citep{bajec2022strategic,liao2020multi}. This contributes to more equitable, transparent, and environmentally accountable operational models within the gig economy.
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{A Conceptual Framework of Courier Fairness}
+\label{ch:concept}
+
+The Examination Committee observed that fairness should be consolidated as the thesis's principal scientific contribution, and that this requires a conceptual definition and justification \emph{prior to} its mathematical formulation, explicitly oriented toward courier welfare, with its dimensions made explicit. This chapter responds to that observation. It does not introduce new optimization machinery; it establishes the conceptual vocabulary that Chapter~\ref{ch:formal} then operationalizes.
+
+\section{Fairness, Balance, and Equity: Clarifying the Concepts}
+\label{sec:concept-define}
+
+The MDRP literature reviewed in Chapter~\ref{ch:litreview} uses the terms \emph{fairness}, \emph{balance}, and \emph{equity} loosely and often interchangeably. This section draws on distributive-justice and organizational-psychology theory to distinguish them, because the choice among them is not merely terminological: it determines what the optimization model is actually required to guarantee.
+
+\begin{description}[leftmargin=3cm,style=nextline]
+    \item[Balance] is a purely \emph{descriptive, operational} notion: a statistical property of an allocation (e.g., similar route lengths, similar order counts) with no normative content of its own. Most MDRP papers that claim to address ``fairness'' in fact only enforce balance as a computational proxy \citep{jozefowiez2009evolutionary,ulmer2021restaurant,liao2020multi}, because it is easy to compute and to embed as a penalty term. Balance is necessary but not sufficient for fairness: an allocation can be balanced in workload yet still be unfair if, for example, couriers who work identical hours end up with systematically different net earnings once vehicle operating costs are accounted for.
+
+    \item[Equity] is a \emph{relational, input-adjusted} notion, following the equity theory of \citet{adams1963toward}: an allocation is equitable when the ratio of an individual's outcomes (earnings) to their inputs (active time, effort, risk exposure, vehicle capacity) is comparable across individuals in the same reference group. Equity is therefore a stronger requirement than balance, because it normalizes outcomes by what each courier actually contributed or risked, rather than comparing raw totals.
+
+    \item[Fairness] is adopted in this dissertation as the encompassing \emph{normative} concept, grounded in Rawls's account of distributive justice \citep{rawls1971theory}: an allocation rule is fair when the burdens and benefits of a cooperative scheme --- here, the platform's matching of orders to couriers --- are distributed according to principles that all similarly situated participants could reasonably endorse, rather than being an artifact of the platform's optimization objective. Balance and equity are the \emph{operational vocabulary} through which fairness is measured; fairness is the normative claim that operational vocabulary is meant to serve.
+\end{description}
+
+\begin{definition}[Courier fairness, as adopted in this thesis]
+\label{def:fairness}
+A platform assignment-and-compensation policy $\pi$ is \emph{fair to couriers} if it does not produce systematic, policy-attributable disparities in economic outcomes (earnings), physical burden (workload), or opportunity (order availability) among similarly situated couriers, after conditioning on voluntary differences in availability, vehicle type, and zone of operation (Section~\ref{sec:concept-dimensions}). ``Policy-attributable'' excludes disparities that couriers themselves choose through their availability decisions, which the policy cannot and should not equalize.
+\end{definition}
+
+Definition~\ref{def:fairness} operationalizes Rawlsian fairness for this setting: the empirical proxy used throughout the dissertation is the hourly-earnings Gini coefficient $F_{\text{Gini}}$ (Section~\ref{sec:fairness}), an equity-theoretic quantity in Adams's sense because it is computed on \emph{earnings per active hour} --- an outcome-per-input ratio --- rather than on raw earnings, which would conflate fairness with couriers' voluntary labor-supply decisions. This directly answers the Committee's request to orient the concept toward courier welfare (observation~1) and to relate fairness, balance, and equity (observation~3): balance metrics ($F_{\text{Orders}}$) remain in the model as secondary diagnostics, equity is the design principle behind normalizing by active time, and fairness is the overall normative target that the constraint in Eq.~\eqref{eq:fair_const} is meant to guarantee.
+
+\section{Dimensions of Courier Fairness}
+\label{sec:concept-dimensions}
+
+A single pooled fairness statistic can be misleading: it may certify an allocation as ``fair on average'' while masking systematic disparities that track a specific, identifiable dimension of the operating environment. The Committee explicitly requested that these dimensions be made explicit. Table~\ref{tab:fairness-dimensions} analyzes the three dimensions most salient in this setting and specifies how each enters, or should enter, the model of Chapter~\ref{ch:formal}.
+
+\begin{table}[ht]
+\centering
+\caption{Dimensions of courier fairness and their treatment in this dissertation.}
+\label{tab:fairness-dimensions}
+\small
+\begin{tabularx}{\textwidth}{p{2.1cm}p{5.3cm}p{6.4cm}}
+\toprule
+\textbf{Dimension} & \textbf{Why it matters for fairness} & \textbf{Treatment in the model} \\
+\midrule
+Temporal (hour-of-day, day-of-week) & Demand is highly non-uniform in time; a courier active only during low-demand hours will earn less even under a perfectly non-discriminatory policy, purely as a function of when they chose to work. Confusing this with policy-induced unfairness would penalize the model for something outside its control. &
+Already addressed structurally through the accumulated equity history $\mathcal{H}_t$ (Section~\ref{sec:state}), which evaluates $F_{\text{Gini}}$ at end-of-day rather than within each rolling-horizon window (Gap~\ref{gap:2}), so that transient temporal imbalances are not misread as unfairness. \\
+\midrule
+Spatial (zone or neighborhood of operation) & Orders and stores cluster geographically; a courier based in a low-density zone has structurally fewer matching opportunities than one in a high-density zone, independent of the policy. &
+\textbf{Proposed extension:} a \emph{zone-conditioned} fairness statistic $F_{\text{Gini}}(\mathbf{w} \mid z)$, computed within each operating zone $z$ before being aggregated, so that spatial demand scarcity is not conflated with policy-induced inequality. Reported as a secondary diagnostic alongside the pooled $F_{\text{Gini}}$ in Phase~5 (Chapter~\ref{ch:results}). \\
+\midrule
+Vehicle type ($v_c \in \{$walking, bicycle, motorcycle, car$\}$) & Vehicle type determines achievable speed, route capacity $Q$, and operating cost structure (fuel vs.\ none); couriers on lower-capacity vehicles structurally complete fewer or shorter routes per hour. &
+\textbf{Proposed extension:} a \emph{vehicle-conditioned} fairness statistic $F_{\text{Gini}}(\mathbf{w} \mid v)$, computed within vehicle-type strata, consistent with Adams's equity principle of comparing outcomes only within a matched reference group (Section~\ref{sec:concept-define}). Also feeds the environmental analysis of Section~\ref{sec:concept-sustainability}. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The pooled $F_{\text{Gini}}$ (Eq.~\ref{eq:gini}) remains the \emph{primary} fairness criterion embedded as a hard constraint in the CMDP, to keep the core optimization problem tractable within the doctoral scope; the zone- and vehicle-conditioned statistics are reported as \emph{secondary, diagnostic} metrics in the experimental phase (Chapter~\ref{ch:results}), so that a policy which appears fair in aggregate can be audited for dimension-specific disparities without requiring a full re-formulation of the constrained optimization objective for each stratum. A fourth dimension --- courier tenure/experience --- is acknowledged as a limitation: the available instances (Section~\ref{sec:problem}) do not record tenure, and its inclusion is left as future work (Chapter~\ref{ch:conclusions}).
+
+\section{Fairness as a Constraint versus an Objective}
+\label{sec:concept-constraint}
+
+The Committee asked for a careful, explicit analysis of whether fairness should enter the model as an objective function or as a constraint (observation~4), since this choice is consequential and was previously left implicit.
+
+In the algorithmic-fairness literature, \citet{corbettdavies2023measure} argue that formulating fairness as a \emph{constraint} on an otherwise efficiency-maximizing objective is generally preferable to folding it into the objective as a weighted penalty term, for three reasons directly relevant here: (i) a constraint makes the tolerated level of inequality, $\alpha$, an explicit, auditable, and policy-settable quantity, rather than an implicit trade-off buried inside an objective weight with no natural units; (ii) a constrained formulation avoids the arbitrary calibration problem of choosing a penalty weight that has no direct interpretation to a regulator or manager; and (iii) it allows an external party --- a labor regulator, or the platform's own governance board --- to set a compliance threshold directly, rather than inferring one from an optimized trade-off. This is the argument adopted for the \emph{primary} formulation of this dissertation: fairness enters as a hard constraint, $F_{\text{Gini}}(\mathbf{w}^\pi) \leq \alpha$ (Eq.~\ref{eq:fair_const}), not as a term added to the cost function.
+
+This choice is not, however, treated as universal. Two economic-block precedents take the opposite route: \citet{wen2010dynamic} and \citet{sobhanan2024equity} formulate fairness as one arm of a \emph{bi-objective} trade-off, which has the complementary advantage of tracing a full efficiency--fairness Pareto frontier without committing \emph{a priori} to a single tolerance level --- useful for exploratory analysis, at the cost of not guaranteeing that any specific fairness level is actually met. This dissertation therefore uses \emph{both} paradigms, each where it is best suited: the constrained formulation (Eqs.~\ref{eq:fair_const}--\ref{eq:feasibility}) is the primary model used to answer Gaps~\ref{gap:1} and~\ref{gap:2}, where an auditable guarantee is the point; the bi-objective \textsc{Pay-BRKGA} variant (Section~\ref{sec:phase4}) is used specifically for Gap~\ref{gap:3}, where the goal is to \emph{trace}, not pre-commit to, the cost-of-fairness curve as the payment weight $\lambda$ is varied. Section~\ref{sec:objective} restates the constrained formulation with this justification made explicit.
+
+\section{Trade-offs: Fairness, Equity, Economic Benefit, and Efficiency}
+\label{sec:concept-tradeoffs}
+
+The Committee requested a deeper analysis of the trade-offs among equity, economic benefit, and operational efficiency (observation~5), and of how fairness, balance, and equity affect both worker welfare and platform performance (observation~3).
+
+Mechanically, tightening the fairness constraint (lowering $\alpha$ in Eq.~\ref{eq:fair_const}) forces the assignment policy to reassign some orders away from the courier that would minimize routing cost or lateness toward a courier with a larger accumulated earnings deficit (tracked in $\mathcal{H}_t$, Section~\ref{sec:state}). This can raise average route distance and reduce the per-epoch coverage achievable under a fixed courier fleet, which is precisely the operational cost, Eq.~\eqref{eq:cost}, that the objective in Eq.~\eqref{eq:obj} minimizes. The magnitude of this cost is, by construction, an empirical question that Phase~5 (Chapter~\ref{ch:results}) answers through the efficiency--fairness Pareto curves obtained by sweeping $\alpha \in [0,1]$; \citet{martinez2024exploring} report, for a comparable setting, that fairness constraints impose only \emph{moderate} efficiency costs, which motivates the expectation that this trade-off is manageable rather than prohibitive, without pre-judging the result.
+
+The relationship is not purely adversarial, however. On the worker-welfare side, a more equitable earnings distribution is associated in the gig-economy literature with reduced income volatility and lower attrition \citep{liao2020multi}, and with avoidance of the punitive dynamics documented by \citet{canada2023}, in which low-activity couriers accumulate penalties that can end in suspension --- a dynamic that a fairness-constrained policy is designed to interrupt. Lower attrition is, in turn, an \emph{economic benefit to the platform itself}: courier recruitment, onboarding, and retraining are direct operating costs, so a policy that keeps couriers active and adequately compensated can partially offset the routing-efficiency cost identified above. This dissertation therefore treats the fairness--efficiency relationship not as a single number to be reported, but as a trade-off with at least two channels working in opposite directions --- a reassignment cost and a retention benefit --- whose net empirical balance is quantified in Chapter~\ref{ch:results} and interpreted for platform and regulatory audiences in Chapter~\ref{ch:discussion}.
+
+\section{Environmental Sustainability and Adoption}
+\label{sec:concept-sustainability}
+
+The Committee asked that the practical implications of environmental sustainability, and its bearing on adoption by companies, be analyzed (observation~9). This dimension was present in the approved proposal only as a passing remark (Chapter~\ref{ch:motivation}) and is developed here explicitly.
+
+Two considerations motivate treating environmental sustainability as more than a rhetorical addition. First, a recent systematic review of operations-research approaches to sustainable last-mile delivery identifies route consolidation, batching, and vehicle-mix optimization as the principal levers available to reduce the emissions footprint of last-mile logistics \citep{moradi2025systematic} --- levers that are already present as decision variables in this thesis's model (batching within a route $s$, and the vehicle type $v_c$ recorded for every courier, Section~\ref{sec:problem}). Second, \citet{bajec2022strategic} show, in a crowdshipping setting closely related to the MDRP, that structured economic incentives (Shapley-value subsidies for environmentally friendly deliveries) can simultaneously improve platform profits and courier welfare, which is direct evidence that environmental and fairness objectives need not be in tension.
+
+This suggests a concrete, low-cost extension of the modeling framework: because vehicle type $v_c$ is already recorded for every courier, an \emph{emissions proxy}
+\begin{equation}
+    E(a_t) = \sum_{(c,s) \in a_t} \epsilon(v_c) \cdot \text{dist}(s),
+    \label{eq:emissions}
+\end{equation}
+where $\epsilon(v_c)$ is a per-kilometer emission factor for vehicle type $v_c$ (near zero for walking and bicycle couriers, positive for motorcycle and car), can be computed at no additional data cost and reported alongside the efficiency--fairness Pareto curves of Chapter~\ref{ch:results}. This makes it possible to examine an implication the Committee's observation raises but that the original proposal did not consider: a fairness-constrained policy that reassigns orders toward under-served couriers could, depending on the vehicle-type composition of the fleet, either raise or lower the aggregate emissions proxy relative to the efficiency-only baseline --- an empirical question with direct managerial relevance, since a fairness policy that is emissions-neutral or emissions-reducing is a substantially easier case to make to platform management and to regulators than one that is not. This is examined empirically in Chapter~\ref{ch:results} (Section~\ref{sec:results-sustainability}) and interpreted for an adoption-oriented audience in Chapter~\ref{ch:discussion}.
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Literature Review}
+\label{ch:litreview}
+\label{sec:literature}
+
+This chapter provides a structured map of the existing literature, organized around three conceptually distinct blocks that together constitute the MDRP: (i) the \emph{operational block}, covering routing and assignment decisions; (ii) the \emph{economic block}, covering pricing, compensation structures, and guaranties; and (iii) the \emph{behavioral/strategic block}, covering courier acceptance/rejection and availability dynamics. Fairness in delivery platforms typically materializes through decisions that \emph{cross} all three blocks; failing to separate them obscures both the assumptions and the scientific contribution of each study. Read together with Chapter~\ref{ch:concept}, this review shows that the literature has consistently used \emph{balance}, not fairness or equity in the senses defined in Section~\ref{sec:concept-define}, as its operational proxy --- which is precisely the structural pattern (P2, Section~\ref{sec:taxonomy}) that motivates this dissertation.
+
+Section~\ref{sec:planning} also reviews the planning-horizon taxonomy (static, rolling, dynamic) that cuts across all blocks, as it determines the temporal structure under which decisions are made. The chapter closes with an extended taxonomy table (Table~\ref{tab:taxonomy}) that systematically positions each work across all relevant dimensions, and with an explicit identification of the structural gaps that this thesis addresses (Chapter~\ref{ch:gaps}).
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Operational Block: Routing and Assignment}
+\label{sec:operational}
+
+The MDRP was formally defined by \citet{reyes2018meal}, who proposed a rolling-horizon, dynamic-deterministic framework for courier assignment and route planning: at each re-optimization epoch the problem is solved as a deterministic optimization instance, but the horizon rolls forward as new orders arrive in real time, so uncertainty is handled procedurally, through re-optimization, rather than through an explicit stochastic model. Their model re-optimizes at fixed time intervals, balancing short-term adaptability and long-term strategy.
+
+\citet{steever2019dynamic} introduced the \emph{Virtual Food Court Delivery Problem} (VFCDP), a dynamic model that continuously revises courier assignments and routes whenever a new order arrives or traffic conditions change. Unlike static systems, the VFCDP updates decisions in real time, which is essential when multiple simultaneous orders share the same courier fleet.
+
+\citet{ulmer2021restaurant} proposed the \emph{Anticipative Customer Assignment} (ACA) model, which combines anticipative assignment with dynamic routing to handle random preparation times and varying demand. Temporal buffers are used to manage uncertainty and prevent overloading; by delaying assignment decisions until more information is available, the model balances workloads and reduces delivery lateness.
+
+\citet{yildiz2019provably} developed provably high-quality solutions for a deterministic MDRP variant, evaluated on the real, publicly released Grubhub MDRP instance set. Notably, their computational results indicate the opposite of what is often assumed: order bundling (grouping multiple orders into one courier trip) does \emph{not}, by itself, significantly reduce total travel distance; rather, courier capacity and shift-scheduling decisions are the primary levers that improve performance. Their work establishes strong performance bounds and uses a per-order-plus-guaranteed-minimum-pay compensation structure, but does not address stochastic demand or fairness.
+
+More recent operational contributions include \citet{bi2023meal}, who analyze MDRP in a shared-logistics mode on e-commerce platforms; \citet{auad2023courier}, who study courier satisfaction through dynamic operating regions; \citet{simoni2023crowdsourced}, who propose an order-batching and assignment algorithm for crowdsourced on-demand food delivery; and \citet{neria2024restaurant}, who extend the model to ghost-kitchen settings. In the Latin American context, \citet{martinez2024exploring} explicitly explores fairness in food delivery routing and scheduling, finding that fairness constraints impose only moderate efficiency costs.
+
+A critical observation shared across operational models is that acceptance behavior is treated as exogenous or perfect: couriers are assumed to always accept the assignment offered. This assumption is not innocuous---it decouples the routing decision from the courier's strategic response, potentially invalidating fairness claims.
+
+A partial exception, and a direct methodological precedent for this dissertation, is the Uniandes computational framework of \citet{quintero2020computational}, which simulates a discrete-event MDRP environment in which couriers may accept or reject a notification with a probability that is an explicit function of assignment distance and a courier-level acceptance-rate parameter, and in which courier compensation follows a guaranteed-minimum-per-shift structure closely related to the one adopted in Section~\ref{sec:cost}. This is, to our knowledge, the closest existing precedent to an endogenous acceptance mechanism in the MDRP literature. It stops short of the gap this dissertation addresses, however, because the acceptance probability is not itself a function of the \emph{pay offered} for the specific route: it captures a courier's willingness to travel a given distance, not their strategic response to price, which is precisely the mechanism formalized in Section~\ref{sec:acceptance}.
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Economic Block: Pricing, Compensation, and Guarantees}
+\label{sec:economic}
+
+Most operational models assume a simplified cost structure where the platform pays a fixed cost per delivery, or optimizes distance as a proxy for cost. The economic block addresses the richer reality in which \emph{compensation structures} (non-linear pay, guaranteed minimums, incentives, and penalties) directly shape both the efficiency-fairness tradeoff and courier behavior.
+
+\citet{reyes2018meal} introduce a guaranteed-minimum-compensation scheme: a courier's total pay for the shift is the maximum of (i) the sum of per-delivery earnings and (ii) a minimum amount tied to the length of the shift, so the platform tops up earnings only when the shift-level total falls short --- a shift-level, company-set guarantee, not a statutory hourly minimum wage. \citet{yildiz2019provably} formalize essentially the same mechanism, distinguishing ``minimum-pay'' from ``delivery-only'' couriers. This is an important precedent for embedding economic guarantees in routing models, and is close in spirit to the compensation structure adopted in Section~\ref{sec:cost}, though neither paper conditions the guarantee on a fairness criterion across couriers.
+
+\citet{wen2010dynamic} propose a two-stage model that minimizes delivery costs while balancing workload, preventing burnout, and distributing income opportunities equitably. Their formulation is one of the few that simultaneously treats cost minimization and income equity as objectives.
+
+\citet{lesmana2019balancing} study efficiency-fairness tradeoffs in ride-sourcing and propose a reassignment algorithm that achieves any desired point on the frontier between efficiency loss and fairness gain. They formally define fairness as income inequality among drivers, making their gap specification the clearest in the MDRP literature.
+
+\citet{bajec2022strategic} use a leader-follower game and Shapley-value incentives to promote sustainable crowdshipping. Their model includes subsidies for environmentally friendly deliveries and demonstrates that structured incentives can simultaneously improve platform profits and courier welfare --- a result revisited in Section~\ref{sec:concept-sustainability}. \citet{sobhanan2024equity} propose an equity-driven workload allocation model using a bi-objective framework that balances equity and cost, providing Pareto-optimal tradeoff curves.
+
+A key observation: none of these models integrates a full compensation structure (including acceptance-dependent pay, dynamic incentives, and intertemporal guarantees) within a rolling-horizon routing problem. The economic and operational blocks remain largely separate in the literature, creating a modeling gap that this thesis addresses explicitly.
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Behavioral/Strategic Block: Acceptance, Rejection, and Availability}
+\label{sec:behavioural}
+
+The behavioral block covers phenomena that emerge from couriers' autonomous decision-making: whether to accept or reject an offered assignment, when to log in or out, and how to reposition while idle. These decisions are driven by couriers' individual incentives and are typically ignored or oversimplified in routing models.
+
+\citet{liao2020multi} implement a two-stage NSGA-II evolutionary algorithm that balances the delivery workload among couriers. Their model recognizes that an equitable distribution of orders acts as an indirect incentive, reducing fatigue and potential courier attrition during peak hours.
+
+\citet{ahamed2020deep} apply deep reinforcement learning (RL) to crowdsourced urban delivery, using system-state characterization and heuristic-guided action selection. Their RL framework allows couriers' availability patterns to be incorporated as part of the state space, though acceptance/rejection remains exogenous.
+
+\citet{bozanta2022courier} use RL for courier routing and assignment, with training on historical data from a food delivery service. The approach learns assignment policies that implicitly account for courier behavior, but acceptance is not modeled as a strategic response to the offered incentive.
+
+\citet{haferkamp2022heatmap} propose a heatmap-based decision-support tool for repositioning in ride-sharing, allowing idle couriers to be directed to high-demand areas. This addresses availability dynamics, but not the acceptance/rejection problem.
+
+The key structural limitation: no study in the MDRP literature models
+acceptance/rejection as an endogenous function of the system state and the offered payment. Real couriers do respond to incentives ---a courier offered a low-paying, long-distance assignment is more likely to reject it--- yet this feedback loop is absent from all existing optimization models. Ignoring endogenous acceptance biases efficiency and fairness estimates and makes the optimal policy non-implementable in practice.
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Planning Horizon}
+\label{sec:planning}
+
+The planning horizon determines the temporal structure of decisions. Its choice can be justified formally rather than only qualitatively: \citet{pillac2013review}, in their review of dynamic vehicle routing problems, formalize the \emph{degree of dynamism}, the proportion of requests that are unknown at the start of the planning period relative to the total number of requests handled, as a quantitative criterion for how ``dynamic'' a problem instance actually is and, consequently, for whether a static, rolling, or fully dynamic solution architecture is warranted. Because essentially all orders in the MDRP addressed in this thesis are revealed after the start of the operating day (Section~\ref{sec:problem}), the degree of dynamism is close to its maximum, which is the formal justification --- beyond computational convenience --- for adopting a rolling/dynamic horizon rather than a static one.
+
+\paragraph{Static horizon.} Routes and assignments are fixed at the start of the day and not revised. This is tractable but ignores real-time demand
+\citep{jozefowiez2009evolutionary,banos2013hybrid,yildiz2019provably,arora2023ocd,
+dusadeerungsikul2023multi,thipparthy2024optimizing}.
+
+\paragraph{Rolling horizon.} The day is divided into short windows; at each trigger, pending and new orders are re-optimized. This balances short-term adaptability with computational tractability and is the dominant approach in the MDRP \citep{reyes2018meal,wen2010dynamic,martinez2024exploring}.
+
+\paragraph{Dynamic horizon.} Decisions are updated whenever new information arrives (new orders, traffic changes, courier events). Most RL-based and ADP approaches fall here \citep{ulmer2021restaurant,steever2019dynamic,bozanta2022courier,lesmana2019balancing,liao2020multi,ahamed2020deep,bi2023meal,simoni2023crowdsourced,xie2024genetic,
+xue2021optimization,bajec2022strategic,bozanta2022courier,haferkamp2022heatmap,
+neria2024restaurant}.
+
+The rolling-horizon framework is adopted in this thesis because it is (i) computationally feasible at real-world scales, (ii) well-suited to crowdsourced settings with uncertain arrival and availability, and (iii) enables fairness tracking across successive windows.
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Extended Literature Taxonomy}
+\label{sec:taxonomy}
+
+Table~\ref{tab:taxonomy} systematically positions each work across the three conceptual blocks and the critical dimensions identified in the review. Six dimensions are added beyond the standard MDRP taxonomy to expose the structural gaps: (i) the block classification (Op = operational, Ec = economic, Be = behavioral); (ii) whether the acceptance/rejection mechanism is endogenous (En), exogenous (Ex), or not modeled (--); (iii) whether a formal fairness metric $F(\cdot)$ is specified; (iv) whether a compensation structure beyond distance-based
+pay is included; (v) whether real operational data are used; and (vi) the approximate
+instance scale.
+
+\begin{landscape}
+\begin{longtable}{p{3.8cm}cccccccccc}
+\caption{Extended taxonomy of MDRP-related literature.
+\textbf{Block}: Op = Operational, Ec = Economic, Be = Behavioral.
+\textbf{Acc/Rej}: En = Endogenous, Ex = Exogenous, -- = Not modeled.
+\textbf{Formal F($\cdot$)}: whether a formal fairness metric is defined.
+\textbf{Comp. struct.}: whether a non-trivial compensation model is included.
+\textbf{Rolling/Dyn}: R = rolling horizon, D = dynamic, S = static.}
+\label{tab:taxonomy}\\
+\toprule
+\textbf{Article} & \textbf{Block} & \textbf{Horiz.} & \textbf{Crowd} &
+\textbf{Stoch.} & \textbf{Acc/Rej} & \textbf{Formal $F(\cdot)$} &
+\textbf{Comp. struct.} & \textbf{Real data} & \textbf{Fairness} &
+\textbf{Scale} \\
+\midrule
+\endfirsthead
+\multicolumn{11}{c}{\small (continued)}\\
+\toprule
+\textbf{Article} & \textbf{Block} & \textbf{Horiz.} & \textbf{Crowd} &
+\textbf{Stoch.} & \textbf{Acc/Rej} & \textbf{Formal $F(\cdot)$} &
+\textbf{Comp. struct.} & \textbf{Real data} & \textbf{Fairness} &
+\textbf{Scale} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{11}{r}{\small Continued on next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+% ── Operational ────────────────────────────────────────────────────────────────
+\citet{reyes2018meal}       & Op+Ec & R & \checkmark & --         & -- & Partial & Min. wage & \checkmark & Partial & Large \\
+\citet{steever2019dynamic}  & Op    & D & \checkmark & \checkmark & -- & No      & --        & \checkmark & No      & Medium \\
+\citet{ulmer2021restaurant} & Op    & D & \checkmark & \checkmark & -- & No      & Distance  & \checkmark & No      & Medium \\
+\citet{yildiz2019provably}  & Op    & S & \checkmark & --         & -- & No      & Per-order + Min. wage & \checkmark & No & Large \\
+\citet{bi2023meal}          & Op    & D & \checkmark & \checkmark & -- & No      & Distance  & --         & No      & Large \\
+\citet{auad2023courier}     & Op    & S & \checkmark & \checkmark & -- & No      & Distance  & \checkmark & No      & Medium \\
+\citet{simoni2023crowdsourced} & Op & D & \checkmark & \checkmark & -- & No     & Distance  & \checkmark & No      & Large \\
+\citet{neria2024restaurant} & Op    & D & --         & \checkmark & -- & No      & Distance  & --         & No      & Medium \\
+\citet{martinez2024exploring} & Op  & R & \checkmark & --         & -- & No      & Distance  & \checkmark & Yes     & Medium \\
+\citet{xie2024genetic}      & Op    & D & --         & --         & -- & Partial & Partial   & --         & Yes     & Small \\
+% ── Economic ───────────────────────────────────────────────────────────────────
+\citet{wen2010dynamic}      & Ec    & R & \checkmark & \checkmark & Ex & Partial & Workload  & \checkmark & Yes     & Medium \\
+\citet{lesmana2019balancing}& Ec    & D & \checkmark & --         & Ex & \textbf{Yes} & Income & \checkmark & Yes & Medium \\
+\citet{bajec2022strategic}  & Ec    & D & \checkmark & --         & Ex & Partial & Shapley   & \checkmark & Yes     & Medium \\
+\citet{sobhanan2024equity}  & Ec    & D & \checkmark & \checkmark & -- & \textbf{Yes} & Load  & --         & Yes     & Medium \\
+% ── Behavioural ────────────────────────────────────────────────────────────────
+\citet{liao2020multi}       & Be+Op & D & \checkmark & \checkmark & -- & No      & Workload  & \checkmark & Yes     & Medium \\
+\citet{ahamed2020deep}      & Be    & D & \checkmark & \checkmark & Ex & No      & Distance  & --         & No      & Small  \\
+\citet{bozanta2022courier}  & Be    & D & \checkmark & \checkmark & Ex & No      & --        & --         & No      & Medium \\
+\citet{haferkamp2022heatmap}& Be    & D & \checkmark & --         & -- & No      & Distance  & --         & No      & Medium \\
+\citet{xue2021optimization} & Be+Op & D & \checkmark & \checkmark & -- & No      & Schedule  & \checkmark & No      & Small  \\
+% ── Classic VRP ────────────────────────────────────────────────────────────────
+\citet{jozefowiez2009evolutionary} & Op & S & -- & -- & -- & Partial & Distance & -- & Yes & Small \\
+\citet{banos2013hybrid}     & Op    & S & --         & \checkmark & -- & No      & Distance  & --         & No      & Small  \\
+\citet{arora2023ocd}        & Op    & S & \checkmark & --         & -- & No      & Distance  & \checkmark & No      & Medium \\
+\citet{dusadeerungsikul2023multi} & Op & S & -- & -- & -- & No     & Distance  & --         & No      & Small  \\
+\citet{thipparthy2024optimizing} & Op & S & -- & \checkmark & -- & No     & Distance  & \checkmark & No      & Medium \\
+\end{longtable}
+\end{landscape}
+
+\noindent
+Inspection of Table~\ref{tab:taxonomy} reveals four structural patterns that motivate this thesis:
+\begin{enumerate}[label=\textbf{P\arabic*.}]
+    \item \textbf{Acceptance/rejection is almost always exogenous or absent.} Only five studies treat it as exogenous; none treats it as endogenous (En). This decouples routing decisions from couriers' strategic responses.
+
+    \item \textbf{Formal fairness metrics $F(\cdot)$ are rare, and where present, are not conceptually grounded.} Only \citet{lesmana2019balancing} and \citet{sobhanan2024equity} define a formal, quantifiable fairness function; neither situates it with respect to the balance/equity/fairness distinction developed in Chapter~\ref{ch:concept}. All other studies use qualitative or proxy notions of fairness (workload balance, route-length balance) --- i.e., \emph{balance} in the sense of Section~\ref{sec:concept-define}, not fairness.
+
+    \item \textbf{Compensation structures are oversimplified.} The dominant assumption is distance-based pay or fixed cost. Non-linear pay, dynamic incentives, intertemporal guarantees, and acceptance-dependent compensation are almost universally absent.
+
+    \item \textbf{Dynamic fairness is not addressed.} No study tracks fairness as an
+    accumulated state variable across the rolling horizon, meaning that a ``fair'' assignment in one window may accumulate into inequity over the full operation day.
+\end{enumerate}
+
+These four patterns directly motivate the four research gaps formalized in
+Chapter~\ref{ch:gaps}.
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Problem Description}
+\label{ch:problem}
+\label{sec:problem}
+
+The MDRP addressed in this study is grounded in the operational challenges of digital delivery platforms in Latin America. These platforms connect couriers $C$, users $U$, and restaurants/stores $R$. Information about stores and couriers is known in advance; information about users and orders becomes available only at order-placement time, creating the stochastic and dynamic character of the problem.
+
+\section{Sets and Parameters}
+
+\begin{description}[leftmargin=2cm,style=nextline]
+    \item[$U$] Set of users, each $u \in U$ with drop-off location $\ell_u$.
+    \item[$R$] Set of restaurants/stores, each $r \in R$ with pick-up location $\ell_r$.
+    \item[$O$] Set of orders; each $o \in O$ is linked to restaurant $r_o \in R$, user $u_o \in U$, placement time $a_o$, ready time $e_o$, pick-up service time $s_r$, drop-off service time $s_u$, and target drop-off time $d_o$.
+    \item[$C$] Set of couriers; each $c \in C$ has on-time $e_c$, off-time $l_c > e_c$, initial location $\ell_c$, and vehicle type $v_c \in \{\text{walking, bicycle, motorcycle, car}\}$.
+    \item[$S$] Set of routes; each route $s \in S$ contains orders from a single restaurant ($|\{r_o : o \in s\}| = 1$) and is assigned to a single courier.
+\end{description}
+
+\section{Structural Assumptions}
+\label{sec:assumptions}
+
+\begin{assumption}[Route capacity] Each route has a maximum number of orders $Q$.
+\end{assumption}
+\begin{assumption}[Static travel times] Travel time $\tau(\ell,\ell')$ between any pair of locations is deterministic and time-invariant (computed from real road networks via OSRM).
+\end{assumption}
+\begin{assumption}[Notification constraints] Couriers may only receive assignment notifications while idling or during pick-up; moving or dropping-off couriers are not notified for safety reasons.
+\end{assumption}
+\begin{assumption}[Single-order-per-user] Each user places at most one order per operation day.
+\end{assumption}
+\begin{assumption}[Cancellation finality] Once an order is canceled---either by the user or the platform---it cannot re-enter the system, and it counts negatively in service metrics.
+\end{assumption}
+
+\section{Performance Metrics}
+\label{sec:metrics}
+
+The primary platform metric is the \emph{coverage rate} (fraction of orders successfully delivered). Secondary metrics include click-to-door time, ready-to-door time, courier utilization, and ---critically for this thesis--- \emph{fairness metrics} formally defined in Section~\ref{sec:fairness} and~\ref{sec:validation}, together with the environmental diagnostic of Eq.~\eqref{eq:emissions}.
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Formal Mathematical Framework}
+\label{ch:formal}
+\label{sec:formal}
+
+This chapter formalizes the MDRP as a \emph{Constrained Markov Decision Process} (CMDP) with a fairness component. This formalism is necessary to (i) precisely state the optimization problem, (ii) embed the fairness concept developed in Chapter~\ref{ch:concept} as a mathematical object, and (iii) provide a rigorous basis for the algorithmic contributions of the thesis. Each subsection below states the corresponding model element and, where the Examination Committee requested it, the justification behind it.
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{System State}
+\label{sec:state}
+
+At each decision epoch $t$ (triggered at every rolling-horizon window boundary), the system state $s_t$ is a tuple
+
+\begin{equation}
+    s_t = \bigl(\mathcal{L}_t,\; \mathcal{O}_t,\; \mathcal{P}_t,\; \mathcal{H}_t\bigr),
+\end{equation}
+
+\noindent where:
+\begin{description}[leftmargin=2.5cm,style=nextline]
+    \item[$\mathcal{L}_t$] \textbf{Location state.} For each courier $c \in C$, the current position $\ell_c(t)$, status $\sigma_c(t) \in \{\text{idle, picking-up, in-transit, dropping-off, offline}\}$, and estimated time until next availability $\eta_c(t)$.
+
+    \item[$\mathcal{O}_t$] \textbf{Order state.} The set of unassigned orders available for assignment at time $t$, including their attributes $(r_o, u_o, a_o, e_o, d_o)$.
+
+    \item[$\mathcal{P}_t$] \textbf{Preparation state.} For each unassigned order $o \in \mathcal{O}_t$, the estimated remaining preparation time $\hat{p}_o(t)$.
+
+    \item[$\mathcal{H}_t$] \textbf{Accumulated equity history.} For each courier $c$, a vector of accumulated performance indicators up to time $t$:
+        \begin{equation}
+            h_c(t) = \bigl(\text{earn}_c(t),\; \text{orders}_c(t),\;
+            \text{active}_c(t)\bigr),
+        \end{equation}
+        where $\text{earn}_c(t)$ is total earnings, $\text{orders}_c(t)$ is total orders delivered, and $\text{active}_c(t)$ is total active time. This component tracks the \emph{intertemporal equity state} and is absent from all existing MDRP formulations.
+\end{description}
+
+\begin{definition}[Equity history]
+    $\mathcal{H}_t$ is the component of the state that enables \emph{dynamic fairness control}: an assignment policy can use accumulated history to avoid compounding of inequities across rolling-horizon windows (Section~\ref{sec:concept-dimensions}, temporal dimension).
+\end{definition}
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Exogenous Information}
+\label{sec:exogenous}
+
+Between decision epochs $t$ and $t+1$, exogenous information $\xi_{t+1}$ is revealed:
+\begin{equation}
+    \xi_{t+1} = \bigl(\Delta\mathcal{O}_{t+1},\; \Delta\mathcal{P}_{t+1},\;
+    \Delta\mathcal{A}_{t+1}\bigr),
+\end{equation}
+where $\Delta\mathcal{O}_{t+1}$ is the set of new orders placed in $(t, t+1]$,
+$\Delta\mathcal{P}_{t+1}$ is the realization of preparation times, and $\Delta\mathcal{A}_{t+1}$ contains courier availability events (log-ins and log-outs).
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Action Space}
+\label{sec:action}
+
+At epoch $t$, the platform chooses an assignment-and-routing action:
+\begin{equation}
+    a_t = \{(c, s) : c \in C_t^{\text{avail}},\; s \in S_t\},
+\end{equation}
+where $C_t^{\text{avail}} \subseteq C$ is the set of available couriers and $S_t$ is the set of feasible routes constructed from $\mathcal{O}_t$. Each courier is assigned at most one route; each order appears in at most one route. The action also includes a \emph{pay offer} $\pi_{c,s}$ for each pair (courier, route), which determines the probability of acceptance the courier (see Section~\ref{sec:acceptance}).
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Operational Cost Function}
+\label{sec:cost}
+
+The per-epoch operational cost is
+\begin{equation}
+    c(s_t, a_t, \xi_{t+1}) = \sum_{o \in \mathcal{O}_t} w_1 \cdot \mathbf{1}[o \text{ not
+    delivered}] + w_2 \cdot \sum_{o \text{ delivered}} \max(0,\; \tau_{\text{drop}}(o) - d_o),
+    \label{eq:cost}
+\end{equation}
+where $w_1$ penalizes undelivered orders and $w_2$ penalizes lateness relative to the target drop-off time $d_o$.
+
+\subsection{Justification and Calibration of the Operational Cost Function}
+\label{sec:costjustification}
+
+The Committee asked that the operational costs considered in the models be justified and illustrated (observation~8), rather than left as free, unanchored weights. This subsection responds directly.
+
+The weight $w_1$ is not an arbitrary penalty: it is designed to be anchored to the platform's actual opportunity cost of a non-delivered order, namely the commission revenue and store-side goodwill forfeited when an order is cancelled --- both directly observable in the Phase~2 historical data (Section~\ref{sec:phase2}). The weight $w_2$ is designed to be anchored to the platform's contractual service-level treatment of late deliveries (e.g., a customer credit, refund, or discount policy triggered past a lateness threshold), where such a policy exists in the data; where it does not, $w_2$ is calibrated so that the model's revealed lateness tolerance reproduces the lateness distribution actually observed under the historical (corporate baseline) policy, using the Stage~1 historical-replay validation protocol (Section~\ref{sec:validation}). In both cases, $w_1$ and $w_2$ are treated as \emph{estimated parameters}, not free hyperparameters: their calibration is an explicit deliverable of Phase~2 (Data Collection and Statistical Characterization, Section~\ref{sec:phase2}), and Chapter~\ref{ch:results} will report the fitted values together with a sensitivity analysis showing how the resulting policies change as $w_1/w_2$ is varied, so that the cost structure assumed by the model is auditable rather than assumed.
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Fairness Function}
+\label{sec:fairness}
+
+\begin{definition}[Fairness metric $F$]
+    Let $\text{earn}_c(T)$ denote the total earnings of courier $c$ at the end of operation day $T$, and $\text{active}_c(T)$ the total active time. The \emph{hourly earnings inequality} metric is
+    \begin{equation}
+        F_{\text{Gini}}(\mathbf{w}) = \frac{\sum_{c} \sum_{c'} |w_c - w_{c'}|}
+        {2|C|\sum_{c} w_c},
+        \quad w_c = \frac{\text{earn}_c(T)}{\text{active}_c(T)},
+        \label{eq:gini}
+    \end{equation}
+    where $\mathbf{w} = (w_1, \ldots, w_{|C|})$ is the vector of hourly earnings across couriers. $F_{\text{Gini}} \in [0,1]$, with 0 indicating perfect equality. As discussed in Section~\ref{sec:concept-define}, normalizing by $\text{active}_c(T)$ makes $F_{\text{Gini}}$ an equity-theoretic (input-adjusted), not merely descriptive, statistic.
+\end{definition}
+
+\noindent Additional fairness metrics considered:
+
+\begin{description}[leftmargin=3.5cm,style=nextline]
+    \item[$F_{\text{MaxMin}}$] Max--min fairness: maximize the minimum hourly earnings across all couriers, $\max_{\pi} \min_c w_c$.
+    \item[$F_{\text{Orders}}$] Order-count fairness: Gini coefficient applied to the number of orders delivered per courier per active hour --- a \emph{balance} statistic in the sense of Section~\ref{sec:concept-define}, retained as a secondary diagnostic.
+    \item[$F_{\text{Deficit}}$] Minimum-wage deficit: fraction of couriers whose hourly earnings fall below the statutory minimum wage $w^*$,
+        $F_{\text{Deficit}} = |\{c : w_c < w^*\}| / |C|$.
+\end{description}
+
+The thesis will evaluate all four metrics, and additionally the zone- and vehicle-conditioned variants $F_{\text{Gini}}(\mathbf{w} \mid z)$ and $F_{\text{Gini}}(\mathbf{w} \mid v)$ proposed in Section~\ref{sec:concept-dimensions}, but will use the pooled $F_{\text{Gini}}$ as the primary fairness criterion, given its interpretability, its prevalence in economic inequality literature, and the existence of closed-form sensitivity expressions that facilitate algorithm design.
+
+\subsection{On the Choice of \texorpdfstring{$\alpha$}{alpha}: A Formal Calibration Criterion}
+\label{sec:alpha}
+
+The Committee asked that the parameter $\alpha$ --- the maximum tolerated Gini inequality in the fairness constraint~\eqref{eq:fair_const} --- be given a formal definition and a clear, concise calculation criterion, rather than being treated as a free parameter swept only for sensitivity analysis (observation~6). This subsection proposes three complementary, non-exclusive criteria; Chapter~\ref{ch:results} will report which one (or combination) is retained after Phase~2 data are available, and why.
+
+\begin{description}[leftmargin=3.7cm,style=nextline]
+    \item[Criterion A --- Historical-baseline anchor.] Set $\alpha = F_{\text{Gini}}^{\text{hist}}$, the Gini coefficient of hourly earnings actually observed under the platform's current (corporate baseline) assignment policy on the historical data (Section~\ref{sec:phase2}). Under this criterion, the fairness constraint requires only that the proposed policy be \emph{no less equal than the status quo}, which is the minimal, most defensible requirement to put to a platform that has not previously operated under any fairness guarantee.
+
+    \item[Criterion B --- Inequality-severity bands.] Anchor $\alpha$ to conventional income-inequality severity bands used in welfare-economics and labor-statistics reporting, under which a Gini coefficient below approximately $0.30$ is typically read as ``low'' inequality and above approximately $0.40$ as ``high'' inequality for a working population. Under this criterion, $\alpha$ is set to the upper bound of the band judged acceptable for a labor context (e.g., $\alpha = 0.30$), providing an externally interpretable compliance threshold independent of the platform's own historical performance.
+
+    \item[Criterion C --- Pareto-knee selection.] Rather than fixing $\alpha$ \emph{a priori}, sweep $\alpha \in [0,1]$ to trace the full efficiency--fairness Pareto frontier (Gap~\ref{gap:1}, Chapter~\ref{ch:gaps}) and select the ``knee'' of the curve --- the point of maximum curvature, beyond which further reductions in $\alpha$ yield disproportionately large efficiency losses --- as the recommended operating point. This is a standard multi-objective decision-making criterion and requires no external reference value, at the cost of being computable only \emph{after} the Phase~5 experiments are run.
+\end{description}
+
+\noindent These three criteria are complementary rather than competing: Criterion~A gives a defensible lower bound on ambition, Criterion~B gives an externally auditable target, and Criterion~C gives an empirically efficient operating point once data are available. Chapter~\ref{ch:results} reports $\alpha$ under all three and discusses their agreement or divergence.
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Endogenous Acceptance Model}
+\label{sec:acceptance}
+
+Let $p_{c,s}(\pi_{c,s}, s_t)$ denote the probability that the courier $c$ accepts the route $s$ when offered pay $\pi_{c,s}$ in state $s_t$. The acceptance probability is modeled as
+\begin{equation}
+    p_{c,s} = \sigma\!\bigl(\beta_0 + \beta_1 \pi_{c,s} + \beta_2 \text{dist}(s) +
+    \beta_3 \text{active}_c(t) + \boldsymbol{\beta}_4^\top \mathbf{x}_{c,t}\bigr),
+    \label{eq:acceptance}
+\end{equation}
+where $\sigma(\cdot)$ is the logistic function, $\text{dist}(s)$ is total route distance, $\text{active}_c(t)$ is cumulative active time (a fatigue proxy), and $\mathbf{x}_{c,t}$ captures other state features (vehicle type, time of day, etc.). Parameters $\boldsymbol{\beta}$ are estimated from historical data using maximum-likelihood logistic
+regression. Including the offered pay $\pi_{c,s}$ as an explanatory variable ($\beta_1$) is what distinguishes Eq.~\eqref{eq:acceptance} from the closest existing precedent, the distance-and-courier-parameter acceptance function of \citet{quintero2020computational} (Section~\ref{sec:operational}): here the courier's acceptance decision responds directly to the price the platform offers, which is the behavioral channel a fairness-aware tariff policy (Section~\ref{sec:routebalance}) is designed to act on. The transition from $s_t$ to $s_{t+1}$ is then
+\begin{equation}
+    s_{t+1} = f\!\bigl(s_t,\; a_t,\; \xi_{t+1},\; \mathbf{b}_t\bigr),
+\end{equation}
+where $\mathbf{b}_t \in \{0,1\}^{|C_t^{\text{avail}}|}$ is the vector of acceptance realizations, drawn from the Bernoulli distribution parameterized by \eqref{eq:acceptance}.
+
+\subsection{Route Balancing and Tariff Treatment}
+\label{sec:routebalance}
+
+The Committee asked for an analysis of the criteria used for route balancing and tariff treatment (observation~7). Two elements of the model jointly determine this, and are made explicit here.
+
+\paragraph{Tariff treatment.} The pay offer $\pi_{c,s}$ in Eq.~\eqref{eq:acceptance} is not a free decision variable chosen independently of the platform's real payment practice: it is constrained to follow the platform's actual tariff schedule, modeled as an affine function of route distance and a base fee,
+\begin{equation}
+    \pi_{c,s} = \pi_0 + \pi_1 \cdot \text{dist}(s),
+    \label{eq:tariff}
+\end{equation}
+where $\pi_0$ (base fee) and $\pi_1$ (per-kilometer rate) are estimated from the historical payment records in Phase~2 (Section~\ref{sec:phase2}), consistent with real per-kilometer and per-order commission structures reported for Latin American platforms. Fairness-aware policies (\textsc{BRKGA-Fair}, \textsc{Pay-BRKGA}, Section~\ref{sec:phase4}) are permitted to adjust $\pi_1$ within a bounded range around this baseline --- rather than to set pay arbitrarily --- so that the tariff structure explored remains operationally realistic and comparable to the platform's current practice.
+
+\paragraph{Route balancing.} Balancing routes by \emph{count} alone (as in $F_{\text{Orders}}$) is insufficient, because it ignores that routes differ systematically in distance and, through Eq.~\eqref{eq:tariff}, in pay: a courier who receives many short, low-pay routes is not treated equivalently to one who receives few long, high-pay routes, even if their order counts are balanced. This dissertation therefore introduces an explicit route-balancing constraint, bounding the share of high-value routes any single courier may receive within a rolling-horizon window relative to their peers:
+\begin{equation}
+    \bigl|\{s \in a_t : c(s) = c,\ \text{dist}(s) > \bar{d}_t\}\bigr| \;\leq\; \kappa \cdot |\{s \in a_t : c(s) = c\}|,
+    \qquad \forall c \in C_t^{\text{avail}},
+    \label{eq:routebalance}
+\end{equation}
+where $\bar{d}_t$ is the mean route distance among routes dispatched at epoch $t$, and $\kappa \in (0,1]$ is a concentration threshold (e.g., $\kappa = 1$ recovers the unconstrained case). Constraint~\eqref{eq:routebalance} operationalizes route balancing directly in terms of the tariff-linked route value, rather than in terms of raw counts, tying the two observations (7) together: tariffs determine what a route is worth, and route balancing determines that no courier is structurally denied access to high-value routes.
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Constrained Optimization Objective}
+\label{sec:objective}
+
+The platform seeks a policy $\pi^*$ that minimizes the expected cumulative operational cost subject to a fairness constraint, following the justification developed in Section~\ref{sec:concept-constraint}:
+
+\begin{align}
+    \min_{\pi}\; & \mathbb{E}_{\xi}\!\left[\sum_{t=0}^{T} \gamma^t c(s_t, a_t, \xi_{t+1})\right]
+    \label{eq:obj} \\
+    \text{s.t.}\; & F_{\text{Gini}}(\mathbf{w}^\pi) \leq \alpha, \label{eq:fair_const}\\
+    & \mathbb{E}[w_c^\pi] \geq w^* \quad \forall c \in C, \label{eq:minwage}\\
+    & \text{Eq.}~\eqref{eq:routebalance} \quad \forall t, \label{eq:routebalance_ref} \\
+    & a_t \in \mathcal{A}(s_t) \quad \forall t, \label{eq:feasibility}
+\end{align}
+
+\noindent where $\gamma \in (0,1]$ is a discount factor, $\alpha \in [0,1]$ is the maximum tolerated Gini inequality (calibrated per Section~\ref{sec:alpha}), and $w^*$ is the statutory minimum hourly wage. The constraint \eqref{eq:fair_const} bounds income inequality; constraint \eqref{eq:minwage} guarantees a minimum expected hourly wage for every courier; constraint~\eqref{eq:routebalance_ref} enforces route balancing (Section~\ref{sec:routebalance}); constraint \eqref{eq:feasibility} ensures route feasibility and assignment validity.
+
+This formulation subsumes the three existing approaches in the literature as special cases: (i) setting $\alpha = 1$ and removing \eqref{eq:minwage} and~\eqref{eq:routebalance_ref} recovers the corporate (efficiency-only) model; (ii) incorporating $F_{\text{Orders}}$ as the fairness criterion recovers workload-balance models; (iii) using $F_{\text{Deficit}}$ recovers minimum-wage guarantee models.
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Research Gaps}
+\label{ch:gaps}
+\label{sec:gaps}
+
+Building on the four structural patterns identified in Section~\ref{sec:taxonomy}, this chapter formalizes four research gaps as \emph{falsifiable technical propositions}. Each gap is stated using four elements: (i) what the dominant literature \emph{does}, (ii) what it \emph{does not} do with precision, (iii) \emph{why} that omission matters for validity or applicability, and (iv) \emph{how} the gap will be closed and progress measured. Gap~\ref{gap:1} in particular is the direct technical counterpart of the conceptual argument developed in Chapter~\ref{ch:concept}.
+
+% ──────────────────────────────────────────────────────────────────────────────
+\begin{gap}[Absence of a formal, quantifiable, and conceptually grounded fairness metric]
+\label{gap:1}
+\end{gap}
+\hfill
+
+Most MDRP papers acknowledge fairness as a desirable objective and use proxy indicators such as route-length balance \citep{jozefowiez2009evolutionary}, number-of-orders balance \citep{ulmer2021restaurant}, or verbal assertions of ``equitable workload distribution'' \citep{liao2020multi} --- \emph{balance}, not fairness, in the terms of Section~\ref{sec:concept-define}. Two papers define formal metrics: \citet{lesmana2019balancing} use income inequality and \citet{sobhanan2024equity} use load inequality, but neither justifies the choice from a distributive-justice or equity-theoretic standpoint.
+
+No MDRP study defines a single, operationalized fairness function $F(\cdot)$ that: (a) is conceptually grounded in a defensible account of fairness rather than adopted as a computational convenience, (b) can be evaluated in closed form from operational data, (c) is coupled to the routing objective as a constraint or penalty with an explicitly justified choice between the two (Section~\ref{sec:concept-constraint}), and (d) enables comparison across different policies on the same instances using real data from Latin American platforms.
+
+Without such an $F(\cdot)$: (i) fairness claims are non-verifiable and cannot be replicated; (ii) the optimization model has no mechanism to trade off efficiency against fairness, so improvements in coverage may come entirely at couriers' expense; and (iii) policy recommendations made without a formal, justified metric cannot be enforced or monitored in practice.
+
+The Gini coefficient of hourly earnings $F_{\text{Gini}}$ (Eq.~\ref{eq:gini}), conceptually grounded in Chapter~\ref{ch:concept} and formally calibrated in Section~\ref{sec:alpha}, is embedded as a hard constraint in the CMDP (Eq.~\ref{eq:fair_const}). Experiments will report $F_{\text{Gini}}$, $F_{\text{MaxMin}}$, $F_{\text{Orders}}$, $F_{\text{Deficit}}$, and the zone-/vehicle-conditioned variants of Section~\ref{sec:concept-dimensions}, and will show efficiency--fairness Pareto curves by sweeping $\alpha \in [0,1]$. \textbf{Progress criterion:} a policy with constrained $F_{\text{Gini}} \leq \alpha^*$ that matches or exceeds the coverage of the unconstrained baseline.
+
+
+% ──────────────────────────────────────────────────────────────────────────────
+\begin{gap}[Static fairness vs.\ intertemporal / dynamic fairness]
+\label{gap:2}
+\end{gap}
+\hfill
+
+
+Rolling-horizon models \citep{reyes2018meal,wen2010dynamic,martinez2024exploring} optimize assignments within each window independently. If fairness is considered, it is enforced within each window (e.g., balance the number of orders assigned in the next 2 minutes), not across the full operation day.
+
+
+No existing MDRP model controls the \emph{accumulated} equity state $\mathcal{H}_t$ (Section~\ref{sec:state}) over successive windows. A policy that produces balanced assignments in each 2-minute window can still generate large income disparities over an 8-hour shift if couriers log in and out at different times, or if some couriers systematically receive high-value routes.
+
+
+Couriers care about end-of-day earnings, not per-window balance. A routing policy that is ``fair in each window'' but unfair over the full day provides no meaningful guarantee to workers and will not be accepted as a labor-practice improvement. Moreover, the literature on algorithmic fairness \citep{lesmana2019balancing,corbettdavies2023measure} shows that short-horizon fairness and long-horizon fairness can diverge substantially.
+
+
+The equity history $\mathcal{H}_t$ is included in the CMDP state space (Section~\ref{sec:state}), and the fairness constraint~\eqref{eq:fair_const} is evaluated on end-of-day accumulated values rather than within-window values. Two policy variants will be compared: (a) \emph{myopic-fair}, which balances only within each window, and (b) \emph{dynamic-fair}, which uses $\mathcal{H}_t$
+to bias assignment towards couriers with the largest deficit relative to the mean.
+\textbf{Progress criterion:} the dynamic-fair policy achieves a statistically significant reduction in $F_{\text{Gini}}$ evaluated at end-of-day, compared with myopic-fair, across the large instances.
+
+
+% ──────────────────────────────────────────────────────────────────────────────
+\begin{gap}[Decoupling of economic compensation from operational decisions]
+\label{gap:3}
+\end{gap}
+\hfill
+
+
+The dominant operational approach \citep{reyes2018meal,steever2019dynamic,ulmer2021restaurant,
+yildiz2019provably} minimizes travel distance or delivery lateness, using distance as a proxy for cost. A few economic studies \citep{wen2010dynamic,reyes2018meal} include simple compensation terms (minimum wage guarantees, per-order fixed pay), but these are not integrated with the routing objective, and none links pay explicitly to a real tariff schedule (Section~\ref{sec:routebalance}).
+
+
+No study integrates a full compensation structure ---including (i) distance-dependent, non-linear pay functions, (ii) dynamic incentives (surge pricing), (iii) minimum-wage guarantees as hard constraints, and (iv) acceptance-probability-adjusted expected pay--- within the rolling-horizon routing problem. The economic and operational sub-problems are solved sequentially or independently, not jointly.
+
+
+The compensation structure changes which assignments are optimal: a route that minimizes platform cost but violates a courier's minimum-wage constraint is infeasible under a fair policy. Conversely, ignoring acceptance probabilities overestimates coverage, because some assigned routes will be rejected. Joint optimization changes both the routing decisions and the pay offers, and is therefore scientifically necessary to make valid claims about the efficiency--fairness tradeoff (Section~\ref{sec:concept-tradeoffs}).
+
+
+The CMDP cost function~\eqref{eq:cost} will be extended to include a payment term:
+\begin{equation}
+    c^+(s_t, a_t, \xi_{t+1}) = c(s_t, a_t, \xi_{t+1}) + \sum_{(c,s)\in a_t}
+    \lambda \cdot \text{pay}(c, s, \pi_{c,s}),
+    \label{eq:cost_plus}
+\end{equation}
+where $\text{pay}(c,s,\pi_{c,s})$ is the actual payment to courier $c$ for route $s$ under the tariff schedule~\eqref{eq:tariff}, and $\lambda > 0$ is a weight traded off against coverage. Sensitivity analysis will sweep $\lambda$ to trace the cost-of-fairness curve, using the bi-objective formulation justified in Section~\ref{sec:concept-constraint}. \textbf{Progress criterion:} the integrated model achieves a statistically significant improvement in $F_{\text{Deficit}}$ compared with the distance-minimizing baseline, without a significant loss in coverage.
+
+
+% ──────────────────────────────────────────────────────────────────────────────
+\begin{gap}[Exogenous acceptance assumption]
+\label{gap:4}
+\end{gap}
+\hfill
+
+
+The vast majority of MDRP models assume that couriers always accept the assignment offered by the platform (perfect acceptance). The few studies that model rejection
+\citep{reyes2018meal,wen2010dynamic,bozanta2022courier} treat the acceptance probability as an exogenous parameter (e.g., a fixed fraction of assignments are rejected randomly), not as a function of the offered incentive or the courier's state.
+
+
+No MDRP model formulates a strategic acceptance function $p_{c,s}(\pi_{c,s}, s_t)$
+(Eq.~\ref{eq:acceptance}) where the probability that courier $c$ accepts route $s$ depends jointly on the pay offered, route characteristics, and cumulative courier fatigue. As a consequence, the platform's optimal pay-and-assign policy is not derived from first principles, and the reported coverage rates are over-optimistic.
+
+
+If a courier's acceptance probability is below 1, the platform needs to offer higher pay to increase the chance of acceptance, or it needs to queue the order for the next window. This changes both the routing decisions and the fairness outcomes: higher pay for better coverage reduces profits and may require guaranteed minimums to be adjusted. Without modeling endogenous acceptance, the platform cannot make rational decisions about the efficiency--fairness tradeoff.
+
+
+The acceptance model~\eqref{eq:acceptance} will be estimated from historical data using logistic regression (rejections are observable in the data as canceled assignments). The transition function of the CMDP will incorporate Bernoulli acceptance draws from the fitted model. Two policies will be compared: (a) exogenous-acceptance, using a fixed per-day rejection rate; and (b) \emph{endogenous-acceptance}, using the fitted model. \textbf{Progress criterion:} the endogenous-acceptance policy achieves a statistically significant improvement in \emph{predicted} coverage versus actual coverage on held-out instances (i.e., lower forecast error), demonstrating that the model better captures the true dynamics.
+
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Gap--Contribution Map}
+
+Table~\ref{tab:gap_map} summarizes how each gap is linked to a specific model component, algorithm extension, primary metric, and validation protocol.
+
+\begin{table}[ht]
+\centering
+\caption{Gap--contribution--validation map.}
+\label{tab:gap_map}
+\small
+\begin{tabularx}{\textwidth}{p{1.4cm}p{2.8cm}p{2.5cm}p{2.2cm}p{3.5cm}}
+\toprule
+\textbf{Gap} & \textbf{Model component} & \textbf{Algorithm extension} &
+\textbf{Primary metric} & \textbf{Validation protocol} \\
+\midrule
+G1: No formal, grounded $F(\cdot)$ &
+  Constraint~\eqref{eq:fair_const} with $F_\text{Gini}$, grounded in Ch.~\ref{ch:concept} &
+  Add fairness penalty / constraint to Models &
+  $F_\text{Gini}$, $F_\text{Deficit}$ &
+  Efficiency--fairness Pareto curve, 24 instances, sweep $\alpha$ \\
+\midrule
+G2: Static fairness &
+  Accumulated state $\mathcal{H}_t$ in CMDP &
+  Deficit-biased assignment rule in rolling horizon &
+  End-of-day $F_\text{Gini}$ &
+  Myopic-fair vs.\ dynamic-fair, large instances ($>$5{,}000 orders) \\
+\midrule
+G3: Econ.--op.\ decoupling &
+  Extended cost $c^+$ with payment term (Eq.~\ref{eq:cost_plus}), tariff-linked (Eq.~\ref{eq:tariff}) &
+  Sweep $\lambda$; bi-objective Models &
+  $F_\text{Deficit}$, coverage rate &
+  Sensitivity on $\lambda$, medium instances (500--5{,}000 orders) \\
+\midrule
+G4: Exogenous acceptance &
+  Acceptance model~\eqref{eq:acceptance} in CMDP transition &
+  Logistic-regression pre-fitting; pay-offer optimization &
+  Forecast error (coverage) &
+  Exogenous vs.\ endogenous policies, held-out instances \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Research Question and Objectives}
+\label{ch:objectives}
+\label{sec:objectives}
+
+\section{Research Question}
+\label{sec:research-question}
+
+\begin{quote}
+\itshape
+How can computational decision-support tools be designed to optimize meal delivery platforms in Latin America, grounded in an explicit and justified conceptual account of courier fairness, formally guaranteeing fairness in compensation, workload distribution, and opportunities for couriers, while maintaining competitive operational efficiency and without disproportionate environmental cost?
+\end{quote}
+
+\section{General Objective}
+
+Develop a conceptually grounded, constrained optimization framework ---rooted in a Markov Decision Process with explicit fairness constraints--- for the MDRP, and validate it on real operational data from a Latin American food-delivery platform, comparing the efficiency--fairness tradeoffs of corporate-focused and fairness-focused policies across all identified research gaps.
+
+\section{Specific Objectives}
+
+\begin{enumerate}[label=\textbf{SO\arabic*.}]
+    \item \textbf{Conceptual foundation of fairness.} Develop and justify a conceptual definition of courier fairness, distinguishing it from balance and equity, specifying its temporal, spatial, and vehicle-type dimensions, and justifying its treatment as a constraint rather than an objective. \emph{(Addresses Committee observations 1, 3, 4; Chapter~\ref{ch:concept}; Year 1 deliverable.)}
+
+    \item \textbf{Literature synthesis and gap formalization.} Conduct a systematic review organized by the three-block taxonomy (operational, economic, behavioral) and formulate the four research gaps as falsifiable technical propositions with explicit fairness metrics. \emph{(Addresses G1--G4; Year 1 deliverable.)}
+
+    \item \textbf{Data collection and statistical characterization.} Pre-process and analyze real-world instances, fitting demand-arrival distributions, preparation-time distributions, tariff parameters~\eqref{eq:tariff}, and the acceptance/rejection model (Eq.~\ref{eq:acceptance}) using maximum-likelihood estimation. \emph{(Feeds G3--G4; Year 1 deliverable.)}
+
+    \item \textbf{Simulation platform development.} Build a modular, event-driven simulation platform (SimPy) that replicates the MDRP operational flow and accepts plug-in policies. \emph{(Year 1 deliverable; validated on historical data.)}
+
+    \item \textbf{CMDP formulation and algorithm design.} Formalize the MDRP as a CMDP (Chapter~\ref{ch:formal}) and develop or extend metaheuristic / rolling-horizon solvers to satisfy the fairness and route-balancing constraints in Eqs.~\eqref{eq:fair_const}--\eqref{eq:routebalance_ref}. \emph{(Addresses G1--G3; Year 2.)}
+
+    \item \textbf{Computational experiments and analysis.} Run all policy variants (corporate, dynamic-fair, economy-integrated, endogenous-acceptance) on the 24 instances, report efficiency--fairness--sustainability Pareto curves, and test statistical significance of differences. \emph{(Addresses G1--G4; Year 2--3.)}
+
+    \item \textbf{Recommendations and policy implications.} Derive actionable guidelines for delivery platforms in Latin America, identifying conditions under which each policy variant is preferred, and discuss implications for labor regulation, platform governance, and environmental adoption incentives.
+    \emph{(Year 3.)}
+\end{enumerate}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Methodology}
+\label{ch:methodology}
+\label{sec:methodology}
+
+The methodology is structured as a \emph{traceable program} that links each research gap to a modeling decision, an algorithmic approach, and an experimental validation protocol. This structure reflects not only a forward-looking plan but also the consolidation of prior work, as most phases have already been partially developed and documented in scientific articles, with approximately one publication aligned with each major phase of the thesis. Table~\ref{tab:method_matrix} presents the methodology matrix in compact form; the sections below elaborate on each column. This chapter is carried over from the approved proposal with updates limited to cross-references to the new conceptual and mathematical material (Chapters~\ref{ch:concept}--\ref{ch:formal}).
+
+
+\begin{table}[ht]
+\centering
+\caption{Methodology matrix: gap $\Rightarrow$ model $\Rightarrow$ algorithm $\Rightarrow$
+metric $\Rightarrow$ experiment.}
+\label{tab:method_matrix}
+\small
+\begin{tabularx}{\textwidth}{p{1.0cm}p{2.8cm}p{2.8cm}p{2.2cm}p{3.2cm}}
+\toprule
+\textbf{Gap} & \textbf{Model} & \textbf{Algorithm} & \textbf{Metric(s)} & \textbf{Experiment} \\
+\midrule
+G1 &
+  CMDP with $F_\text{Gini}$ constraint &
+  Metaheuristics-RH with fairness decoder; MIP with fairness penalty & $F_\text{Gini}$, Coverage &
+  Sweep $\alpha \in [0,1]$; 24 instances; Pareto curves \\
+\midrule
+G2 &
+  Accumulated state $\mathcal{H}_t$; deficit-biased assignment &
+  Rolling-horizon rule using $h_c(t)$ deficit score &
+  End-of-day $F_\text{Gini}$, $F_\text{MaxMin}$ &
+  Myopic-fair vs.\ dynamic-fair on large instances \\
+\midrule
+G3 &
+  Extended cost $c^+$ with pay term; bi-obj.\ model &
+  Bi-objective Metaheuristics; sensitivity on $\lambda$,  &
+  $F_\text{Deficit}$, Coverage, Pay/order &
+  Sweep $\lambda$; medium instances; dominated-solutions test \\
+\midrule
+G4 &
+  Logistic acceptance model in CMDP transition &
+  Logistic regression (pre-fit); pay-offer inner loop &
+  Forecast error; coverage gap &
+  Exogenous vs.\ endogenous policies; held-out test set \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Phase 1 --- Systematic Review and Gap Formalization (Year 1, Q1--Q2)}
+\label{sec:phase1}
+
+A database search (Scopus, Web of Science, Google Scholar) will be conducted using the query terms: \{meal delivery routing, food delivery optimization, crowdsourced delivery, gig economy fairness, MDRP, last-mile logistics, VRP fairness, algorithmic fairness gig economy\}. The articles will be coded using the three-block taxonomy of Chapter~\ref{ch:litreview} and the extended taxonomy dimensions of
+Table~\ref{tab:taxonomy}. The delivered document is a structured review document, including: (i)~the conceptual framework of Chapter~\ref{ch:concept}, (ii)~the extended taxonomy table, (iii)~the four formalized gaps
+(Chapter~\ref{ch:gaps}), and (iv)~identification of the best-performing baseline algorithms from the literature for benchmarking.
+
+\noindent\textbf{Prior work status.} Phase~1 is substantially complete. The search strategy adapts the three-stage protocol---database search, breadth-first citation pruning, and forward-looking citation tracing---developed and validated in \citet{pantoja2024comprehensive} for the robotized packing domain. Transferring this protocol to the MDRP produced the taxonomy in Table~\ref{tab:taxonomy} and the gap formalization (G1--G4) presented in Chapter~\ref{ch:gaps}. Following the Examination Committee's observations, the conceptual grounding in Chapter~\ref{ch:concept} has been added as a required extension of this phase.
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Phase 2 --- Data Collection and Statistical Characterization (Year 1, Q2--Q3)}
+\label{sec:phase2}
+
+
+The real-world instances from the Latin American platform are pre-processed to:
+\begin{enumerate}
+    \item Fit \emph{demand arrival distributions} (orders per minute by time-of-day) using Poisson or non-homogeneous Poisson processes.
+    \item Fit \emph{preparation-time distributions} per store category.
+    \item Estimate the \emph{tariff parameters} $\pi_0, \pi_1$ (Eq.~\ref{eq:tariff}) and the \emph{acceptance model} (Eq.~\ref{eq:acceptance}) by maximum-likelihood logistic regression on historical acceptance/rejection events.
+    \item Estimate the operational cost weights $w_1, w_2$ (Section~\ref{sec:costjustification}) from historical commission and service-level data.
+    \item Compute descriptive statistics for $F_\text{Gini}$ and $F_\text{Deficit}$ on the historical data, establishing the baseline fairness level $F_{\text{Gini}}^{\text{hist}}$ used in Criterion~A of Section~\ref{sec:alpha}.
+\end{enumerate}
+
+\noindent The deliverable is a structured dataset with the above fitted parameters, and a descriptive report documenting current fairness levels as the empirical baseline.
+
+\noindent\textbf{Prior work status.} Another research work by the author is currently under review for publication and provides an important foundation for this phase. That study performed a multi-policy simulation analysis on the same real-world MDRP instances considered in this thesis, producing fitted demand-arrival distributions and courier-availability patterns that are directly reused in the present research. These results constitute the initial statistical characterization of the operational environment and support the development of the simulation framework described in Phase~3. Consequently, the data infrastructure required for this phase is already in place; the remaining work focuses on estimating the endogenous acceptance model (Eq.~\ref{eq:acceptance}), the tariff parameters (Eq.~\ref{eq:tariff}), and the baseline fairness metrics, particularly $F_\text{Gini}$ and $F_\text{Deficit}$, which were not addressed in the previous studies.
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Phase 3 --- Simulation Platform (Year 1, Q3--Q4)}
+\label{sec:phase3}
+
+A modular, event-driven simulation platform is built using SimPy (Python). The platform:
+\begin{itemize}
+    \item Replicates the MDRP operational flow: order arrivals, preparation, courier
+        availability, rolling-horizon triggers, assignment notifications, acceptance draws, travel, delivery, and cancellation events.
+    \item Accepts any plug-in assignment policy (a Python callable that implements the action function $a_t = \pi(s_t)$), enabling systematic comparison.
+    \item Computes all performance metrics defined in Section~\ref{sec:validation}, including the emissions proxy (Eq.~\ref{eq:emissions}), at the end of each simulation run.
+    \item Validated by replaying historical instances and verifying that the simulated results (coverage rate, delivery times) match the observed data within a 5\% tolerance.
+\end{itemize}
+
+\noindent The deliverable is an open, reproducible simulator with documented API and at least one validated corporate-baseline policy.
+
+\noindent\textbf{Prior work status.} A significant portion of the operational and computational foundations required for this phase has already been developed in the published article \citet{giraldo2024grasp}. We introduced and validated a GRASP-based optimization framework for the MDRP using 22 real-world instances from a Colombian delivery platform. That study provided the first published characterization of the dataset employed throughout this thesis, including statistical profiles of order volumes, courier fleet composition, vehicle types, delivery time windows, and operational routing dynamics. Moreover, the work established an initial event-driven representation of the MDRP operational flow, incorporating order generation, courier assignment, travel-time estimation, batching logic, and delivery constraints under realistic conditions. These contributions constitute the first validated baseline of the simulation environment proposed in this thesis and provide the empirical and computational foundation for the modular SimPy platform developed in the present research.
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Phase 4 --- Model and Algorithm Development (Year 2)}
+\label{sec:phase4}
+
+\subsection{CMDP Formulation}
+The CMDP (Chapter~\ref{ch:formal}) is fully implemented with: (i)~the operational state $(\mathcal{L}_t, \mathcal{O}_t, \mathcal{P}_t, \mathcal{H}_t)$; (ii)~the acceptance model~\eqref{eq:acceptance} in the transition function; (iii)~the extended cost function~\eqref{eq:cost_plus}; (iv)~the fairness constraint~\eqref{eq:fair_const}; (v)~the route-balancing constraint~\eqref{eq:routebalance}.
+
+\subsection{Algorithmic Family}
+The thesis will evaluate the following family of algorithms, chosen for their demonstrated scalability in the MDRP literature and compatibility with the rolling-horizon architecture:
+
+\begin{description}[leftmargin=4.5cm,style=nextline]
+    \item[Corporate baseline] Business Model heuristic: the platform's current greedy assignment (nearest available courier).
+    \item[GRASP] GRASP algorithm optimizing routing and assignation of couriers.
+    \item[BRKGA-Coverage] Biased Random-Key Genetic Algorithm with rolling horizon, fitness = coverage rate. This is the current first-article baseline.
+    \item[BRKGA-Fair] BRKGA-Coverage extended with a fairness decoder that uses the deficit state $\mathcal{H}_t$ to bias routing decisions towards under served couriers while staying within the coverage constraint.
+    \item[MIP-Fair] Mixed-integer model with the fairness constraint~\eqref{eq:fair_const} explicitly solved at each rolling-horizon window (feasible for small/medium instances).
+    \item[Pay-BRKGA] Bi-objective BRKGA optimizing both coverage and $F_\text{Deficit}$ simultaneously (for Gap G3), using the bi-objective paradigm justified in Section~\ref{sec:concept-constraint}.
+\end{description}
+
+\noindent The algorithmic choice is not fixed; if ADP or constrained RL proves to be superior in the Phase~3 pilot experiments, the preferred approach will be updated accordingly.
+
+\medskip
+\noindent\textbf{Prior work status.} The feasibility and competitive performance of metaheuristic approaches for the MDRP at real-world scales have already been established by prior publications of the research group, lending empirical weight to the algorithm family described above. \citet{giraldo2024grasp} showed that a GRASP metaheuristic fulfills more orders than a simulation-optimization baseline across all 22 tested instances within the
+two-minute re-optimization window imposed by the platform, confirming that metaheuristics are the appropriate algorithmic paradigm for this problem.
+
+Other recent work in the publishing process, titled \emph{A Biased Random-Key Genetic Algorithm with Rolling Horizon for the Meal Delivery Routing Problem}, is a rolling-horizon BRKGA approach---which constitutes the \textbf{BRKGA-Coverage} and \textbf{BRKGA-Fair} entries in the algorithm family above---and is currently in the final stages of preparation for submission to the Metaheuristics International Conference 2026.
+
+Finally, another article in the publishing process, titled \emph{Analysis of the Impact of Stakeholders on Companies with Home Delivery Platforms Using Hybrid Optimization and Simulation Approaches}, provides an empirical management-level evaluation of three assignment policies (corporate, equitable-vehicle, and equitable-workload) on the same real-world instances, demonstrating that fairness-oriented policies impose only moderate efficiency costs. This last result directly motivates the Pareto analysis planned for Phase~5 and anchors the practical relevance of the modeling choices made throughout the thesis.
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Phase 5 --- Experiments and Analysis (Year 2--3)}
+\label{sec:phase5}
+
+For each of the instances and each of the policy variants, 10 replications are run (to account for stochastic demand and acceptance draws). Statistical tests (Kruskal--Wallis + post-hoc Dunn with Bonferroni correction) will determine whether differences in coverage and fairness metrics are statistically significant.
+
+The main experimental output is a set of \emph{efficiency--fairness Pareto curves} obtained by sweeping $\alpha$ in constraint~\eqref{eq:fair_const}, together with the emissions proxy of Eq.~\eqref{eq:emissions} reported alongside them (Section~\ref{sec:concept-sustainability}), showing the marginal cost --- and environmental side effect --- of improving fairness. These curves directly address the doctoral requirement for a falsifiable, quantified evaluation of the proposed models, and are reported in Chapter~\ref{ch:results}.
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Simulation Platform}
+\label{ch:simulation}
+\label{sec:simulation}
+
+The simulation platform is the main computational instrument of this thesis. It serves two functions: (i)~a \emph{validation test environment}, which replays historical operation days to verify that model outputs are consistent with observed platform data, and (ii)~a \emph{policy laboratory}, which compares the efficiency, fairness, and environmental results of different assignment policies under controlled, reproducible conditions. This chapter documents the platform architecture, the
+event logic, the policy interface, and the validation protocol, carried over from the approved proposal.
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Architecture Overview}
+
+The platform is implemented in Python using the \texttt{SimPy} discrete-event simulation library \citep{simpy2023}. Its design follows three principles:
+
+\begin{enumerate}
+    \item \textbf{Modularity.} Each actor (courier, order, store, platform) is an independent simulation process. Policies are injected as callable objects and are never hard-coded into the simulator kernel.
+    \item \textbf{Reproducibility.} All stochastic draws (demand arrivals, preparation times, acceptance realizations) are seeded from a single root seed, enabling exact replication across policy variants on the same instance.
+    \item \textbf{Fidelity.} The simulator replicates the operational constraints documented in Section~\ref{sec:assumptions}: route capacity $Q$, notification constraints (Assumption 3), cancellation finality (Assumption 5), and OSRM-based travel times (Assumption 2).
+\end{enumerate}
+
+Figure~\ref{fig:sim_arch} illustrates the high-level data flow. At initialization, the simulator reads (i)~the instance file (orders, couriers, stores, road distances), (ii)~the fitted demand and preparation-time distributions (Phase~2 of the methodology), and (iii)~the fitted acceptance and tariff models~(Eqs.~\ref{eq:acceptance} and~\ref{eq:tariff}). It then launches the event loop and calls the policy function at each rolling-horizon trigger.
+
+\begin{figure}[ht]
+ \centering
+    \fbox{\parbox{0.9\textwidth}{\centering\vspace{3cm}
+    \textit{[Placeholder --- architecture diagram to be inserted: instance data $\rightarrow$ fitted distributions (Phase 2) $\rightarrow$ SimPy event loop $\rightarrow$ plug-in policy $\pi(s_t)$ $\rightarrow$ performance metrics (Table~\ref{tab:metrics})]}
+    \vspace{3cm}}}
+\caption{High-level architecture of the discrete-event simulation platform.}
+\label{fig:sim_arch}
+\end{figure}
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Event Types and Simulation Logic}
+
+The simulation progresses through the following event types, processed in chronological order by the SimPy event queue:
+
+\begin{description}[leftmargin=3.5cm,style=nextline]
+    \item[\textsc{OrderArrival}]
+        Triggered at the placement time $a_o$ of each order $o$. The order is inserted into the pending-orders pool $\mathcal{O}_t$ and a \textsc{PreparationEnd} event is
+        scheduled at time $a_o + \tilde{p}_o$, where $\tilde{p}_o$ is drawn from the fitted preparation-time distribution for store category $r_o$.
+
+    \item[\textsc{PreparationEnd}]
+        Marks the moment when order $o$ is ready for pick-up (ready time $e_o$ is set). If $o$ has already been assigned to a courier, the courier is notified. If $o$ has not been assigned and is beyond a platform-defined wait threshold $\Delta_{\max}$, a \textsc{Cancellation} event is scheduled.
+
+    \item[\textsc{RollingHorizonTrigger}]
+        The policy decision point. Triggered every $\Delta_{\text{RH}}$ minutes (configurable; default 2~min, following \citealt{reyes2018meal}). The trigger collects the current state $s_t = (\mathcal{L}_t, \mathcal{O}_t, \mathcal{P}_t, \mathcal{H}_t)$, calls the plug-in policy function $\pi(s_t)$, and posts the resulting assignment $a_t$ to the
+        system.
+
+    \item[\textsc{AcceptanceRealisation}]
+        For each (courier, route) pair in $a_t$, a Bernoulli draw with probability
+        $p_{c,s}$~\eqref{eq:acceptance} determines whether the courier accepts. Accepted couriers transition to status \textit{picking-up}; rejected routes return the unassigned orders to $\mathcal{O}_{t+1}$.
+
+    \item[\textsc{PickUp}]
+        Courier $c$ arrives at store $\ell_{r_s}$ at time $\tau(\ell_c, \ell_{r_s})$ and collects the orders in route $s$. The courier then transitions to \textit{in-transit} and a \textsc{Delivery} event is scheduled.
+
+    \item[\textsc{Delivery}]
+        Courier $c$ completes drop-off for all orders in $s$. Performance metrics---delivery time, lateness, earnings, and the emissions increment~\eqref{eq:emissions}---are recorded. The courier transitions to \textit{idle}; the equity history $h_c(t)$ is updated accordingly.
+
+    \item[\textsc{Cancellation}]
+        An order that has not been assigned within the cancellation window is removed from the system. The event contributes to the undelivered-order count (coverage penalty).
+
+    \item[\textsc{CourierLogin} / \textsc{CourierLogout}]
+        Read from the instance file; update $\mathcal{L}_t$ (courier availability) and the equity history $\mathcal{H}_t$ (active-time accumulation starts/stops).
+\end{description}
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Policy Plug-In Interface}
+
+Assignment policies are injected into the simulator through a standardized Python interface:
+
+\begin{verbatim}
+def policy(state: SimState, params: dict) -> Assignment:
+    """
+    Parameters
+    ----------
+    state   : SimState  --  named tuple (L_t, O_t, P_t, H_t)
+    params  : dict      --  algorithm-specific hyper-parameters
+
+    Returns
+    -------
+    Assignment : list of (courier_id, route, pay_offer) tuples
+    """
+\end{verbatim}
+
+\noindent This interface ensures that all policy variants ---Corporate Baseline, BRKGA-Coverage, BRKGA-Fair, MIP-Fair, and Pay-BRKGA (Section~\ref{sec:phase4})--- are evaluated under \emph{identical} simulation conditions, with no changes to the simulator kernel. The interface also exposes the accumulated equity history $\mathcal{H}_t$ so that fairness-aware policies can use historical deficit information.
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Performance Metrics Collected}
+\label{sec:validation}
+
+At the end of each simulation run the platform computes and stores the metrics listed in Table~\ref{tab:metrics}. All metrics are defined at the instance level (aggregated over the full operation day) and at the replication level (averaged over 10 replications per policy per instance).
+
+\begin{table}[ht]
+\centering
+\caption{Performance metrics recorded by the simulation platform.}
+\label{tab:metrics}
+\small
+\begin{tabularx}{\textwidth}{p{3.2cm}p{5.5cm}p{4.2cm}}
+\toprule
+\textbf{Metric} & \textbf{Definition} & \textbf{Addresses} \\
+\midrule
+Coverage rate & Fraction of orders delivered / total orders placed & Efficiency (G1--G4) \\
+Click-to-door time & Mean time from order placement to drop-off (delivered orders) & Service quality \\
+Ready-to-door time & Mean time from order ready to drop-off & Last-mile efficiency \\
+Courier utilization & Active time / logged-in time per courier (mean across $C$) & Labor efficiency \\
+$F_{\text{Gini}}$ & Gini coefficient of hourly earnings (Eq.~\ref{eq:gini}) & Fairness (G1, G2) \\
+$F_{\text{Gini}}(\cdot\mid z), F_{\text{Gini}}(\cdot\mid v)$ & Zone- and vehicle-conditioned Gini (Section~\ref{sec:concept-dimensions}) & Fairness dimensions (obs.\ 1) \\
+$F_{\text{MaxMin}}$ & Minimum hourly earnings across couriers & Fairness (G2) \\
+$F_{\text{Orders}}$ & Gini coefficient of orders/active-hour & Balance (G1) \\
+$F_{\text{Deficit}}$ & Fraction of couriers below minimum wage $w^*$ & Fairness (G3) \\
+Acceptance rate & Fraction of assigned routes accepted & Behavioral (G4) \\
+Pay per order & Mean pay per delivered order & Economic (G3) \\
+Emissions proxy $E$ & Vehicle-weighted route distance (Eq.~\ref{eq:emissions}) & Sustainability (obs.\ 9) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Validation Protocol}
+
+The simulation platform is validated in two stages before it is used for policy comparison.
+
+\paragraph{Stage 1 --- Historical replay.}
+For each of the instances, the simulator is run with the \emph{Corporate Baseline} policy (the platform's historical greedy assignment rule) and with the historical seed (no stochastic demand; preparation times and acceptance draws are fixed to the observed values). The simulated coverage rate and mean click-to-door time are compared against the historical records.
+
+\paragraph{Stage 2 --- Stochastic consistency.}
+The simulator is run with stochastic demand, preparation, and acceptance models
+(Phases~1--2 of the methodology) using 30 replications on three pilot instances (one small, one medium, one large). The coefficient of variation (CV) of coverage rate between replications must be below 5\%, confirming that 10 replications are sufficient to estimate mean performance with adequate precision. If CV exceeds 5\%, the replication count increases to 20.
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Results}
+\label{ch:results}
+
+\begingroup\small\noindent\textit{This chapter is a structural placeholder. It cannot be populated with findings until the Phase~5 computational experiments (Section~\ref{sec:phase5}) are executed; its purpose here is to fix, in advance, exactly what will be reported and how, so that the experimental design is reviewed by the advisor and Committee before data collection is finalized. Each section states the question it answers, the metric(s) that answer it (Table~\ref{tab:metrics}), and the statistical test to be applied.}\endgroup
+
+\section{Experimental Setup}
+Recap of the 24 real-world instances (small/medium/large, Section~\ref{sec:problem}), the five-to-six policy variants (Section~\ref{sec:phase4}), and the replication protocol (10 replications per policy per instance, Section~\ref{sec:phase5}). \textit{[To be completed with the final instance-size table and any deviations from the plan.]}
+
+\section{G1 --- Efficiency--Fairness Pareto Curves}
+\label{sec:results-g1}
+Reports $F_{\text{Gini}}$, $F_{\text{MaxMin}}$, $F_{\text{Orders}}$, $F_{\text{Deficit}}$, and coverage rate as $\alpha$ is swept over $[0,1]$ (Eq.~\ref{eq:fair_const}), across all 24 instances. States which of the three calibration criteria of Section~\ref{sec:alpha} is adopted as the operating point, and why. \textit{[Pareto curve figures and Kruskal--Wallis/Dunn test results pending Phase~5.]}
+
+\section{G2 --- Static vs.\ Dynamic Fairness}
+Compares \emph{myopic-fair} and \emph{dynamic-fair} policies on end-of-day $F_{\text{Gini}}$ and $F_{\text{MaxMin}}$ across the large instances ($>$5,000 orders). \textit{[Pending Phase~5.]}
+
+\section{G3 --- Economic Integration Sensitivity}
+Reports the cost-of-fairness curve obtained by sweeping $\lambda$ in Eq.~\eqref{eq:cost_plus} on medium instances, together with $F_{\text{Deficit}}$ and coverage. \textit{[Pending Phase~5.]}
+
+\section{G4 --- Endogenous vs.\ Exogenous Acceptance}
+Reports the logistic acceptance model's fit statistics (AUC, calibration) and the forecast-error comparison between exogenous- and endogenous-acceptance policies on held-out instances (Section~\ref{sec:phase2}, risk register Table~\ref{tab:risks}). \textit{[Pending Phase~2/5.]}
+
+\section{Fairness Dimensions: Zone and Vehicle-Type Diagnostics}
+Reports $F_{\text{Gini}}(\mathbf{w} \mid z)$ and $F_{\text{Gini}}(\mathbf{w} \mid v)$ (Section~\ref{sec:concept-dimensions}) to audit whether the pooled fairness result masks zone- or vehicle-specific disparities. \textit{[Pending Phase~5.]}
+
+\section{Environmental Diagnostic}
+\label{sec:results-sustainability}
+Reports the emissions proxy $E$ (Eq.~\ref{eq:emissions}) alongside the efficiency--fairness Pareto curves of Section~\ref{sec:results-g1}, to determine whether the fairness-constrained policies raise or lower per-order emissions relative to the corporate baseline (Section~\ref{sec:concept-sustainability}). \textit{[Pending Phase~5.]}
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Discussion}
+\label{ch:discussion}
+
+\begingroup\small\noindent\textit{This chapter is a structural placeholder. It will interpret the results of Chapter~\ref{ch:results} for the audiences identified below, once those results exist.}\endgroup
+
+\section{Efficiency--Fairness--Equity Trade-offs Revisited}
+Revisits the conceptual trade-off argument of Section~\ref{sec:concept-tradeoffs} in light of the empirical Pareto curves: does the reassignment cost dominate the retention benefit, or vice versa, and under what instance characteristics (size, demand density, fleet composition)?
+
+\section{Managerial and Regulatory Implications}
+Translates the G1--G4 findings into guidance for (i)~platform operators deciding whether and how to adopt a fairness-constrained routing policy, and (ii)~labor regulators considering minimum-earnings or fairness-reporting requirements for gig platforms in Latin America (Specific Objective SO7).
+
+\section{Environmental Sustainability and Adoption Implications}
+Interprets the emissions-proxy results of Section~\ref{sec:results-sustainability} for an adoption-oriented audience, per the analysis proposed in Section~\ref{sec:concept-sustainability} and grounded in \citet{moradi2025systematic} and \citet{bajec2022strategic}.
+
+\section{Limitations}
+Anticipated limitations include: reliance on a single Latin American platform's data (external validity), the tractability boundary of MIP-Fair on large instances (Table~\ref{tab:risks}), the exclusion of courier tenure as a fairness dimension (Section~\ref{sec:concept-dimensions}), and the reliance on vehicle-type emission factors from secondary literature rather than direct measurement (Section~\ref{sec:concept-sustainability}).
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Conclusions and Policy Recommendations}
+\label{ch:conclusions}
+
+\begingroup\small\noindent\textit{This chapter is a structural placeholder, to be written last.}\endgroup
+
+\section{Summary of Contributions}
+Restates the dissertation's contributions: (i)~a conceptually grounded definition of courier fairness distinguishing it from balance and equity (Chapter~\ref{ch:concept}); (ii)~a CMDP formulation embedding a formally justified fairness constraint, calibrated $\alpha$, tariff-linked pay, and route balancing (Chapter~\ref{ch:formal}); (iii)~an endogenous-acceptance model; (iv)~an open, validated simulation platform; and (v)~an empirical efficiency--fairness--sustainability evaluation on 24 real-world instances.
+
+\section{Answers to the Research Question and Gaps}
+Directly answers the research question (Section~\ref{sec:research-question}) using the Chapter~\ref{ch:results} findings, gap by gap (G1--G4).
+
+\section{Policy Recommendations}
+Delivers the Specific Objective SO7 policy brief for delivery platforms and, where relevant, for labor-policy discussions in Colombia and Latin America more broadly.
+
+\section{Future Work}
+Candidate directions include: courier tenure as a fairness dimension (Section~\ref{sec:concept-dimensions}), multi-platform generalization, direct measurement of vehicle emission factors, and constrained reinforcement-learning alternatives to the metaheuristic family of Section~\ref{sec:phase4}.
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Work Plan}
+\label{ch:workplan}
+\label{sec:workplan}
+
+The doctoral work plan spans three years and is organized into six sequential phases that correspond to the methodology described in Chapter~\ref{ch:methodology}. Each phase produces one or more \emph{verifiable deliverables}, mapped to the four research gaps (G1--G4) and the seven specific objectives (SO1--SO7). Table~\ref{tab:workplan} presents the full plan in Gantt
+format, carried over from the approved proposal; the year--quarter labels are calendar-anchored below to the actual proposal-approval date rather than left abstract.
+
+\noindent\textbf{Calendar anchoring.} The proposal was approved on July 21, 2026. Year~1 is anchored to begin in Q3 2026 (August--October 2026): Y1-Q1~$\approx$~Aug--Oct~2026, Y1-Q2~$\approx$~Nov~2026--Jan~2027, Y1-Q3~$\approx$~Feb--Apr~2027, Y1-Q4~$\approx$~May--Jul~2027, Y2-Q1~$\approx$~Aug--Oct~2027, Y2-Q2~$\approx$~Nov~2027--Jan~2028, Y2-Q3~$\approx$~Feb--Apr~2028, Y2-Q4~$\approx$~May--Jul~2028, Y3-Q1~$\approx$~Aug--Oct~2028, Y3-Q2~$\approx$~Nov~2028--Jan~2029, Y3-Q3~$\approx$~Feb--Apr~2029, Y3-Q4~$\approx$~May--Jul~2029. This mapping should be confirmed with the advisor and adjusted for any elapsed time between proposal approval and the start of full-time dissertation work.
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Phase Timeline and Deliverables}
+
+\begin{table}[H]
+\centering
+\caption{Doctoral work plan: phases, activities, and deliverables across three years.}
+\label{tab:workplan}
+\scriptsize
+\begin{tabularx}{1\linewidth}{p{0.4cm}p{3.5cm}p{3.8cm}p{2cm}p{2cm}p{2cm}}
+\toprule
+ & \textbf{Activity} & \textbf{Deliverable} & \textbf{Gaps / SO} &
+ \textbf{Year--Quarter} & \textbf{Milestone} \\
+\midrule
+\multicolumn{6}{l}{\textbf{Year 1}} \\
+\midrule
+P0 & Conceptual grounding of fairness (Chapter~\ref{ch:concept}) &
+     Conceptual-framework chapter; dimension segmentation; constraint-vs-objective justification & Obs.\ 1,3,4; SO1 & Y1-Q1 & Chapter reviewed by advisor \\
+P1 & Database search; taxonomy coding; gap formalization &
+     Structured literature review report; extended taxonomy table (Table~\ref{tab:taxonomy}) \textbf{First article published} & G1--G4; SO2 & Y1-Q1 -- Y1-Q2 & Review submitted to advisor \\
+P2 & Instance pre-processing; distribution fitting; tariff and acceptance model estimation; cost-weight calibration &
+     Structured dataset with fitted parameters; descriptive baseline fairness report; calibrated $\alpha$ (Section~\ref{sec:alpha}) & G3--G4; SO3 & Y1-Q2 -- Y1-Q3 & Baseline $F_{\text{Gini}}$ documented \\
+P3 & SimPy simulator development; corporate baseline policy; historical validation &
+     Open simulator with documented API; validation report (Stage 1 \& 2) \textbf{Second article published}& SO4 & Y1-Q3 -- Y1-Q4 & Simulator passes 5\% tolerance test \\
+\midrule
+\multicolumn{6}{l}{\textbf{Year 2}} \\
+\midrule
+P4a & CMDP full implementation; BRKGA-Fair decoder design; MIP-Fair formulation; route-balancing constraint &
+      Algorithm code base (all policy variants) \textbf{Third/ Fourth article published} & G1--G3; SO5 & Y2-Q1 -- Y2-Q2 & Pilot experiments on 3 instances \\
+P4b & Pay-BRKGA bi-objective design; endogenous acceptance integration &
+      Extended algorithm code base; acceptance model integrated in CMDP & G3, G4; SO5 & Y2-Q2 -- Y2-Q3 & All policies pass unit tests \\
+P5a & Computational experiments: small and medium instances (19 instances $\times$ policies $\times$ 10 rep.) & Results database; efficiency--fairness--sustainability Pareto curves (small/medium) & G1--G4; SO6 & Y2-Q3 -- Y2-Q4 & Draft results section (small/medium) \\
+\midrule
+\multicolumn{6}{l}{\textbf{Year 3}} \\
+\midrule
+P5b & Computational experiments: large instances; statistical testing &
+      Full results database; Kruskal--Wallis + Dunn tests; Pareto curves (all sizes) & G1--G4; SO6 & Y3-Q1 -- Y3-Q2 & All experiments complete \\
+P6  & Policy implications; guidelines for platforms; discussion of labour regulation and environmental adoption incentives & Recommendations chapter; policy brief for practitioner audience &
+      SO7 & Y3-Q2 -- Y3-Q3 & Chapter reviewed by advisor \\
+W   & Thesis writing; journal paper submissions; dissertation defence preparation &
+      Dissertation manuscript; $\geq$2 journal submissions &
+      All & Y3-Q2 -- Y3-Q4 & Dissertation submitted \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Expected Academic Outputs}
+
+The thesis aims to produce the following academic outputs; it should be noted that some of these have already been published:
+
+\begin{enumerate}[label=\textbf{A\arabic*.}]
+    \item \textbf{Journal article (Published Q1 SJR -- Q2 JCR).} ``Comprehensive review of robotized freight packing'' \emph{Logistics}, \url{https://doi.org/10.3390/logistics8030069}.
+
+    \item \textbf{Journal article (Published Q2 SJR -- Q2 JCR).} ``A GRASP Algorithm for the Meal Delivery Routing Problem'' \emph{Lecture Notes in Computer Science, vol.\ 14754}, \url{https://doi.org/10.1007/978-3-031-62922-8_21}.
+
+    \item \textbf{Journal article (Publishing process Q2 SJR -- Q2 JCR).} ``A Biased Random-Key Genetic Algorithm with Rolling Horizon for the Meal Delivery Routing Problem''  \emph{Lecture Notes in Computer Science}.
+
+    \item \textbf{Journal article (Publishing process Q3 SJR -- Q3 JCR).} ``Analysis of the Impact of Stakeholders on Companies with Home Delivery Platforms Using Hybrid Optimization and Simulation Approaches'' \emph{Revista Universidad EAN}.
+
+    \item \textbf{Conference presentations.} Three presentations to date (June 2024, July 2024, June 2026) reporting preliminary simulation results; further presentations planned as Phase~4--5 results become available.
+
+    \item \textbf{Open dataset and simulator.} Anonymized version of the instances and the SimPy simulator code base, published on a public repository under an open license.
+
+    \item \textbf{Dissertation.} Full PhD thesis submitted to Universidad de los Andes, integrating the conceptual framework of Chapter~\ref{ch:concept} and all four research gaps and their resolutions.
+\end{enumerate}
+
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Risk Assessment and Mitigation}
+
+\begin{table}[ht]
+\centering
+\caption{Risk register and mitigation strategies.}
+\label{tab:risks}
+\small
+\begin{tabularx}{\textwidth}{p{3.5cm}p{1.8cm}p{1.5cm}p{7.2cm}}
+\toprule
+\textbf{Risk} & \textbf{Likelihood} & \textbf{Impact} & \textbf{Mitigation} \\
+\midrule
+    Data access disruption (platform withdraws historical data) & Low & High & All instances are already collected and stored locally. Phase 2 begins immediately to fit distributions before any access change. \\
+\midrule
+    Computational intractability of MIP-Fair on large instances & Medium & Medium &
+    MIP-Fair is only required for small/medium instances. Large instances use BRKGA-Fair exclusively. The algorithmic family is explicitly stated as non-final (Section~\ref{sec:phase4}). \\
+\midrule
+    Logistic acceptance model has low predictive power & Medium & Medium &
+    The acceptance model is pre-validated in Phase 2 (held-out test set). If the AUC is below 0.65, the model is replaced by a non-parametric alternative (random forest) or the exogenous-acceptance assumption is retained for G4. \\
+\midrule
+    Large-instance experiments exceed computational budget & Medium & Medium & Large instances will be run on the university HPC cluster. If cluster access is
+    unavailable, the replication count for large instances is reduced from 10 to 5, with explicit discussion of statistical power in the thesis. \\
+\midrule
+    Scope creep in algorithm development (Year 2) & Low & Low & The algorithmic family is fixed to the variants listed in Section~\ref{sec:phase4}. Additional algorithms may be discussed as
+    future work but will not be implemented unless Phase 4 pilot experiments reveal that all are computationally infeasible. \\
+\midrule
+    The three $\alpha$-calibration criteria (Section~\ref{sec:alpha}) disagree substantially & Medium & Low & Report all three; adopt Criterion~A (historical-baseline anchor) as the default operating point for the main results, since it requires the weakest external assumption, and present B and C as robustness checks. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\FloatBarrier
+
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{thebibliography}{99}
+
+\bibitem[Adams, 1963]{adams1963toward}
+Adams, J.~S. (1963).
+\newblock Toward an understanding of inequity.
+\newblock \textit{Journal of Abnormal and Social Psychology}, \textit{67}(5), 422--436.
+\newblock \url{https://doi.org/10.1037/h0040968}
+
+\bibitem[Ahamed et~al., 2021]{ahamed2020deep}
+Ahamed, T., Zou, B., Farazi, N.~P., \& Tulabandhula, T. (2021).
+\newblock Deep reinforcement learning for crowdsourced urban delivery: System states characterization, heuristics-guided action choice, and rule-interposing integration.
+\newblock \textit{Transportation Research Part B: Methodological}, \textit{152}, 227--257.
+\newblock \url{https://doi.org/10.1016/j.trb.2021.08.015}
+
+\bibitem[Arora et~al., 2023]{arora2023ocd}
+Arora, A., Vats, P., Chopra, G., Kaur, R., Singh, D., \& Chaudhary, M. (2023).
+\newblock {OCD}: On-demand ordering food through online crowdsourcing.
+\newblock \textit{Lecture Notes in Networks and Systems}, \textit{579}, 539--548.
+\newblock \url{https://doi.org/10.1007/978-981-19-7663-6_51}
+
+\bibitem[Auad et~al., 2023]{auad2023courier}
+Auad, R., Erera, A., \& Savelsbergh, M. (2023).
+\newblock Courier satisfaction in rapid delivery systems using dynamic operating regions.
+\newblock \textit{Omega}, \textit{121}, 102917.
+\newblock \url{https://doi.org/10.1016/j.omega.2023.102917}
+
+\bibitem[Bajec \& Tuljak-Suban, 2022]{bajec2022strategic}
+Bajec, P., \& Tuljak-Suban, D. (2022).
+\newblock A strategic approach for promoting sustainable crowdshipping in last-mile deliveries.
+\newblock \textit{Sustainability}, \textit{14}(20), 13508.
+\newblock \url{https://doi.org/10.3390/su142013508}
+
+\bibitem[Ba\~{n}os et~al., 2013]{banos2013hybrid}
+Ba\~{n}os, R., Ortega, J., Gil, C., M\'{a}rquez, A.~L., \& De~Toro, F. (2013).
+\newblock A hybrid meta-heuristic for multi-objective vehicle routing problems with time windows.
+\newblock \textit{Computers \& Industrial Engineering}, \textit{65}(2), 286--296.
+\newblock \url{https://doi.org/10.1016/j.cie.2013.01.007}
+
+\bibitem[Bejarano Dur\'{a}n, 2021]{bejarano2021trabajo}
+Bejarano Dur\'{a}n, B.~F. (2021).
+\newblock El trabajo de los repartidores a domicilio y las plataformas digitales en Colombia: caso de Rappi y iFood.
+\newblock Research article (undergraduate law thesis), Universidad Cat\'{o}lica de Colombia.
+
+\bibitem[Berg et~al., 2019]{Berg2019}
+Berg, J., Furrer, M., Harmon, E., Rani, U., \& Silberman, M.~S. (2019).
+\newblock \textit{Las plataformas digitales y el futuro del trabajo}.
+\newblock Organizaci\'{o}n Internacional del Trabajo.
+\newblock \url{https://www.ilo.org/publications/las-plataformas-digitales-y-el-futuro-del-trabajo}
+
+\bibitem[Bi et~al., 2023]{bi2023meal}
+Bi, H., Zhu, X., Lu, F., \& Huang, M. (2023).
+\newblock The meal delivery routing problem in E-commerce platforms under the shared logistics mode.
+\newblock \textit{Journal of Theoretical and Applied Electronic Commerce Research},
+  \textit{18}(4), 1799--1819.
+\newblock \url{https://doi.org/10.3390/jtaer18040091}
+
+\bibitem[Bozanta et~al., 2022]{bozanta2022courier}
+Bozanta, A., Cevik, M., Kavaklioglu, C., Kavuk, E.~M., Tosun~Misirli, A., Sonuc, S.~B., Duranel, A., \& Basar, A. (2022).
+\newblock Courier routing and assignment for food delivery service using reinforcement learning.
+\newblock \textit{Computers \& Industrial Engineering}, \textit{164}, 107871.
+\newblock \url{https://doi.org/10.1016/j.cie.2021.107871}
+
+\bibitem[Ca\~{n}ada et~al., 2023]{canada2023}
+Ca\~{n}ada, E., Izcara, C., \& Zapata~Campos, M.~J. (2023).
+\newblock Putting fairness into the gig economy: Delivery cooperatives as alternatives to corporate platforms.
+\newblock \textit{Societies}, \textit{13}(3), 68.
+\newblock \url{https://doi.org/10.3390/soc13030068}
+
+\bibitem[Corbett-Davies et~al., 2023]{corbettdavies2023measure}
+Corbett-Davies, S., Gaebler, J.~D., Nilforoshan, H., Shroff, R., \& Goel, S. (2023).
+\newblock The measure and mismeasure of fairness: A critical review of fair machine learning.
+\newblock \textit{Journal of Machine Learning Research}, \textit{24}, 1--117.
+\newblock \url{https://arxiv.org/abs/1808.00023}
+
+\bibitem[Dusadeerungsikul et~al., 2023]{dusadeerungsikul2023multi}
+Dusadeerungsikul, P.~O., Wisaprom, N., Sae-Ngow, T., \& Hanvivatpong, P.
+  (2023).
+\newblock A multi-objective model for meal delivery problem in Thailand.
+\newblock \textit{Advances in Transdisciplinary Engineering}, \textit{35}, 191--198.
+\newblock \url{https://doi.org/10.3233/ATDE230044}
+
+\bibitem[Giraldo-Herrera \& \'{A}lvarez, 2024]{giraldo2024grasp}
+Giraldo-Herrera, D., \& \'{A}lvarez, D.
+\newblock A GRASP Algorithm for the Meal Delivery Routing Problem.
+\newblock In \emph{Metaheuristics International Conference} \textbf{2024}, 306--320.
+
+\bibitem[Haferkamp et~al., 2023]{haferkamp2022heatmap}
+Haferkamp, J., Ulmer, M.~W., \& Ehmke, J.~F. (2023).
+\newblock Heatmap-based decision support for repositioning in ride-sharing systems.
+\newblock \textit{Transportation Science}, \textit{58}(1), 110--130.
+\newblock \url{https://doi.org/10.1287/trsc.2023.1202}
+
+\bibitem[Jozefowiez et~al., 2009]{jozefowiez2009evolutionary}
+Jozefowiez, N., Semet, F., \& Talbi, E.-G. (2009).
+\newblock An evolutionary algorithm for the vehicle routing problem with route balancing.
+\newblock \textit{European Journal of Operational Research}, \textit{195}(3), 761--769.
+\newblock \url{https://doi.org/10.1016/j.ejor.2007.06.065}
+
+\bibitem[Lesmana et~al., 2019]{lesmana2019balancing}
+Lesmana, N.~S., Zhang, X., \& Bei, X. (2019).
+\newblock Balancing efficiency and fairness in on-demand ridesourcing.
+\newblock \textit{Advances in Neural Information Processing Systems}, \textit{32}, 5310--5320.
+\newblock \url{https://proceedings.neurips.cc/paper/2019/hash/3070e6addcd702cb58de5d7897bfdae1-Abstract.html}
+
+\bibitem[Liao et~al., 2020]{liao2020multi}
+Liao, W., Zhang, L., \& Wei, Z. (2020).
+\newblock Multi-objective green meal delivery routing problem based on a two-stage solution strategy.
+\newblock \textit{Journal of Cleaner Production}, \textit{258}, 120627.
+\newblock \url{https://doi.org/10.1016/j.jclepro.2020.120627}
+
+\bibitem[Mart\'{i}nez-Sykora et~al., 2024]{martinez2024exploring}
+Mart\'{i}nez-Sykora, A., McLeod, F., Cherrett, T., \& Friday, A. (2024).
+\newblock Exploring fairness in food delivery routing and scheduling problems.
+\newblock \textit{Expert Systems with Applications}, \textit{240}, 122488.
+\newblock \url{https://doi.org/10.1016/j.eswa.2023.122488}
+
+\bibitem[Moradi et~al., 2025]{moradi2025systematic}
+Moradi, N., Mafakheri, F., \& Wang, C. (2025).
+\newblock A systematic review of sustainable ground-based last-mile delivery of parcels: Insights from operations research.
+\newblock \textit{Vehicles}, \textit{7}(4), 121.
+\newblock \url{https://doi.org/10.3390/vehicles7040121}
+
+\bibitem[Neria et~al., 2025]{neria2024restaurant}
+Neria, G., Hildebrandt, F.~D., Tzur, M., \& Ulmer, M.~W. (2025).
+\newblock The restaurant meal delivery problem with ghost kitchens.
+\newblock \textit{Transportation Science}, \textit{59}(2), 433--450.
+\newblock \url{https://doi.org/10.1287/trsc.2024.0510}
+
+\bibitem[Pantoja-Benavides et~al., 2024]{pantoja2024comprehensive}
+Pantoja-Benavides, G., Giraldo, D., Montes, A., Garc\'{i}a, A., Rodr\'{i}guez, C., Mar\'{i}n, C., \& \'{A}lvarez-Mart\'{i}nez, D. (2024).
+\newblock Comprehensive review of robotized freight packing.
+\newblock \textit{Logistics}, \textit{8}(3), 69.
+\newblock \url{https://doi.org/10.3390/logistics8030069}
+
+\bibitem[Pillac et~al., 2013]{pillac2013review}
+Pillac, V., Gendreau, M., Gu\'{e}ret, C., \& Medaglia, A.~L. (2013).
+\newblock A review of dynamic vehicle routing problems.
+\newblock \textit{European Journal of Operational Research}, \textit{225}(1), 1--11.
+\newblock \url{https://doi.org/10.1016/j.ejor.2012.08.015}
+
+\bibitem[Quintero Rojas, 2020]{quintero2020computational}
+Quintero Rojas, S. (2020).
+\newblock \textit{Computational framework for solving the meal delivery routing problem}.
+\newblock Department of Industrial Engineering, Universidad de los Andes, Bogot\'{a}, Colombia.
+
+\bibitem[Rawls, 1971]{rawls1971theory}
+Rawls, J. (1971).
+\newblock \textit{A Theory of Justice}.
+\newblock Cambridge, MA: Belknap Press of Harvard University Press.
+
+\bibitem[Reyes et~al., 2018]{reyes2018meal}
+Reyes, D., Erera, A., Savelsbergh, M., Sahasrabudhe, S., \& O'Neil, R. (2018).
+\newblock \textit{The meal delivery routing problem}.
+\newblock Optimization Online.
+\newblock \url{http://www.optimization-online.org/DB_HTML/2018/04/6571.html}
+
+\bibitem[Simoni \& Winkenbach, 2023]{simoni2023crowdsourced}
+Simoni, M.~D., \& Winkenbach, M. (2023).
+\newblock Crowdsourced on-demand food delivery: An order batching and assignment algorithm.
+\newblock \textit{Transportation Research Part C: Emerging Technologies}, \textit{149}, 104055.
+\newblock \url{https://doi.org/10.1016/j.trc.2023.104055}
+
+\bibitem[{Team SimPy}, 2023]{simpy2023}
+{Team SimPy}. (2023).
+\newblock \textit{{SimPy}: Discrete-event simulation for {Python}} [Software].
+\newblock \url{https://simpy.readthedocs.io}
+
+\bibitem[Sobhanan et~al., 2024]{sobhanan2024equity}
+Sobhanan, A., Charkhgard, H., \& Dayarian, I. (2024).
+\newblock \textit{Equity-driven workload allocation for crowdsourced last-mile delivery} [Preprint].
+\newblock SSRN.
+\newblock \url{https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4909090}
+
+\bibitem[Steever et~al., 2019]{steever2019dynamic}
+Steever, Z., Karwan, M.~H., \& Murray, C.~C. (2019).
+\newblock Dynamic courier routing for a food delivery service.
+\newblock \textit{Computers \& Operations Research}, \textit{107}, 173--188.
+\newblock \url{https://doi.org/10.1016/j.cor.2019.03.008}
+
+\bibitem[Thipparthy et~al., 2024]{thipparthy2024optimizing}
+Thipparthy, K.~R., Khalaf, M.~I., Yogi, K.~S., Alghayadh, F.~Y., Yusupov, A., Maguluri, L.~P., \& Ofori-Amanfo, P. (2024).
+\newblock Optimizing delivery routes for sustainable food delivery for multiple food items per order.
+\newblock \textit{Discover Sustainability}, \textit{5}(1).
+\newblock \url{https://doi.org/10.1007/s43621-024-00326-y}
+
+\bibitem[Ulmer et~al., 2021]{ulmer2021restaurant}
+Ulmer, M.~W., Thomas, B.~W., Campbell, A.~M., \& Woyak, N. (2021).
+\newblock The restaurant meal delivery problem: Dynamic pickup and delivery with deadlines and random ready times.
+\newblock \textit{Transportation Science}, \textit{55}(1), 75--100.
+\newblock \url{https://doi.org/10.1287/trsc.2020.1000}
+
+\bibitem[Wen et~al., 2010]{wen2010dynamic}
+Wen, M., Cordeau, J.-F., Laporte, G., \& Larsen, J. (2010).
+\newblock The dynamic multi-period vehicle routing problem.
+\newblock \textit{Computers \& Operations Research}, \textit{37}(9), 1615--1623.
+\newblock \url{https://doi.org/10.1016/j.cor.2009.11.017}
+
+\bibitem[Xie \& Wu, 2024]{xie2024genetic}
+Xie, Y., \& Wu, Z. (2024).
+\newblock A genetic algorithm for meal delivery problem considering rider's wage balance.
+\newblock \textit{2024 36th Chinese Control and Decision Conference (CCDC)},
+  4873--4879.
+\newblock \url{https://doi.org/10.1109/ccdc62350.2024.10588199}
+
+\bibitem[Xue et~al., 2021]{xue2021optimization}
+Xue, G., Wang, Z., \& Wang, G. (2021).
+\newblock Optimization of rider scheduling for a food delivery service in {O2O} business.
+\newblock \textit{Journal of Advanced Transportation}, \textit{2021}, 5515909.
+\newblock \url{https://doi.org/10.1155/2021/5515909}
+
+\bibitem[Y{\i}ld{\i}z \& Savelsbergh, 2019]{yildiz2019provably}
+Y{\i}ld{\i}z, B., \& Savelsbergh, M.~W.~P. (2019).
+\newblock Provably high-quality solutions for the meal delivery routing problem.
+\newblock \textit{Transportation Science}, \textit{53}(5), 1372--1388.
+\newblock \url{https://doi.org/10.1287/trsc.2018.0887}
+
+\end{thebibliography}
+
+\end{document}
+
