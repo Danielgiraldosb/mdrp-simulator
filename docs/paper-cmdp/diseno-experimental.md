@@ -224,8 +224,12 @@ el pago/km sigue por encima del umbral; (v) F_Deficit 0,98–1,00 en todos (cohe
 SMMLV de la encuesta). **Regla de radio:** el método más lento es el greedy (34,8 min en Bogotá), por un
 defecto de implementación (H7, recorre los 2.650 repartidores por pedido) y no por el tamaño del problema;
 MIP-Fair tarda 15,4 min, bajo el límite de 20. Decisión: se arregla H7 (rejilla espacial) antes de X1 y
-**el radio se mantiene en 3 km**. Pendiente: repetir las seis corridas greedy con circuidad 1,3 (D2) para
-confirmar la regla de α.
+**el radio se mantiene en 3 km**. Confirmación con circuidad 1,3 (D2, seis corridas greedy,
+`output/paper/pilot_c13.csv`): cobertura 0,63–0,78 (unos 4 pts menos que con 1,0, como corresponde a
+distancias 30 % mayores), Gini corporativo por ciudad 0,457 / 0,418 / 0,326 / 0,539 / 0,321 / 0,392, media
+**0,409**: la malla de α {0,20 … 0,40; 1,00} queda confirmada. Greedy Bogotá día completo con H7 resuelto:
+10,7 min (antes 34,8). X1 lanzado el 2026-10-21 a las 00:05 en la máquina del autor (4 procesos, orden por
+semilla, reanudable; `output/paper/main.csv`).
 
 ## 9. Presupuesto de cómputo y plan de corridas
 

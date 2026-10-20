@@ -296,3 +296,7 @@ jerárquico empeora el Gini de fin de día; F_Deficit ≈ 0,98–1,00. El greedy
 en Bogotá) porque cada repartidor evaluaba todos los pedidos pendientes: resuelto (H7, 116 → 26 s en la ventana de Bogotá, resultado idéntico); el
 radio de 3 km se mantiene (MIP-Fair 15 min < 20). Estimación de X1 con estos tiempos: 308 h de CPU (≈ 235 h
 con el greedy arreglado).
+
+Confirmación con circuidad 1,3 (seis corridas greedy): Gini corporativo medio 0,409, malla de α confirmada;
+cobertura unos 4 pts menor que con 1,0; greedy Bogotá 10,7 min con H7 resuelto. X1 lanzado el 21 oct a las
+00:05 (4 procesos, orden por semilla, reanudable).
