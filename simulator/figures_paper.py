@@ -146,7 +146,7 @@ def _frontier_panel(ax, pts: pd.DataFrame, ycol: str, ylabel: str, title: str) -
         if m in pts.index:
             r = pts.loc[m]
             ax.plot([r['F_Gini']], [r[ycol]], mk, c=col, ms=6, label=lab, ls='none')
-    ax.set_xlabel('end-of-day Gini coefficient of hourly earnings (eligible couriers)')
+    ax.set_xlabel('end-of-day Gini of hourly earnings, eligible couriers')
     ax.set_ylabel(ylabel)
     ax.set_title(title, fontsize=9)
 
