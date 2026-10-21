@@ -352,4 +352,16 @@ propuestos 35–46 %. A2: los tres métodos leen la historia como pago por hora 
 los conectados a la ronda; el déficit solo separa "nunca entregó" de "entregó" y compite con la cobertura.
 Decisión E10: variantes de segunda generación (historia = pago por hora conectada hasta t, población elegible,
 ocioso con déficit máximo, MIP-Fair con holgura ε de E8), desarrolladas en un worktree mientras corre X1 y
-evaluadas en X3. Slide 18: estado al 21 oct 17:00.
+evaluadas en X3. Slide 18: estado al 21 oct 17:15.
+
+### E10 piloteada; E10b es la palanca; el greedy ya lee H_t (2026-10-21, 17:15; slide 16)
+
+Segunda generación implementada en el worktree `C:/MDRP-dev` (84 tests). Piloto en dos zonas de Pereira:
+la base de exposición y la población elegible solas mueven el Gini de elegibles ≤ 0,03, porque los
+elegibles ociosos nunca entran al conjunto de candidatos (k más cercanos). E10b, prefiltro consciente del
+déficit (cada ruta prueba además a los k_d ociosos con mayor déficit, los más cercanos a igual déficit):
+MIP-Fair 0,58 → 0,45–0,49 y BRKGA-Fair 0,61 → 0,50–0,52 sin perder cobertura, activando al 83–91 % de los
+elegibles; ε (E8) no mueve; Pay-BRKGA no llega al ocioso; brecha restante 0,15–0,20 con el greedy (0,28).
+Hallazgo: el greedy del simulador ordena a los repartidores libres por pedidos entregados (el menos servido
+elige primero): ya lee H_t de la forma más barata; el paper lo describía como "pedido al más cercano" y se
+corrigió. Grilla gen2 de X3: 8 configuraciones × 24 × 2 × 5 = 1.920 corridas.

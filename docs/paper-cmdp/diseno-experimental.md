@@ -490,3 +490,59 @@ Hipótesis a contrastar en X3: (H1) con exposición en vez de productividad, BRK
 ε > 0 cierran una parte sustancial de la brecha 0,30–0,54 a un costo de cobertura menor que el 1,0–1,1 pts
 que paga el greedy; (H2) ε mueve a MIP-Fair-X donde α no lo hacía; (H3) Pay-BRKGA-X sigue sin alcanzar a los
 ociosos, porque el pago no llega a quien no recibe oferta.
+
+### 12.8 E10 implementada y piloteada; E10b (prefiltro por déficit) es la palanca; el greedy ya lee H_t (2026-10-21, 17:15)
+
+**Implementación** (worktree `C:/MDRP-dev`, rama `e10-variants`, commits 73b8e81 y siguientes; master no se toca
+mientras corre X1): `fair_history.py` (base `exposure` = pago / horas conectadas hasta t con piso de 30 min;
+población `eligible` = turno declarado ≥ 60 min, ocioso con cero), leído por BRKGA-Fair, Pay-BRKGA y MIP-Fair;
+`mipfair_cov_slack` (E8); el estado lleva `C_all`; `batch_paper.py --experiment gen2`; 84 tests en verde (7
+nuevos en `tests/test_fair_history.py`). Los valores por defecto reproducen la primera generación.
+
+**Piloto 1 (Instancia_4 y 10, Pereira, semilla 1, ambos regímenes).** La base de exposición y la población
+elegible solas (`_x`) mueven el Gini de elegibles ≤ 0,03: BRKGA-Fair 0,605 → 0,577 (manual), MIP-Fair 0,582 → 0,586.
+Diagnóstico por ronda (`gen2_diag.py`): en la ronda mediana hay 33 elegibles ociosos sin ingreso y **ninguno es
+candidato** de ninguna ruta; solo el 12–16 % de ellos entra alguna vez al conjunto de candidatos. Los métodos
+centrados en el pedido no alcanzan a los ociosos porque el prefiltro (k más cercanos a la tienda) nunca los
+incluye; la historia no puede actuar sobre quien no es candidato.
+
+**E10b (tomada): prefiltro consciente del déficit.** `fair_cand_deficit_k`: además de los k más cercanos, cada
+ruta prueba a los k_d repartidores ociosos con mayor déficit y, a igual déficit (todo ocioso sin ingreso tiene
+déficit 1), los más cercanos a la tienda de esa ruta. (La primera versión desempataba por id y los mismos ocho
+lejanos bloqueaban los cupos ronda tras ronda.) Piloto 2, Gini de elegibles, media de las dos zonas:
+
+| configuración | manual: Gini elig. | activos/elig. | cobertura | CPU (s) | auto: Gini elig. | activos/elig. |
+|---|---|---|---|---|---|---|
+| greedy | **0,279** | **0,97** | 0,721 | 5 | **0,282** | **0,98** |
+| brkga_fair_w20 (1.ª gen.) | 0,605 | 0,68 | 0,738 | 12 | 0,585 | 0,69 |
+| brkga_fair_w20_x | 0,577 | 0,70 | 0,734 | 14 | 0,588 | 0,71 |
+| brkga_fair_w20_xk (k_d = 8) | 0,547 | 0,73 | 0,732 | 17 | 0,556 | 0,73 |
+| brkga_fair_w40_xk25 | 0,522 | 0,76 | 0,729 | 21 | 0,504 | 0,78 |
+| mipfair_a030 (1.ª gen.) | 0,582 | 0,68 | 0,728 | 13 | 0,595 | 0,68 |
+| mipfair_a030_x_e000 | 0,586 | 0,67 | 0,728 | 12 | 0,565 | 0,72 |
+| mipfair_a030_xk_e000 (k_d = 8) | 0,492 | 0,83 | 0,736 | 31 | 0,447 | 0,91 |
+| mipfair_a030_xk_e005 | 0,483 | 0,83 | 0,742 | 31 | 0,447 | 0,91 |
+| mipfair_a030_xk25_e000 | 0,450 | 0,83 | 0,731 | 79 | 0,417 | 0,87 |
+| paybrkga_l05_xk | 0,570 | 0,69 | 0,702 | 26 | 0,548 | 0,72 |
+
+Lecturas: (i) el prefiltro es la palanca: MIP-Fair pasa de 0,58 a 0,45–0,49 sin perder cobertura (incluso
+gana) y activa al 83–91 % de los elegibles; BRKGA-Fair de 0,61 a 0,50–0,52; (ii) la holgura ε de E8 apenas
+mueve (el exceso de Gini de la ronda casi no cambia con una asignación); (iii) Pay-BRKGA sigue sin llegar a
+los ociosos (H3 confirmada: el pago no alcanza a quien no recibe oferta); (iv) queda una brecha de 0,15–0,20
+con el greedy, que activa al 97 %; (v) CPU: k_d = 8 duplica el tiempo de MIP-Fair y k_d = 25 lo multiplica por
+seis (en Bogotá puede superar la hora; X3 con timeout de 150 min).
+
+**El greedy ya lee H_t.** `GreedyPolicy.assign` recorre a los repartidores libres en orden creciente de
+`history.orders_delivered` ("el menos servido elige primero") y cada uno toma la mejor ruta factible en su
+tienda más cercana. No es "pedidos por urgencia al repartidor más cercano" como decía el paper (corregido,
+commit 1b41ac6): es una regla centrada en el repartidor con prioridad al rezagado, es decir, la lectura más
+barata posible de H_t (un entero por repartidor). Esto refuerza el mensaje: la historia importa, y la forma de
+leerla (a quién se le ofrece trabajo) importa más que la sofisticación del término de equidad. Queda para el
+director confirmar si la práctica de la plataforma es centrada en el repartidor (todo en el paper).
+
+**Grilla gen2 de X3 (fijada).** brkga_fair_w20_x, brkga_fair_w20_xk, brkga_fair_w40_xk25, paybrkga_l05_xk,
+mipfair_a030_x_e000, mipfair_a030_xk_e000, mipfair_a030_xk_e005, mipfair_a030_xk25_e000: 8 × 24 × 2 regímenes
+× 5 semillas = 1.920 corridas; más `supp` (7 ablaciones + 2 de holgura E8, manual, 5 semillas = 1.080).
+X3 ≈ 3.000 corridas, ≈ 12–15 h con 12 procesos. Se lanza al terminar X1 (fusión de `e10-variants` en master
+primero). Hipótesis para X3: H1' el prefiltro cierra más de la mitad de la brecha 0,30–0,54 en las 24 zonas a
+costo de cobertura nulo o negativo; H2 refutada en el piloto (ε no mueve); H3 confirmada en el piloto.

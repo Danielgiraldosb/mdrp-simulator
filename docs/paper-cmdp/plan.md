@@ -276,3 +276,10 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   Decisión E10: variantes de segunda generación (exposición, población elegible, ε de E8) en el worktree
   `C:/MDRP-dev` mientras corre X1; X3 crece a ≈ 2.040 corridas; α* para X2 se decide tras X3. Detalle en
   `diseno-experimental.md` §12.7.
+- **2026-10-21, 17:15 (E10 piloteada).** Segunda generación implementada en el worktree `C:/MDRP-dev` (rama
+  `e10-variants`, 84 tests). Piloto en dos zonas: la base de exposición sola no mueve el Gini de elegibles; el
+  prefiltro consciente del déficit (E10b, `fair_cand_deficit_k`) sí: MIP-Fair 0,58 → 0,45–0,49 y BRKGA-Fair
+  0,61 → 0,50–0,52 sin perder cobertura; brecha restante 0,15–0,20 con el greedy. Hallazgo: el greedy del
+  simulador ya ordena por pedidos entregados (el menos servido elige primero); el paper lo describía mal y
+  se corrigió (1b41ac6). Grilla gen2 de X3 fijada (1.920 corridas) + supp (1.080). Detalle en
+  `diseno-experimental.md` §12.8. X1 en 4.177/8.640 a las 17:03; fin estimado 22 oct ≈ 10–11 h.
