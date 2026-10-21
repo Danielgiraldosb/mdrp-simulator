@@ -268,3 +268,11 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   reporte pasan al Gini sobre elegibles; variantes de segunda generación (déficit sobre elegibles ociosos,
   MIP-Fair con holgura E8) tras X1, evaluadas en X3. `analyze_couriers.py` nuevo; F3 y F4 preliminares
   generadas (`figures_paper.py --fig f3f4`). Detalle en `diseno-experimental.md` §12.6.
+- **2026-10-21, 16:30 (E9 ratificada).** El director ratificó E9. Paper reescrito sobre la población elegible
+  (resumen, introducción, descripción, métricas con C^e y F_Gini^act, T3 con 10 columnas, tabla de alcances,
+  T5 de cumplimiento con α 0,30–0,50, frentes F3/F4, discusión y conclusión), con las semillas 1–4 de X1
+  (3.456 celdas). Resultado central confirmado: greedy 0,30, todos los demás 0,50–0,57. A2: las políticas de
+  primera generación leen pago por hora *activa* (productividad), no conectada; explica que α sea inerte.
+  Decisión E10: variantes de segunda generación (exposición, población elegible, ε de E8) en el worktree
+  `C:/MDRP-dev` mientras corre X1; X3 crece a ≈ 2.040 corridas; α* para X2 se decide tras X3. Detalle en
+  `diseno-experimental.md` §12.7.

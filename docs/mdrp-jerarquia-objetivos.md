@@ -339,3 +339,17 @@ cruzan cero. Activos entre elegibles: greedy 97 %, los demás 69–77 %; p25 del
 ≤ 150. Los métodos bajan el estadístico restringido excluyendo repartidores. Decisión provisional E9 (cambia
 el modelo; ratificar): la restricción y el reporte pasan al Gini sobre elegibles con ceros; variantes de
 segunda generación de los tres métodos tras X1, evaluadas en X3. Detalle en `diseno-experimental.md` §12.6.
+
+### E9 ratificada y segunda pasada con 4 semillas (2026-10-21, 16:30; slide 16 reescrita)
+
+El director ratificó E9: el estadístico de la restricción y del reporte es el Gini del pago por hora
+conectada sobre los repartidores elegibles (conectados ≥ 1 h, ociosos con cero); el Gini sobre activos queda
+como vista secundaria. Con las semillas 1–4 (3.456 celdas) la lectura se confirma: greedy 0,301 (manual) y
+0,296 (auto), todos los demás 0,50–0,57; activos entre elegibles 97 % frente a 70–79 %; p25 481 frente a
+85–167 COP/h; se repite en las seis ciudades. Cumplimiento sobre el Gini de elegibles: greedy cumple α = 0,30
+la mitad de los días, 0,35 el 91 % y 0,40 el 97 %; ningún otro método cumple α ≤ 0,40 ningún día; a 0,50 los
+propuestos 35–46 %. A2: los tres métodos leen la historia como pago por hora *activa* (productividad) sobre
+los conectados a la ronda; el déficit solo separa "nunca entregó" de "entregó" y compite con la cobertura.
+Decisión E10: variantes de segunda generación (historia = pago por hora conectada hasta t, población elegible,
+ocioso con déficit máximo, MIP-Fair con holgura ε de E8), desarrolladas en un worktree mientras corre X1 y
+evaluadas en X3. Slide 18: estado al 21 oct 17:00.

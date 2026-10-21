@@ -146,15 +146,24 @@ def _frontier_panel(ax, pts: pd.DataFrame, ycol: str, ylabel: str, title: str) -
         if m in pts.index:
             r = pts.loc[m]
             ax.plot([r['F_Gini']], [r[ycol]], mk, c=col, ms=6, label=lab, ls='none')
-    ax.set_xlabel('end-of-day Gini coefficient of hourly earnings')
+    ax.set_xlabel('end-of-day Gini coefficient of hourly earnings (eligible couriers)')
     ax.set_ylabel(ylabel)
     ax.set_title(title, fontsize=9)
 
 
-def fig_frontiers(out_dir: str, main_csv: str) -> None:
-    """F3 (coverage) and F4 (lateness) against the end-of-day Gini, one panel per regime."""
+def fig_frontiers(out_dir: str, main_csv: str, couriers_table: str = None, complete_seeds: bool = True) -> None:
+    """F3 (coverage) and F4 (lateness) against the end-of-day Gini, one panel per regime.
+    With couriers_table (analyze_couriers.py --out) the x-axis is the Gini over the ELIGIBLE couriers
+    (decision E9, 2026-10-21); without it, the active-courier F_Gini of metrics.py."""
     plt = _plt()
     df = pd.read_csv(main_csv)
+    if couriers_table:
+        ct = pd.read_csv(couriers_table)[['run_id', 'gini_elig_hourly']]
+        df = df.merge(ct, on='run_id', how='inner')
+        df['F_Gini'] = df['gini_elig_hourly']
+    if complete_seeds:
+        cnt = df.groupby('seed')['run_id'].count()
+        df = df[df['seed'].isin(cnt[cnt == cnt.max()].index)]
     inst = df.groupby(['regime', 'method', 'instance'])[['F_Gini', 'coverage_rate', 'overage_mean']].mean().reset_index()
     pts = inst.groupby(['regime', 'method'])[['F_Gini', 'coverage_rate', 'overage_mean']].mean().reset_index()
     par = df.groupby('method')[['alpha', 'weight', 'lambda_pay']].first().reset_index()
@@ -175,13 +184,15 @@ def main() -> None:
     ap.add_argument('--fig', nargs='+', default=['f1', 'f2'], choices=['f1', 'f2', 'f3f4'])
     ap.add_argument('--out', default=os.path.normpath(os.path.join(THIS_DIR, '..', 'docs', 'paper-cmdp', 'paper', 'figures')))
     ap.add_argument('--main-csv', default=os.path.join(THIS_DIR, 'output', 'paper', 'main.csv'))
+    ap.add_argument('--couriers-table', default=os.path.join(THIS_DIR, 'output', 'paper', 'main_couriers.csv'),
+                    help='analyze_couriers.py --out table; the x-axis of F3/F4 is then the eligible-courier Gini (E9)')
     args = ap.parse_args()
     if 'f1' in args.fig:
         fig_f1(args.out)
     if 'f2' in args.fig:
         fig_f2(args.out)
     if 'f3f4' in args.fig:
-        fig_frontiers(args.out, args.main_csv)
+        fig_frontiers(args.out, args.main_csv, args.couriers_table if os.path.exists(args.couriers_table) else None)
 
 
 if __name__ == '__main__':

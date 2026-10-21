@@ -2,8 +2,11 @@
 analyze_couriers.py -- analysis A1: alternative scopes of the end-of-day Gini coefficient, computed
 ex post from the per-courier tables written by batch_paper.py (output/paper/couriers/<run_id>.csv).
 
-The reported F_Gini is the Gini of earnings per connected hour over the couriers with at least one
-delivery ("active"). Policies can lower it by concentrating work on fewer couriers, so we also report:
+metrics.py's F_Gini is the Gini of earnings per connected hour over the couriers with at least one
+delivery ("active"). Policies can lower it by concentrating work on fewer couriers. Decision E9 (ratified
+2026-10-21): the statistic of the paper is gini_elig_hourly, over the ELIGIBLE couriers (connected
+>= MIN_SHIFT_H hours, idle ones at zero); analyze_paper.py --gini elig and figures_paper.py read it from
+the --out table. Also reported:
 
   gini_all_hourly    earnings per connected hour over ALL loaded couriers (idle ones count as zero)
   gini_active_total  total earnings over active couriers

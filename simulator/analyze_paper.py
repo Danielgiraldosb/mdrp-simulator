@@ -4,6 +4,10 @@ analyze_paper.py -- summaries of batch_paper.py outputs (Etapa 5 tooling).
   python analyze_paper.py output/paper/pilot.csv                 # per instance x method table + timing
   python analyze_paper.py output/paper/main.csv --main           # X1: Pareto points, compliance, paired diffs
   python analyze_paper.py output/paper/main.csv --main --md out.md
+  python analyze_paper.py output/paper/main.csv --main --gini elig --couriers-table output/paper/main_couriers.csv
+      # decision E9 (2026-10-21, ratified): F_Gini in every table is the Gini over the ELIGIBLE couriers
+      # (connected >= 1 h, idle ones at zero), from analyze_couriers.py --out; the active-courier Gini of
+      # metrics.py is kept as F_Gini_active
 
 Every comparison between methods is PAIRED by (instance, seed): common random numbers
 (diseno-experimental.md section 6). Instances are the blocks; seeds are averaged inside.
@@ -90,7 +94,7 @@ def main_tables(df: pd.DataFrame, alpha_ref: float = 0.30) -> str:
     lines.append(pts.round(3).to_string())
     # 3. compliance F_Gini <= alpha per (instance, seed), by method and alpha
     if 'alpha' in df.columns:
-        alphas = sorted(set(a for a in df["alpha"].dropna().unique() if a < 1.0) | {0.45, 0.5}) or [alpha_ref]
+        alphas = sorted(set(a for a in df["alpha"].dropna().unique() if a < 1.0) | {0.45, 0.5, 0.55, 0.6}) or [alpha_ref]
         rows = []
         for (reg, m), g in df.groupby(['regime', 'method']):
             row = {'regime': reg, 'method': m}
@@ -157,8 +161,29 @@ def main() -> None:
     ap.add_argument('csv', nargs='+')
     ap.add_argument('--main', action='store_true', help='X1-style summaries (Pareto, compliance, paired)')
     ap.add_argument('--md', default=None, help='also write the text to this file')
+    ap.add_argument('--couriers-table', default=None,
+                    help='per-run table from analyze_couriers.py --out (joined on run_id)')
+    ap.add_argument('--gini', default='active', choices=['active', 'elig'],
+                    help="which Gini is F_Gini in the tables: 'active' (metrics.py) or 'elig' (E9: eligible "
+                         "couriers, zeros included; needs --couriers-table)")
+    ap.add_argument('--complete-seeds', action='store_true', help='keep only seeds present for every cell')
     args = ap.parse_args()
     df = load(args.csv)
+    if args.couriers_table:
+        ct = pd.read_csv(args.couriers_table)
+        keep = [c for c in ct.columns if c.startswith('gini_') or c.startswith('share_') or c.startswith('p25_')]
+        df = df.merge(ct[['run_id'] + keep], on='run_id', how='left')
+    if args.gini == 'elig':
+        if 'gini_elig_hourly' not in df.columns:
+            sys.exit('--gini elig needs --couriers-table (analyze_couriers.py --out)')
+        df['F_Gini_active'] = df['F_Gini']
+        df['F_Gini'] = df['gini_elig_hourly']
+        print('F_Gini = Gini over eligible couriers (connected >= 1 h, zeros included), decision E9')
+    if args.complete_seeds:
+        full = df.groupby('seed')['run_id'].count()
+        full = full[full == full.max()].index
+        df = df[df['seed'].isin(full)]
+        print(f'complete seeds: {sorted(int(x) for x in full)}')
     print(f'{len(df)} runs, {df["instance"].nunique()} instances, {df["method"].nunique()} methods, '
           f'regimes {sorted(df["regime"].unique())}')
     text = main_tables(df) if args.main else pilot_tables(df)

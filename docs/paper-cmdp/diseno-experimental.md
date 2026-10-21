@@ -435,3 +435,58 @@ recomiendo, porque el resultado principal sería una ilusión del estadístico.
 
 Nota técnica: la recomputación difiere de F_Gini hasta 0,027 porque `shift_h` se guarda con dos decimales
 (0,02 h para turnos de un minuto); confirma que los turnos cortos dominan el estadístico.
+
+### 12.7 E9 ratificada; segunda pasada con cuatro semillas; análisis A2 y decisión E10 (2026-10-21, 16:30)
+
+**E9 ratificada por el director** ("Ratifico E9, sigue con esa definición"). Desde ahora: F_Gini del paper =
+Gini del pago por hora conectada sobre los repartidores elegibles (`shift_h ≥ 1`, ociosos con cero), calculado
+ex post con `analyze_couriers.py --out output/paper/main_couriers.csv`; `analyze_paper.py --main --gini elig
+--couriers-table …` y `figures_paper.py --fig f3f4` lo leen de esa tabla. El F_Gini de `metrics.py` (activos)
+se conserva como `F_Gini_active` y como vista secundaria (tabla de alcances del paper). No se toca código que
+X1 importe.
+
+Semillas 1–4 completas (3.456 celdas; `output/paper/main_e9_stats.txt`, `main_e9_analysis.txt`). Media sobre
+24 instancias (EE del Gini de elegibles 0,008 para greedy y 0,010–0,017 para el resto):
+
+| Método (manual) | cobertura | Gini elegibles | activos / elegibles | p25 COP/h | Gini activos | atraso | pago/tarifa | cumple 0,40 / 0,50 |
+|---|---|---|---|---|---|---|---|---|
+| greedy | 0,759 | **0,301** | **0,97** | **481** | 0,509 | 19,9 | 1,00 | **97 % / 100 %** |
+| ilp | 0,737 | 0,522 | 0,73 | 130 | **0,411** | 19,4 | 0,97 | 0 / 51 % |
+| hier | 0,769 | 0,526 | 0,77 | 148 | 0,527 | **18,1** | 1,01 | 0 / 33 % |
+| brkga | 0,769 | 0,565 | 0,70 | 86 | 0,484 | 18,5 | 1,01 | 0 / 23 % |
+| brkga_fair w5…w40 | **0,770** | 0,546…0,534 | 0,74…0,75 | 121…134 | 0,498…0,504 | 18,6 | 1,01 | 0 / 38–47 % |
+| mipfair α 0,20…1,00 | 0,763 | 0,544…0,545 | 0,72 | 104 | 0,461…0,474 | 19,0 | 1,01 | 0 / 38–42 % |
+| paybrkga λ 0,1…1,0 | 0,757…0,752 | 0,537…0,547 | 0,73…0,71 | 119…95 | 0,486…0,457 | 18,8 | 0,95…0,87 | 0 / 46–33 % |
+
+Auto-aceptación: greedy 0,296, ilp 0,502, hier 0,515, brkga 0,567, brkga_fair 0,536–0,547, mipfair 0,531–0,536,
+paybrkga 0,534–0,535; cobertura 0,786 en todos. Diferencias pareadas contra greedy en el Gini de elegibles:
++0,205 (ilp auto) a +0,271 (brkga auto); ningún IC se acerca a menos de 0,17 de cero. Por ciudad (manual):
+greedy 0,28–0,32; los demás 0,45–0,64 (Bucaramanga y Pereira las más desiguales). Pérdida de régimen
+(manual − auto): cobertura −1,6 a −4,9 pts; Gini de elegibles ±0,02.
+
+**A2: por qué H_t no lo evitó.** `EquityHistory.hourly_earnings` es `earnings / active_time` (minutos en
+movimiento o sirviendo), no por hora conectada. Es una tasa de productividad casi igual entre repartidores:
+uno con una entrega de diez minutos y otro con veinte valen casi lo mismo; solo el que nunca entregó tiene
+déficit. Por eso (i) el déficit de BRKGA-Fair y Pay-BRKGA separa "con trabajo" de "sin trabajo" pero no
+"poco" de "mucho", (ii) el Gini proyectado de MIP-Fair es casi plano y α es inerte (explica L4 junto con la
+prioridad de cobertura), y (iii) la señal compite con la cobertura, que es la prioridad lexicográfica de
+MIP-Fair y el fitness del BRKGA. Además la población interna es la conectada a la ronda (H_all), no la
+elegible. BRKGA-Fair sí empuja en la dirección correcta (activos 0,70 → 0,75, Gini 0,565 → 0,534 con w de 5
+a 40, en ambos regímenes), pero es una fracción de la brecha con el greedy. Esto es un hallazgo del paper, no
+un bug: el modelo del paper define w_c por hora conectada (sección de métricas) y las políticas de primera
+generación leían otra cosa.
+
+**Decisión E10 (tomada; segunda generación, para X3).** Las tres políticas con la historia leída como pago por
+hora *conectada hasta t* (`earnings / (t − on_time)`), sobre los repartidores elegibles (turno declarado
+≥ 1 h), con el ocioso elegible a déficit máximo y, en MIP-Fair, con la holgura de cobertura ε de E8
+(perder hasta ε de la cobertura máxima de la ronda a cambio del exceso de Gini). Configuraciones X3:
+BRKGA-Fair-X (w = 20), Pay-BRKGA-X (λ_pay = 0,5), MIP-Fair-X (α = 0,30; ε ∈ {0, 0,02, 0,05}), contra su base
+de primera generación y contra greedy; 24 instancias × 2 regímenes × 5 semillas = 1.200 corridas (X3 pasa
+de 840 a ≈ 2.040). Implementación en un worktree de git (`C:/MDRP-dev`, rama `e10-variants`) para no tocar
+los módulos que X1 importa; se funde en master al terminar X1. α* para X2 se decide después de X3 sobre el
+Gini de elegibles (el 0,40 provisional se eligió sobre el de activos y ya no aplica: solo greedy lo cumple).
+
+Hipótesis a contrastar en X3: (H1) con exposición en vez de productividad, BRKGA-Fair-X y MIP-Fair-X con
+ε > 0 cierran una parte sustancial de la brecha 0,30–0,54 a un costo de cobertura menor que el 1,0–1,1 pts
+que paga el greedy; (H2) ε mueve a MIP-Fair-X donde α no lo hacía; (H3) Pay-BRKGA-X sigue sin alcanzar a los
+ociosos, porque el pago no llega a quien no recibe oferta.
