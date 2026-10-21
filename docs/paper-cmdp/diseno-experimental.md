@@ -388,7 +388,7 @@ Media (máximo) de minutos por corrida en manual: ilp 1,8 (7,7); greedy 2,1 (10,
 (9,0); paybrkga 2,8 (12,1); hier 3,1 (13,4); mipfair 4,5 (22,0; Bogotá 12). Auto es 10–30 % más rápido. MIP-Fair
 sigue bajo la regla de 20 min salvo en Bogotá 12 (22 min, una celda).
 
-### 12.6 Análisis A1: el alcance del Gini invierte la conclusión (2026-10-21, 05:30)
+### 12.6 Análisis A1: el alcance del Gini invierte la conclusión (2026-10-21, 04:20)
 
 `analyze_couriers.py` recalcula ex post, desde las tablas por repartidor (`output/paper/couriers/`), el Gini
 con otros alcances. Hallazgo: **el F_Gini reportado (pago por hora conectada, solo repartidores con ≥ 1

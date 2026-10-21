@@ -328,7 +328,7 @@ Gini del día. L6 Pay-BRKGA responde a λ. L7 nadie cumple α ≤ 0,30; a 0,40 s
 para X2 = 0,40; la tabla de cumplimiento añade 0,45 y 0,50. Tiempos 1,8–4,5 min por corrida (máx. 22). X1
 completo ≈ 22 oct por la mañana.
 
-### A1: el alcance del Gini invierte la conclusión (2026-10-21, 05:30; slide 16)
+### A1: el alcance del Gini invierte la conclusión (2026-10-21, 04:20; slide 16)
 
 Recalculado ex post desde las tablas por repartidor (`simulator/analyze_couriers.py`): el F_Gini (pago por
 hora entre activos) está dominado por el 7 % de repartidores conectados menos de una hora (turnos de 1 min:
