@@ -40,6 +40,7 @@ import numpy as np
 from config import Config
 from brkga_policy import BRKGAPolicy, _Round, CandKey
 import fair_history as fh
+from brkga_fair import deficits_of
 
 
 class PayBRKGAPolicy(BRKGAPolicy):
@@ -88,6 +89,12 @@ class PayBRKGAPolicy(BRKGAPolicy):
         rec['f_deficit_proj'] = self._deficit_after(
             [(cid, tuple(sorted(seq))) for cid, seq, _ in priced], mult)
         return priced
+
+    def _cand_priority(self, state: Dict[str, Any]):
+        if self.cfg.fair_cand_deficit_k <= 0 or not self._hist:
+            return None
+        w = {cid: fh.hourly(h, self._couriers.get(cid), self._t, self.cfg) for cid, h in self._hist.items()}
+        return deficits_of(w)[0]
 
     # -- Chromosome layout ---------------------------------------------------------------------
 

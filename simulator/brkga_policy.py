@@ -91,18 +91,30 @@ FITNESS = {'coverage': fitness_coverage, 'travel': fitness_travel}
 # -- Candidate prefilter (same rule as ILPPolicy._precompute_routes / HierContext) -----------
 
 def build_candidates(couriers: List[Courier], orders: List[Order], t: float, cfg: Config,
-                     top_k: int) -> Dict[CandKey, Dict[str, Any]]:
+                     top_k: int, priority: Optional[Dict[int, float]] = None,
+                     extra_k: int = 0) -> Dict[CandKey, Dict[str, Any]]:
     """
     (courier_id, route_key) -> {'lateness', 'total_tt', 'sequence', 'n_orders'}
     for every feasible pair, where route_key is the sorted tuple of order ids.
     Only the ``top_k`` idle couriers nearest to the route's store are tried and
     a courier that already rejected any order of the route is skipped.
+    E10b: with ``priority`` ({courier_id: deficit}) and ``extra_k`` > 0, the ``extra_k``
+    remaining couriers with the largest positive priority are tried as well.
     """
     cands: Dict[CandKey, Dict[str, Any]] = {}
+    with_priority: List[Courier] = []
+    if priority and extra_k > 0:
+        with_priority = [c for c in couriers if priority.get(c.courier_id, 0.0) > 0.0]
     for route in generate_store_routes(orders, cfg.max_bundle_size):
         rkey = tuple(sorted(o.order_id for o in route))
         store_loc = route[0].store_loc
         ranked = sorted(couriers, key=lambda c: dist_km(c.location, store_loc))[:top_k]
+        if with_priority:
+            # largest deficit first; among equal deficits (every idle zero-earner has 1) the nearest
+            chosen = {c.courier_id for c in ranked}
+            extra = sorted((c for c in with_priority if c.courier_id not in chosen),
+                           key=lambda c: (-priority[c.courier_id], dist_km(c.location, store_loc)))[:extra_k]
+            ranked = ranked + extra
         for c in ranked:
             if any(c.courier_id in o.rejected_by for o in route):
                 continue
@@ -195,7 +207,8 @@ class BRKGAPolicy(Policy):
         if not couriers or not orders:
             return []
 
-        cands = build_candidates(couriers, orders, t, self.cfg, self.cand_top_k)
+        cands = build_candidates(couriers, orders, t, self.cfg, self.cand_top_k,
+                                 self._cand_priority(state), int(self.cfg.fair_cand_deficit_k))
         if not cands:
             return []
 
@@ -211,6 +224,10 @@ class BRKGAPolicy(Policy):
                 for cid, rkey in best_assign]
 
     # -- Hooks for derived methods ------------------------------------------------------------
+
+    def _cand_priority(self, state: Dict[str, Any]) -> Optional[Dict[int, float]]:
+        """E10b: {courier_id: deficit} for the deficit-aware prefilter; None in the base policy."""
+        return None
 
     def _score(self, cand: Dict[str, Any], courier_id: int, t: float) -> float:
         """Lower is better. Original rule: finish time of the route. The

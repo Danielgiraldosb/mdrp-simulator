@@ -101,5 +101,8 @@ class BRKGAFairPolicy(BRKGAPolicy):
             self.rounds[-1]['deficit_assigned'] = [round(self._deficit.get(cid, 0.0), 4) for cid, _, _ in out]
         return out
 
+    def _cand_priority(self, state: Dict[str, Any]):
+        return self._deficit if self.cfg.fair_cand_deficit_k > 0 else None
+
     def _score(self, cand: Dict[str, Any], courier_id: int, t: float) -> float:
         return super()._score(cand, courier_id, t) - self.weight * self._deficit.get(courier_id, 0.0)

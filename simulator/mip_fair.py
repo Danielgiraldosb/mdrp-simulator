@@ -58,6 +58,7 @@ from policies import Policy, GreedyPolicy
 from ilp_policy import _try_import_pulp, get_solver, _LAMBDA_COST, _MU_DELAY
 from brkga_policy import build_candidates, CandKey
 import fair_history as fh
+from brkga_fair import deficits_of
 
 logger = logging.getLogger(__name__)
 
@@ -142,7 +143,13 @@ class MIPFairPolicy(Policy):
         t: float = state['time']
         if not couriers or not orders:
             return []
-        cands = build_candidates(couriers, orders, t, self.cfg, self.cand_top_k)
+        priority = None
+        if self.cfg.fair_cand_deficit_k > 0:
+            # E10b: deficit of the idle (eligible) couriers under the configured basis
+            pop_idle = fh.population(state, self.cfg, scope='idle')
+            priority = deficits_of({cid: fh.hourly(h, c, t, self.cfg) for cid, (c, h) in pop_idle.items()})[0]
+        cands = build_candidates(couriers, orders, t, self.cfg, self.cand_top_k, priority,
+                                 int(self.cfg.fair_cand_deficit_k))
         if not cands:
             return []
         hist = state.get('H_t') or {}

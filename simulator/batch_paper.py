@@ -100,17 +100,33 @@ for _e in (0.02, 0.05):
 # second generation (E10, 2026-10-21; fair_history.py): the three policies read earnings per hour
 # connected so far over the eligible couriers; MIP-Fair also with the coverage slack of E8.
 # Both regimes, 5 seeds; the bases (greedy, brkga_fair_w20, mipfair_a030, paybrkga_l05) are in main.csv.
+# '_x'  = exposure basis + eligible population (E10); '_xk' = E10 + the deficit-aware prefilter (E10b,
+# 8 extra candidates per route). The E10 pilot (2026-10-21, two zones) showed that the basis alone moves the
+# eligible Gini by 0.03 at most: the idle eligible couriers were never candidates.
 _GEN2 = {'fair_history': 'exposure', 'fair_population': 'eligible'}
+_GEN2K = {**_GEN2, 'fair_cand_deficit_k': 8}
 GEN2: Dict[str, Dict[str, Any]] = {
-    'brkga_fair_w20_x': dict(policy='brkga_fair', cfg={'brkga_fair_weight': 20.0, 'brkga_fair_basis': 'hourly', **_GEN2},
-                             weight=20.0),
-    'paybrkga_l05_x':   dict(policy='pay_brkga', cfg={'paybrkga_lambda_pay': 0.5, 'paybrkga_lambda_deficit': 0.5,
-                                                      'paybrkga_pay_range': 0.30, **_GEN2}, lambda_pay=0.5),
+    'brkga_fair_w20_x':  dict(policy='brkga_fair', cfg={'brkga_fair_weight': 20.0, 'brkga_fair_basis': 'hourly', **_GEN2},
+                              weight=20.0),
+    'brkga_fair_w20_xk': dict(policy='brkga_fair', cfg={'brkga_fair_weight': 20.0, 'brkga_fair_basis': 'hourly', **_GEN2K},
+                              weight=20.0),
+    'paybrkga_l05_xk':   dict(policy='pay_brkga', cfg={'paybrkga_lambda_pay': 0.5, 'paybrkga_lambda_deficit': 0.5,
+                                                       'paybrkga_pay_range': 0.30, **_GEN2K}, lambda_pay=0.5),
+    'mipfair_a030_x_e000': dict(policy='mip_fair', cfg={'mipfair_alpha': 0.30, 'mipfair_scope': 'all',
+                                                        'mipfair_priority': 'coverage', 'mipfair_basis': 'hourly',
+                                                        'mipfair_cand_top_k': 8, 'mipfair_cov_slack': 0.0, **_GEN2},
+                                alpha=0.30),
 }
-for _e in (0.0, 0.02, 0.05):
-    GEN2[f'mipfair_a030_x_e{int(round(_e * 100)):03d}'] = dict(
+_GEN2K25 = {**_GEN2, 'fair_cand_deficit_k': 25}
+GEN2['brkga_fair_w20_xk25'] = dict(policy='brkga_fair', cfg={'brkga_fair_weight': 20.0, 'brkga_fair_basis': 'hourly', **_GEN2K25}, weight=20.0)
+GEN2['brkga_fair_w40_xk25'] = dict(policy='brkga_fair', cfg={'brkga_fair_weight': 40.0, 'brkga_fair_basis': 'hourly', **_GEN2K25}, weight=40.0)
+GEN2['mipfair_a030_xk25_e000'] = dict(policy='mip_fair', cfg={'mipfair_alpha': 0.30, 'mipfair_scope': 'all', 'mipfair_priority': 'coverage',
+                                                               'mipfair_basis': 'hourly', 'mipfair_cand_top_k': 8, 'mipfair_cov_slack': 0.0, **_GEN2K25},
+                                      alpha=0.30)
+for _e in (0.0, 0.05):
+    GEN2[f'mipfair_a030_xk_e{int(round(_e * 100)):03d}'] = dict(
         policy='mip_fair', cfg={'mipfair_alpha': 0.30, 'mipfair_scope': 'all', 'mipfair_priority': 'coverage',
-                                'mipfair_basis': 'hourly', 'mipfair_cand_top_k': 8, 'mipfair_cov_slack': _e, **_GEN2},
+                                'mipfair_basis': 'hourly', 'mipfair_cand_top_k': 8, 'mipfair_cov_slack': _e, **_GEN2K},
         alpha=0.30)
 
 PILOT_METHODS = ['greedy', 'ilp', 'hier', 'brkga', 'brkga_fair_w10', 'mipfair_a030', 'paybrkga_l02']

@@ -160,6 +160,10 @@ class Config:
     fair_population: str = 'round'
     fair_min_shift_min: float = 60.0
     fair_exposure_floor_min: float = 30.0   # floor on connected minutes in the exposure rate
+    # E10b: besides the k nearest idle couriers, every route also tries the fair_cand_deficit_k idle
+    # couriers with the largest deficit (0 = the first-generation prefilter). The order-centric
+    # policies could not reach the idle eligible couriers because they were never candidates.
+    fair_cand_deficit_k: int = 0
     # E8: MIP-Fair may give up this fraction of the round's maximum coverage for the Gini excess
     mipfair_cov_slack: float = 0.0
 
