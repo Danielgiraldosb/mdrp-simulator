@@ -287,3 +287,9 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   centrada en el repartidor; el todo del Greedy en el paper queda resuelto (el benchmark reproduce la
   práctica). X1 en 5.114/8.640 a las 21:02 (≈ 235 filas/h); fin estimado 22 oct ≈ 12 h. Al terminar:
   fusionar `e10-variants`, regenerar T3/T4/F3/F4 con 10 semillas y lanzar X3 (gen2 + supp).
+- **2026-10-21, 21:40 (pipeline de cierre de X1 listo).** `simulator/tables_paper.py` genera los cuerpos de
+  T3 (`tab:benchmark`), `tab:scope` y `tab:compliance` y los números de la prosa (diferencias pareadas con
+  bootstrap, por ciudad, pérdida por régimen, cumplimiento de las 18 configuraciones) a partir de `main.csv` y
+  `main_couriers.csv`; reproduce las tablas de 4 semillas. Al cerrar X1: `analyze_couriers.py --out`,
+  `tables_paper.py`, `figures_paper.py --fig f3f4`, pegar cuerpos en `main.tex` y reescribir la prosa.
+
