@@ -327,3 +327,15 @@ sobre todos los conectados e ingreso total desde las tablas por repartidor. L4 �
 Gini del día. L6 Pay-BRKGA responde a λ. L7 nadie cumple α ≤ 0,30; a 0,40 solo ilp (46–71 %); α* provisional
 para X2 = 0,40; la tabla de cumplimiento añade 0,45 y 0,50. Tiempos 1,8–4,5 min por corrida (máx. 22). X1
 completo ≈ 22 oct por la mañana.
+
+### A1: el alcance del Gini invierte la conclusión (2026-10-21, 05:30; slide 16)
+
+Recalculado ex post desde las tablas por repartidor (`simulator/analyze_couriers.py`): el F_Gini (pago por
+hora entre activos) está dominado por el 7 % de repartidores conectados menos de una hora (turnos de 1 min:
+110.000 COP/h por una entrega), a los que solo el greedy asigna. Sobre la población elegible (conectados
+≥ 1 h, ceros incluidos), manual, semilla 1: greedy 0,301 frente a 0,52–0,57 de todos los demás (ilp 0,524,
+mipfair_a030 0,544, paybrkga_l05 0,547, brkga 0,566); diferencias pareadas +0,22 a +0,27 con IC que no
+cruzan cero. Activos entre elegibles: greedy 97 %, los demás 69–77 %; p25 del pago por hora 481 frente a
+≤ 150. Los métodos bajan el estadístico restringido excluyendo repartidores. Decisión provisional E9 (cambia
+el modelo; ratificar): la restricción y el reporte pasan al Gini sobre elegibles con ceros; variantes de
+segunda generación de los tres métodos tras X1, evaluadas en X3. Detalle en `diseno-experimental.md` §12.6.

@@ -387,3 +387,51 @@ Bogotá 12): la desigualdad de fin de día en pago por hora es alta por construc
 Media (máximo) de minutos por corrida en manual: ilp 1,8 (7,7); greedy 2,1 (10,3); brkga y brkga_fair 2,3
 (9,0); paybrkga 2,8 (12,1); hier 3,1 (13,4); mipfair 4,5 (22,0; Bogotá 12). Auto es 10–30 % más rápido. MIP-Fair
 sigue bajo la regla de 20 min salvo en Bogotá 12 (22 min, una celda).
+
+### 12.6 Análisis A1: el alcance del Gini invierte la conclusión (2026-10-21, 05:30)
+
+`analyze_couriers.py` recalcula ex post, desde las tablas por repartidor (`output/paper/couriers/`), el Gini
+con otros alcances. Hallazgo: **el F_Gini reportado (pago por hora conectada, solo repartidores con ≥ 1
+entrega) está dominado por el 7 % de repartidores conectados menos de una hora** (hay turnos de 1 minuto:
+una entrega de 2.200 COP en 0,02 h son 110.000 COP/h). El greedy, que es centrado en el repartidor (cada
+repartidor libre toma su mejor ruta), les asigna pedidos y su F_Gini se dispara; los métodos centrados en
+el pedido (ILP, MIP-Fair, BRKGA) no los usan y su F_Gini baja. Con la población **elegible** (conectados ≥ 1 h,
+ceros incluidos) la lectura es la contraria. Media sobre 24 instancias, régimen manual (semilla 1):
+
+| Método | F_Gini (activos) | Gini elegibles, por hora, ceros incl. | Gini elegibles activos, por hora | Gini elegibles, ingreso total | activos / elegibles | p25 COP/h elegibles |
+|---|---|---|---|---|---|---|
+| greedy | 0,525 | **0,301** | **0,279** | **0,191** | **0,97** | **481** |
+| ilp | 0,414 | 0,524 | 0,347 | 0,529 | 0,73 | 127 |
+| hier | 0,537 | 0,526 | 0,387 | 0,478 | 0,77 | 147 |
+| brkga | 0,492 | 0,566 | 0,376 | 0,553 | 0,69 | 85 |
+| brkga_fair_w20 | 0,504 | 0,539 | 0,387 | 0,517 | 0,75 | 107 |
+| mipfair_a030 | 0,454 | 0,544 | 0,367 | 0,533 | 0,72 | 107 |
+| paybrkga_l05 | 0,448 | 0,547 | 0,366 | 0,539 | 0,71 | 89 |
+
+Diferencias pareadas contra greedy en el Gini de elegibles por hora (ceros incluidos): +0,22 a +0,27 para
+todos los métodos, con IC 95 % que no cruzan cero (p. ej. mipfair_a030 +0,242 [+0,220; +0,266]; ilp +0,222
+[+0,198; +0,249]). Entre los elegibles activos también son peores (+0,06 a +0,11). El p25 de pago por hora
+entre elegibles cae de ≈ 480 COP/h (greedy) a ≤ 150 con cualquier otro método; bajo todos ellos entre el 21
+y el 31 % de los elegibles termina el día sin una entrega (greedy: 3 %). En auto-aceptación es igual.
+
+**Lectura.** Los tres métodos propuestos, el ILP y el jerárquico bajan el estadístico que el modelo
+restringe (hourly entre activos) **excluyendo** repartidores, no igualando ingresos: asignación óptima por
+ronda y decodificador genético reutilizan a los mejor posicionados; el greedy reparte porque es centrado en
+el repartidor. El sesgo por déficit de BRKGA-Fair y el bloque de Gini de MIP-Fair (sobre todos los conectados,
+H_all, pero sin holgura frente a cobertura, L4) no alcanzan a compensarlo. Es el resultado central del paper
+y debe presentarse como tal ("equidad para quién"): la garantía de fin de día tiene que definirse sobre una
+población que el despachador no pueda encoger.
+
+**Decisión E9 (provisional, para ratificar por el director, cambia el modelo).** El estadístico de la
+restricción (ec. fair_const) y el reportado pasan a ser el Gini del pago por hora conectada sobre los
+repartidores **elegibles** (conectados ≥ 1 h en el día, ceros incluidos); F_Gini sobre activos se reporta
+como vista secundaria. No exige recorrer X1: todos los alcances salen de las tablas por repartidor. Lo que sí
+cambia es el objetivo interno de los métodos (BRKGA-Fair: déficit sobre elegibles ociosos con prefiltro que
+los incluya; MIP-Fair: Gini sobre elegibles con holgura de cobertura, E8; Pay-BRKGA: déficit sobre elegibles);
+esas variantes de "segunda generación" se implementan al terminar X1 y se evalúan en X3 (840 corridas) y, si
+la ganancia es clara, en una repetición parcial de X1 (5 semillas, 3 métodos). Alternativa si el director
+prefiere no tocar el modelo: mantener F_Gini y añadir la tabla de alcances como advertencia; no la
+recomiendo, porque el resultado principal sería una ilusión del estadístico.
+
+Nota técnica: la recomputación difiere de F_Gini hasta 0,027 porque `shift_h` se guarda con dos decimales
+(0,02 h para turnos de un minuto); confirma que los turnos cortos dominan el estadístico.

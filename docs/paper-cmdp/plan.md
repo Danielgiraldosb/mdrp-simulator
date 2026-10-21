@@ -262,3 +262,9 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   sobre todos los conectados y sobre ingreso total, desde `output/paper/couriers/`). X1 completo estimado el
   22 oct por la mañana; después X3 y X2. El paper compila (tectonic, 36 pp.) y vive también en
   `dalvarezmartinez/mdrp-paper` (subtree de `docs/paper-cmdp/paper`), importado en Overleaf por el director.
+- **2026-10-21, 05:30 (A1).** El Gini sobre elegibles (conectados ≥ 1 h, ceros incluidos) invierte la
+  conclusión: greedy 0,30 frente a 0,52–0,57 de todos los demás métodos; los métodos bajan el F_Gini sobre
+  activos excluyendo repartidores. Decisión provisional E9 (ratificar con el director): la restricción y el
+  reporte pasan al Gini sobre elegibles; variantes de segunda generación (déficit sobre elegibles ociosos,
+  MIP-Fair con holgura E8) tras X1, evaluadas en X3. `analyze_couriers.py` nuevo; F3 y F4 preliminares
+  generadas (`figures_paper.py --fig f3f4`). Detalle en `diseno-experimental.md` §12.6.

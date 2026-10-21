@@ -119,15 +119,69 @@ def fig_f2(out_dir: str) -> None:
     _save(fig, out_dir, 'F2_acceptance_curve')
 
 
+FAMILIES = {   # sweep family -> (label, colour, parameter name, ordered configs)
+    'mipfair':    ('MIP-Fair ($\\alpha$)', '#d94801', 'alpha',
+                   ['mipfair_a020', 'mipfair_a025', 'mipfair_a030', 'mipfair_a035', 'mipfair_a040', 'mipfair_a100']),
+    'brkga_fair': ('BRKGA-Fair ($w$)', '#238b45', 'weight',
+                   ['brkga_fair_w5', 'brkga_fair_w10', 'brkga_fair_w20', 'brkga_fair_w40']),
+    'paybrkga':   ('Pay-BRKGA ($\\lambda_{pay}$)', '#6a51a3', 'lambda_pay',
+                   ['paybrkga_l01', 'paybrkga_l02', 'paybrkga_l05', 'paybrkga_l10']),
+}
+BENCH = {'greedy': ('Greedy', 'k', 's'), 'ilp': ('ILP', '#2171b5', 'D'),
+         'hier': ('Hierarchical', '#969696', '^'), 'brkga': ('BRKGA', '#41ab5d', 'o')}
+
+
+def _frontier_panel(ax, pts: pd.DataFrame, ycol: str, ylabel: str, title: str) -> None:
+    """pts: one row per method with columns F_Gini, <ycol>, alpha/weight/lambda_pay."""
+    pts = pts.set_index('method')
+    for fam, (lab, col, par, order) in FAMILIES.items():
+        sub = pts.loc[[m for m in order if m in pts.index]]
+        if sub.empty:
+            continue
+        ax.plot(sub['F_Gini'], sub[ycol], '-o', c=col, ms=4, lw=1.2, label=lab)
+        for m, r in sub.iterrows():
+            v = r[par]
+            ax.annotate(f'{v:g}', (r['F_Gini'], r[ycol]), textcoords='offset points', xytext=(3, 3), fontsize=6, color=col)
+    for m, (lab, col, mk) in BENCH.items():
+        if m in pts.index:
+            r = pts.loc[m]
+            ax.plot([r['F_Gini']], [r[ycol]], mk, c=col, ms=6, label=lab, ls='none')
+    ax.set_xlabel('end-of-day Gini coefficient of hourly earnings')
+    ax.set_ylabel(ylabel)
+    ax.set_title(title, fontsize=9)
+
+
+def fig_frontiers(out_dir: str, main_csv: str) -> None:
+    """F3 (coverage) and F4 (lateness) against the end-of-day Gini, one panel per regime."""
+    plt = _plt()
+    df = pd.read_csv(main_csv)
+    inst = df.groupby(['regime', 'method', 'instance'])[['F_Gini', 'coverage_rate', 'overage_mean']].mean().reset_index()
+    pts = inst.groupby(['regime', 'method'])[['F_Gini', 'coverage_rate', 'overage_mean']].mean().reset_index()
+    par = df.groupby('method')[['alpha', 'weight', 'lambda_pay']].first().reset_index()
+    pts = pts.merge(par, on='method', how='left')
+    nseeds = df['seed'].nunique()
+    for name, ycol, ylabel in (('F3_pareto_coverage', 'coverage_rate', 'coverage (fraction of orders delivered)'),
+                               ('F4_pareto_lateness', 'overage_mean', 'mean lateness of delivered orders (min)')):
+        fig, axes = plt.subplots(1, 2, figsize=(8.4, 3.4), sharey=True)
+        for ax, reg, title in zip(axes, ('manual', 'autoaccept'), ('manual regime', 'auto-accept regime')):
+            _frontier_panel(ax, pts[pts.regime == reg].copy(), ycol, ylabel if ax is axes[0] else '', title)
+        axes[0].legend(fontsize=6.5, frameon=False, loc='best')
+        fig.suptitle(f'mean over {inst.instance.nunique()} instances and {nseeds} seed(s)', fontsize=7, y=0.99)
+        _save(fig, out_dir, name)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--fig', nargs='+', default=['f1', 'f2'], choices=['f1', 'f2'])
+    ap.add_argument('--fig', nargs='+', default=['f1', 'f2'], choices=['f1', 'f2', 'f3f4'])
     ap.add_argument('--out', default=os.path.normpath(os.path.join(THIS_DIR, '..', 'docs', 'paper-cmdp', 'paper', 'figures')))
+    ap.add_argument('--main-csv', default=os.path.join(THIS_DIR, 'output', 'paper', 'main.csv'))
     args = ap.parse_args()
     if 'f1' in args.fig:
         fig_f1(args.out)
     if 'f2' in args.fig:
         fig_f2(args.out)
+    if 'f3f4' in args.fig:
+        fig_frontiers(args.out, args.main_csv)
 
 
 if __name__ == '__main__':
