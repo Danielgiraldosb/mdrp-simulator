@@ -283,3 +283,7 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   simulador ya ordena por pedidos entregados (el menos servido elige primero); el paper lo describía mal y
   se corrigió (1b41ac6). Grilla gen2 de X3 fijada (1.920 corridas) + supp (1.080). Detalle en
   `diseno-experimental.md` §12.8. X1 en 4.177/8.640 a las 17:03; fin estimado 22 oct ≈ 10–11 h.
+- **2026-10-21, 21:05 (práctica confirmada).** El director confirma que la práctica de la plataforma es
+  centrada en el repartidor; el todo del Greedy en el paper queda resuelto (el benchmark reproduce la
+  práctica). X1 en 5.114/8.640 a las 21:02 (≈ 235 filas/h); fin estimado 22 oct ≈ 12 h. Al terminar:
+  fusionar `e10-variants`, regenerar T3/T4/F3/F4 con 10 semillas y lanzar X3 (gen2 + supp).

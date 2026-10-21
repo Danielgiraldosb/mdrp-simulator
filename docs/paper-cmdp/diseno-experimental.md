@@ -537,8 +537,9 @@ seis (en Bogotá puede superar la hora; X3 con timeout de 150 min).
 tienda más cercana. No es "pedidos por urgencia al repartidor más cercano" como decía el paper (corregido,
 commit 1b41ac6): es una regla centrada en el repartidor con prioridad al rezagado, es decir, la lectura más
 barata posible de H_t (un entero por repartidor). Esto refuerza el mensaje: la historia importa, y la forma de
-leerla (a quién se le ofrece trabajo) importa más que la sofisticación del término de equidad. Queda para el
-director confirmar si la práctica de la plataforma es centrada en el repartidor (todo en el paper).
+leerla (a quién se le ofrece trabajo) importa más que la sofisticación del término de equidad. El director
+confirmó (21 oct, 21:00) que la práctica de la plataforma es centrada en el repartidor: el greedy del simulador
+la reproduce y vuelve a ser "la práctica de la plataforma" en el paper (todo resuelto).
 
 **Grilla gen2 de X3 (fijada).** brkga_fair_w20_x, brkga_fair_w20_xk, brkga_fair_w40_xk25, paybrkga_l05_xk,
 mipfair_a030_x_e000, mipfair_a030_xk_e000, mipfair_a030_xk_e005, mipfair_a030_xk25_e000: 8 × 24 × 2 regímenes
