@@ -101,8 +101,10 @@ for _e in (0.02, 0.05):
 # connected so far over the eligible couriers; MIP-Fair also with the coverage slack of E8.
 # Both regimes, 5 seeds; the bases (greedy, brkga_fair_w20, mipfair_a030, paybrkga_l05) are in main.csv.
 # '_x'  = exposure basis + eligible population (E10); '_xk' = E10 + the deficit-aware prefilter (E10b,
-# 8 extra candidates per route). The E10 pilot (2026-10-21, two zones) showed that the basis alone moves the
-# eligible Gini by 0.03 at most: the idle eligible couriers were never candidates.
+# 8 extra candidates per route; '_xk25' = 25). The E10 pilot (2026-10-21, two zones) showed that the basis alone
+# moves the eligible Gini by 0.03 at most (the idle eligible couriers were never candidates) and that the
+# prefilter is the lever (MIP-Fair 0.58 -> 0.45-0.49, BRKGA-Fair 0.61 -> 0.50-0.52, no coverage loss).
+# X3 gen2 = 8 configs x 24 x 2 regimes x 5 seeds = 1,920 runs; run with --timeout-min 150 (k_d = 25 is 6x CPU).
 _GEN2 = {'fair_history': 'exposure', 'fair_population': 'eligible'}
 _GEN2K = {**_GEN2, 'fair_cand_deficit_k': 8}
 GEN2: Dict[str, Dict[str, Any]] = {
@@ -118,7 +120,6 @@ GEN2: Dict[str, Dict[str, Any]] = {
                                 alpha=0.30),
 }
 _GEN2K25 = {**_GEN2, 'fair_cand_deficit_k': 25}
-GEN2['brkga_fair_w20_xk25'] = dict(policy='brkga_fair', cfg={'brkga_fair_weight': 20.0, 'brkga_fair_basis': 'hourly', **_GEN2K25}, weight=20.0)
 GEN2['brkga_fair_w40_xk25'] = dict(policy='brkga_fair', cfg={'brkga_fair_weight': 40.0, 'brkga_fair_basis': 'hourly', **_GEN2K25}, weight=40.0)
 GEN2['mipfair_a030_xk25_e000'] = dict(policy='mip_fair', cfg={'mipfair_alpha': 0.30, 'mipfair_scope': 'all', 'mipfair_priority': 'coverage',
                                                                'mipfair_basis': 'hourly', 'mipfair_cand_top_k': 8, 'mipfair_cov_slack': 0.0, **_GEN2K25},
