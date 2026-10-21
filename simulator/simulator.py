@@ -383,6 +383,10 @@ class Dispatcher(Actor):
             # evaluate the Gini over the whole fleet (MIP-Fair, mipfair_scope=all) read this
             'H_all': {cid: ca.courier.history for cid, ca in self.all_couriers.items()
                       if ca.courier.condition not in ('offline', 'logged_off')},
+            # the courier objects behind H_all (on_time / off_time for the exposure basis and the
+            # eligible population of the second-generation policies, fair_history.py)
+            'C_all': {cid: ca.courier for cid, ca in self.all_couriers.items()
+                      if ca.courier.condition not in ('offline', 'logged_off')},
             'time': self.env.now,
         }
 

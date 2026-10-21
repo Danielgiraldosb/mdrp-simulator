@@ -39,6 +39,7 @@ import numpy as np
 
 from config import Config
 from brkga_policy import BRKGAPolicy, _Round, CandKey
+import fair_history as fh
 
 
 class PayBRKGAPolicy(BRKGAPolicy):
@@ -58,6 +59,8 @@ class PayBRKGAPolicy(BRKGAPolicy):
         self._hist: Dict[int, Any] = {}
         self._t = 0.0
         self._cur_mult: Dict[int, float] = {}
+        fh.validate(cfg)
+        self.gen2 = cfg.fair_history == 'exposure' or cfg.fair_population == 'eligible'
 
     # -- Policy contract -------------------------------------------------------------------
 
@@ -67,6 +70,10 @@ class PayBRKGAPolicy(BRKGAPolicy):
         hist = state.get('H_t') or {}
         self._hist = {cid: hist.get(cid, c.history) for cid, c in self._couriers.items()}
         self._t = state['time']
+        if self.gen2:
+            # E10: the projected deficit is over the eligible idle couriers, per hour connected so far
+            pop = fh.population(state, self.cfg, scope='idle')
+            self._hist = {cid: h for cid, (c, h) in pop.items()}
         out = super().assign(state)
         if not out:
             return out
@@ -116,11 +123,12 @@ class PayBRKGAPolicy(BRKGAPolicy):
         if not self._hist:
             return 0.0
         rnd = self._last_round
-        w = {cid: float(h.hourly_earnings) for cid, h in self._hist.items()}
+        w = {cid: fh.hourly(h, self._couriers.get(cid), self._t, self.cfg) for cid, h in self._hist.items()}
         for cid, rkey in assignments:
-            h = self._hist[cid]
-            hours = (h.active_time + rnd.cands[(cid, rkey)]['total_tt']) / 60.0
-            w[cid] = (h.earnings + self._pay((cid, rkey), mult)) / hours if hours > 0 else w[cid]
+            if cid not in self._hist:
+                continue                     # below the minimum shift: dispatched, not measured
+            w[cid] = fh.projected_hourly(self._hist[cid], self._couriers.get(cid), self._t,
+                                         self._pay((cid, rkey), mult), rnd.cands[(cid, rkey)]['total_tt'], self.cfg)
         return sum(1 for v in w.values() if v < self.min_wage) / len(w)
 
     def _fitness(self, covered: int, n_orders: int, total_tt: float,
