@@ -90,7 +90,7 @@ def main_tables(df: pd.DataFrame, alpha_ref: float = 0.30) -> str:
     lines.append(pts.round(3).to_string())
     # 3. compliance F_Gini <= alpha per (instance, seed), by method and alpha
     if 'alpha' in df.columns:
-        alphas = sorted(a for a in df['alpha'].dropna().unique() if a < 1.0) or [alpha_ref]
+        alphas = sorted(set(a for a in df["alpha"].dropna().unique() if a < 1.0) | {0.45, 0.5}) or [alpha_ref]
         rows = []
         for (reg, m), g in df.groupby(['regime', 'method']):
             row = {'regime': reg, 'method': m}

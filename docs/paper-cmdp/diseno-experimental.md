@@ -300,3 +300,90 @@ celdas son las de Bogotá). El tiempo medio real por corrida en X0 es 3,3 min si
 greedy ya optimizado), es decir ≈ 500 h de CPU para X1, más que la cota por pedido de §9 porque el costo
 por ronda crece con los repartidores conectados y no con los pedidos. Relanzado con 12 procesos (reanudable):
 ≈ 1,7 días de pared; la primera pasada (semilla 1, 864 celdas) en ≈ 4 h.
+
+## 12. X1, primera pasada: semilla 1 completa (2026-10-21, 04:06)
+
+864 celdas (24 instancias × 18 configuraciones × 2 regímenes, semilla 1, circuidad 1,3, día completo), 0 fallos,
+2 h 50 min con 12 procesos (≈ 290 corridas por hora; X1 completo estimado para el 22 oct por la mañana).
+Resúmenes en `output/paper/main_pass1_analysis.txt` (`analyze_paper.py --main`) y `main_pass1_stats.txt`
+(media y error estándar sobre las 24 instancias, Wilcoxon pareado). Todo lo que sigue es **preliminar: una
+semilla**; con 10 semillas cambian los errores estándar, no necesariamente las lecturas.
+
+### 12.1 Media sobre las 24 instancias (error estándar entre paréntesis)
+
+Régimen manual:
+
+| Configuración | Cobertura | Gini fin de día | Atraso medio (min) | F_Deficit | Pago / greedy | min por corrida (máx) |
+|---|---|---|---|---|---|---|
+| greedy | 0,759 (0,013) | 0,525 (0,031) | 19,9 | 0,980 | 1,00 | 2,1 (10,3) |
+| ilp | 0,738 (0,013) | **0,414** (0,012) | 19,4 | 0,993 | 0,97 | 1,8 (7,7) |
+| hier | 0,770 (0,013) | 0,537 (0,019) | **18,1** | 0,981 | 1,01 | 3,1 (13,4) |
+| brkga | **0,771** (0,013) | 0,492 (0,019) | 18,5 | 0,985 | 1,02 | 2,3 (8,9) |
+| brkga_fair w5 / w10 / w20 / w40 | 0,768 / 0,770 / 0,771 / 0,770 | 0,501 / 0,506 / 0,504 / 0,509 | 18,5–18,6 | 0,985 | 1,01 | 2,3 (9,0) |
+| mipfair α 0,20 / 0,25 / 0,30 / 0,35 / 0,40 / 1,00 | 0,764 / 0,763 / 0,763 / 0,763 / 0,765 / 0,764 | 0,454 / 0,472 / 0,454 / 0,464 / 0,470 / 0,463 | 19,0 | 0,988 | 1,01 | 4,5 (22,0) |
+| paybrkga λ 0,1 / 0,2 / 0,5 / 1,0 | 0,760 / 0,756 / 0,754 / 0,754 | 0,482 / 0,463 / 0,448 / 0,471 | 18,8 | 0,990 | 0,95 / 0,90 / 0,88 / 0,87 | 2,8 (12,1) |
+
+Régimen auto-aceptación: la cobertura es **idéntica en las 18 configuraciones, 0,786 (0,013)**. Gini: greedy
+0,586 (0,034); ilp **0,395** (0,010); hier 0,571; brkga 0,498; brkga_fair 0,507–0,521; mipfair 0,448–0,473;
+paybrkga 0,444–0,468. Atraso: hier 17,9; brkga 18,1; mipfair e ilp 18,8; greedy 19,0.
+
+### 12.2 Diferencias pareadas contra greedy (misma instancia; IC 95 % bootstrap sobre las 24 instancias)
+
+| Configuración | Manual: ΔGini | Manual: Δcobertura | Auto: ΔGini |
+|---|---|---|---|
+| ilp | −0,111 [−0,168; −0,053] | −0,021 [−0,027; −0,017] | −0,192 [−0,251; −0,136] |
+| hier | +0,012 [−0,023; +0,048] | +0,011 [+0,008; +0,013] | −0,015 [−0,054; +0,025] |
+| brkga | −0,032 [−0,064; +0,001] | +0,012 [+0,010; +0,014] | −0,089 [−0,143; −0,038] |
+| brkga_fair_w10 | −0,018 [−0,055; +0,022] | +0,011 [+0,008; +0,012] | −0,065 [−0,107; −0,020] |
+| mipfair_a030 | −0,071 [−0,121; −0,023] | +0,004 [+0,001; +0,007] | −0,138 [−0,191; −0,079] |
+| paybrkga_l05 | −0,077 [−0,134; −0,027] | −0,005 [−0,008; −0,002] | −0,140 [−0,194; −0,088] |
+
+Atraso medio: todos los métodos lo bajan frente al greedy (manual: hier −1,8 min, brkga −1,4, paybrkga −1,1,
+mipfair −0,9, ilp −0,5; Wilcoxon p < 10⁻⁴ en todos). Pérdida de régimen (cobertura manual − auto): greedy
+−2,7 pts; ilp −4,8; brkga y brkga_fair −1,5 a −1,8; hier −1,7; mipfair −2,1 a −2,3; paybrkga −2,6 a −3,2.
+
+### 12.3 Cumplimiento (% de instancias con Gini de fin de día ≤ α, semilla 1)
+
+Ninguna configuración alcanza α ≤ 0,30 en ninguna instancia, en ningún régimen. α = 0,35: ilp 17 % (auto) /
+4 % (manual); greedy 4 / 21. α = 0,40: ilp 71 / 46; paybrkga_l05 33 / 33; mipfair_a030 21 / 33; greedy 13 / 25;
+brkga 4 / 0; hier 0 / 0. El Gini del greedy por instancia va de 0,33 (Pereira 22, Medellín 2) a 0,83 (Cali 19,
+Bogotá 12): la desigualdad de fin de día en pago por hora es alta por construcción de las instancias
+(muchos repartidores conectados con una o dos entregas).
+
+### 12.4 Lecturas
+
+- **L1. En auto-aceptación la cobertura no distingue métodos.** Los pedidos no entregados (21 %) son
+  infactibles para cualquier repartidor bajo el SLA duro; la flota no es restrictiva. Toda la diferencia entre
+  métodos está en la equidad y el atraso. En manual el rechazo abre la dispersión de cobertura (0,738–0,771).
+- **L2. La garantía es barata o gratis.** En auto, MIP-Fair y Pay-BRKGA bajan el Gini 0,11–0,14 sin costo de
+  cobertura. En manual, MIP-Fair baja 0,05–0,07 **ganando** 0,4 pts de cobertura y 0,9 min de atraso (greedy
+  queda dominado); Pay-BRKGA baja 0,06–0,08 perdiendo 0,3–0,5 pts y pagando 10–13 % menos.
+- **L3. El ILP exacto es el que más baja el Gini** (0,414 manual, 0,395 auto) y en manual el que más cobertura
+  pierde (−2,1 pts). Mecanismo: el Gini se calcula sobre los repartidores *activos* (≥ 1 entrega) en pago por
+  hora; greedy activa ≈ 1.010 repartidores por instancia (muchos con una sola entrega), ilp ≈ 800, mipfair ≈ 790,
+  brkga ≈ 765. **Los métodos que bajan el Gini lo hacen concentrando el trabajo en menos repartidores, no
+  subiendo a los de abajo.** BRKGA-Fair falla por la misma razón: el sesgo por déficit prefiere al ocioso
+  (déficit 1), activa más repartidores (826–836 frente a 764 del BRKGA) y el Gini sube (0,50–0,52 frente a 0,49).
+  Este es el hallazgo central para la discusión ("equidad para quién"): el estadístico de fin de día sobre
+  activos premia la exclusión. Análisis pendiente A1: recalcular el Gini sobre **todos los conectados** (ceros
+  incluidos) y sobre ingresos totales desde las tablas por repartidor (`output/paper/couriers/`), sin recorrer.
+- **L4. α no mueve a MIP-Fair** (0,448–0,473 en ambos regímenes, dentro del error estándar, incluido α = 1,00
+  que apaga la restricción). Con prioridad cobertura › exceso de Gini (E5') y candidatos top-k 8, las
+  asignaciones óptimas en cobertura por ronda dejan poca holgura al término de Gini; la mejora de MIP-Fair
+  frente al greedy viene de la asignación exacta por ronda (como en el ILP), no del bloque de Gini. Decisión
+  E8 (ablación nueva para X3): variante con **holgura de cobertura** (perder hasta ε del máximo de la ronda a
+  cambio de Gini), `mipfair_a030_eps`, además de las ya previstas (equidad-primero, base total, ociosos, k = 25).
+- **L5. El jerárquico** gana cobertura (+1,1 pts) y es el más puntual (−1,8 min), pero no baja el Gini de fin de
+  día (+0,012, n. s.): el balance por ventana no controla el estadístico del día (pregunta 1 del paper).
+- **L6. Pay-BRKGA** es la única palanca que responde a su parámetro: el Gini baja de 0,482 a 0,448 al subir
+  λ_pay de 0,1 a 0,5 (λ = 1,0 vuelve a 0,471), a costa de 0,3–0,5 pts de cobertura y con 5–13 % menos pago.
+- **L7. Rodilla y α\*.** El frente cobertura–Gini de MIP-Fair es plano (L4) y la rodilla no está definida.
+  Decisión provisional para X2: α\* = 0,40, único nivel con cumplimiento observable (46–71 % en ilp); se
+  confirma con las 10 semillas. La tabla de cumplimiento del paper añade las columnas α = 0,45 y 0,50 (el
+  cumplimiento se calcula ex post, sin recorrer).
+
+### 12.5 Tiempos
+
+Media (máximo) de minutos por corrida en manual: ilp 1,8 (7,7); greedy 2,1 (10,3); brkga y brkga_fair 2,3
+(9,0); paybrkga 2,8 (12,1); hier 3,1 (13,4); mipfair 4,5 (22,0; Bogotá 12). Auto es 10–30 % más rápido. MIP-Fair
+sigue bajo la regla de 20 min salvo en Bogotá 12 (22 min, una celda).

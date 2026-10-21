@@ -300,3 +300,30 @@ con el greedy arreglado).
 Confirmación con circuidad 1,3 (seis corridas greedy): Gini corporativo medio 0,409, malla de α confirmada;
 cobertura unos 4 pts menor que con 1,0; greedy Bogotá 10,7 min con H7 resuelto. X1 lanzado el 21 oct a las
 00:05 (4 procesos, orden por semilla, reanudable).
+
+## 16. X1, primera pasada: resultados preliminares (2026-10-21, 04:06; slide 16 nueva; las antiguas 16 y 17 pasan a 17 y 18)
+
+864 celdas (24 instancias × 18 configuraciones × 2 regímenes, semilla 1, circuidad 1,3), 0 fallos, 2 h 50 min
+con 12 procesos. Media sobre las 24 instancias, régimen manual (detalle y errores estándar en
+`docs/paper-cmdp/diseno-experimental.md` §12):
+
+| Configuración | Cobertura | Gini | Atraso (min) | Pago / greedy | ΔGini vs greedy [IC 95 %] | Auto: Gini |
+|---|---|---|---|---|---|---|
+| greedy | 0,759 | 0,525 | 19,9 | 1,00 | — | 0,586 |
+| ilp | 0,738 | **0,414** | 19,4 | 0,97 | −0,111 [−0,168; −0,053]; cobertura −2,1 pts | **0,395** |
+| hier | 0,770 | 0,537 | **18,1** | 1,01 | +0,012 [−0,023; +0,048] | 0,571 |
+| brkga | **0,771** | 0,492 | 18,5 | 1,02 | −0,032 [−0,064; +0,001] | 0,498 |
+| brkga_fair w5–w40 | 0,768–0,771 | 0,501–0,509 | 18,5 | 1,01 | −0,016 a −0,024 (n. s.) | 0,507–0,521 |
+| mipfair α 0,20–1,00 | 0,763–0,765 | 0,454–0,472 | 19,0 | 1,01 | α 0,30: −0,071 [−0,121; −0,023]; cobertura +0,4 pts | 0,448–0,473 |
+| paybrkga λ 0,1–1,0 | 0,760–0,754 | 0,482–0,448 | 18,8 | 0,95–0,87 | λ 0,5: −0,077 [−0,134; −0,027]; cobertura −0,5 pts | 0,444–0,468 |
+
+Lecturas (una semilla): L1 en auto-aceptación la cobertura es idéntica en las 18 configuraciones (0,786): el
+21 % no entregado es infactible bajo el SLA. L2 en auto, MIP-Fair y Pay-BRKGA bajan el Gini 0,11–0,14 sin
+costo; en manual MIP-Fair baja 0,05–0,07 ganando cobertura y puntualidad. L3 el ILP exacto es el que más baja
+el Gini porque activa ≈ 800 repartidores frente a ≈ 1.010 del greedy: el Gini sobre activos premia
+concentrar el trabajo; BRKGA-Fair falla por lo contrario (el déficit prefiere al ocioso). Pendiente A1: Gini
+sobre todos los conectados e ingreso total desde las tablas por repartidor. L4 α no mueve a MIP-Fair (ni
+α = 1,00); ablación E8 con holgura de cobertura para X3. L5 el jerárquico es el más puntual pero no baja el
+Gini del día. L6 Pay-BRKGA responde a λ. L7 nadie cumple α ≤ 0,30; a 0,40 solo ilp (46–71 %); α* provisional
+para X2 = 0,40; la tabla de cumplimiento añade 0,45 y 0,50. Tiempos 1,8–4,5 min por corrida (máx. 22). X1
+completo ≈ 22 oct por la mañana.

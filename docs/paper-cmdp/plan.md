@@ -253,3 +253,12 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   extraída en `docs/paper-cmdp/paper/estilo-ejor.md` y borrador reescrito con esa estructura
   (`main.tex`, 878 líneas, 61 TODO, la mayoría celdas de resultados; borrador anterior `main_v0.tex`).
   No compilado: no hay TeX en esta máquina. Figuras F1 y F2 en `docs/paper-cmdp/figures/`.
+- **2026-10-21, 04:30.** X1 relanzado a 01:15 con 12 procesos (≈ 290 corridas por hora); semilla 1 completa a
+  las 04:06 (864 celdas, 0 fallos) y analizada: `diseno-experimental.md` §12, slide 16 del deck, T3 y T4 del
+  paper con valores preliminares. Lecturas: cobertura idéntica en auto-aceptación; garantía barata; el ILP
+  exacto baja más el Gini que MIP-Fair porque el Gini sobre activos premia concentrar el trabajo; α no mueve
+  a MIP-Fair; Pay-BRKGA responde a λ. Decisiones: E8 (ablación MIP-Fair con holgura de cobertura, X3), α*
+  provisional 0,40 para X2, columnas 0,45 y 0,50 en la tabla de cumplimiento; análisis A1 pendiente (Gini
+  sobre todos los conectados y sobre ingreso total, desde `output/paper/couriers/`). X1 completo estimado el
+  22 oct por la mañana; después X3 y X2. El paper compila (tectonic, 36 pp.) y vive también en
+  `dalvarezmartinez/mdrp-paper` (subtree de `docs/paper-cmdp/paper`), importado en Overleaf por el director.
