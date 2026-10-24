@@ -127,6 +127,34 @@ def benchmark_rows(blk: pd.DataFrame, regime: str, configs: List[str]) -> str:
     return '\n'.join(lines)
 
 
+def city_rows(blk: pd.DataFrame, df: pd.DataFrame, configs: List[str], regime: str = 'manual', alpha: float = 0.40) -> str:
+    """T8 (appendix): one block per city with the configurations of T3, manual regime: coverage, end-of-day
+    Gini over the eligible couriers, active share, lateness, payment, and compliance with alpha."""
+    city_of = df.groupby('instance')['city'].first()
+    sub = blk[(blk.regime == regime) & blk.method.isin(configs)].copy()
+    sub['city'] = sub['instance'].map(city_of)
+    comp = df[(df.regime == regime) & df.method.isin(configs)].assign(ok=lambda d: d[GINI_COL] <= alpha)
+    comp = comp.groupby(['city', 'method'])['ok'].mean() * 100
+    lines = []
+    for city in sorted(sub.city.unique()):
+        s = sub[sub.city == city]
+        n_inst = s.instance.nunique()
+        agg = s.groupby('method').agg(cov=('coverage_rate', 'mean'), gini=(GINI_COL, 'mean'),
+                                      act=('share_active_elig', 'mean'), late=('overage_mean', 'mean'),
+                                      pay=('pay_pct', 'mean')).loc[[c for c in configs if c in s.method.unique()]]
+        cols = {'cov': fmt_bold(agg['cov'], 'max', '{:.3f}'), 'gini': fmt_bold(agg['gini'], 'min', '{:.3f}'),
+                'act': fmt_bold(agg['act'], 'max', '{:.2f}'), 'late': fmt_bold(agg['late'], 'min', '{:.1f}'),
+                'pay': fmt_bold(agg['pay'].round(0), 'min', '{:.0f}')}
+        lines.append(r'\multicolumn{7}{l}{\textit{' + city.replace('Bogota', "Bogot\\'a").replace('Medellin', "Medell\\'in")
+                     + f' ({n_inst} instances)' + r'}} \\')
+        for m in agg.index:
+            c = comp.get((city, m), float('nan'))
+            lines.append(f"{display_name(m)} & {cols['cov'][m]} & {cols['gini'][m]} & {cols['act'][m]} & "
+                         f"{cols['late'][m]} & {cols['pay'][m]} & {c:.0f} \\\\")
+        lines.append(r'\hline')
+    return '\n'.join(lines)
+
+
 def scope_rows(blk: pd.DataFrame, configs: List[str]) -> str:
     sub = blk[(blk.regime == 'manual') & blk.method.isin(configs)]
     agg = sub.groupby('method').agg(g=(GINI_COL, 'mean'), ga=('gini_elig_active_hourly', 'mean'),
@@ -236,6 +264,7 @@ def main() -> None:
     open(os.path.join(a.out_dir, 'scope.tex'), 'w', encoding='utf8').write(scope_rows(blk, configs) + '\n')
     open(os.path.join(a.out_dir, 'compliance.tex'), 'w', encoding='utf8').write(
         compliance_rows(compliance_table(df, configs)) + '\n')
+    open(os.path.join(a.out_dir, 'city.tex'), 'w', encoding='utf8').write(city_rows(blk, df, configs) + '\n')
     txt = stats_text(df, blk, configs)
     open(os.path.join(a.out_dir, 'stats.txt'), 'w', encoding='utf8').write(txt)
     print(bench)

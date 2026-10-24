@@ -910,7 +910,75 @@ In this section, we provide additional computational analyses that complement th
 \subsection{Results by city}
 \label{sec:App_by_city}
 
-\todo{Table with the six blocks of Table~\ref{tab:benchmark} by city (from main.csv grouped by city) and one paragraph: where the guarantee is cheap (Bucaramanga, Pereira, low corporate Gini) and where it is expensive (Cali, Barranquilla, high corporate Gini).} In the pilot, the corporate Gini coefficient is 0.468 in Barranquilla, 0.372 in Bogot\'a, 0.361 in Bucaramanga, 0.528 in Cali, 0.394 in Medell\'in and 0.387 in Pereira (0.457, 0.418, 0.326, 0.539, 0.321 and 0.392 with circuity 1.3).
+Table~\ref{tab:city} repeats the manual-regime block of Table~\ref{tab:benchmark} for each of the six cities, with the compliance with $\alpha = 0.40$ as the last column. The central result holds city by city: \textbf{Greedy} is between $0.275$ (Medell\'in) and $0.323$ (Pereira) on the end-of-day Gini coefficient over the eligible couriers and meets $\alpha = 0.40$ on every day except three in Pereira, while the six order-centric policies are between $0.448$ (\textbf{ILP}, Bogot\'a and Medell\'in) and $0.637$ (\textbf{BRKGA}, Bucaramanga and Pereira) and meet it on none. The guarantee is therefore uniformly within reach of the courier-centric rule, and the question of where it is cheap or expensive becomes the question of where the order-centric policies fall furthest from it. They fall furthest in the two smallest fleets, Bucaramanga and Pereira ($0.56$--$0.64$, with only 59--73\% of the eligible couriers active), and closest in Bogot\'a and Medell\'in ($0.45$--$0.51$, 79--86\% active), where the fleet is large relative to demand and the best-placed courier changes more often. The coverage that \textbf{Greedy} gives up with respect to the best policy of the city is between $0.8$ points (Bogot\'a) and $1.5$ points (Cali), and its extra lateness between $0.9$ (Pereira, against \textbf{Hierarchical}) and $2.3$ minutes (Bogot\'a); the pay lever of \textbf{Pay-BRKGA} cuts the bill most where the fleet is small and routes are long (Pereira, 19\%; Bucaramanga, 15\%) and least in Bogot\'a and Medell\'in (7--9\%). \todo{Add the second-generation variants of X3 to the city blocks.}
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{l|c|c|c|c|c|c}
+\hline
+\textbf{Policy} & \textbf{Coverage} & \textbf{End-of-day Gini $\FG$} & \textbf{Active eligible} & \textbf{Lateness (min)} & \textbf{Payment (\% of tariff)} & \textbf{$\FG \le 0.40$ (\% of days)} \\
+\hline
+\multicolumn{7}{l}{\textit{Barranquilla (4 instances)}} \\
+\textbf{Greedy} & 0.692 & \textbf{0.304} & \textbf{0.98} & 20.0 & 100 & 100 \\
+\textbf{ILP} & 0.670 & 0.470 & 0.80 & 19.8 & 100 & 0 \\
+\textbf{Hierarchical} & 0.700 & 0.491 & 0.80 & \textbf{18.2} & 100 & 0 \\
+\textbf{BRKGA} & 0.701 & 0.513 & 0.76 & 18.7 & 100 & 0 \\
+\textbf{BRKGA-Fair} ($w = 20$) & 0.701 & 0.481 & 0.82 & 18.8 & 100 & 0 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.690 & 0.503 & 0.78 & 19.5 & 100 & 0 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.690 & 0.499 & 0.78 & 19.0 & \textbf{92} & 0 \\
+\hline
+\multicolumn{7}{l}{\textit{Bogot\'a (4 instances)}} \\
+\textbf{Greedy} & 0.811 & \textbf{0.282} & \textbf{0.96} & 20.1 & 100 & 100 \\
+\textbf{ILP} & 0.799 & 0.448 & 0.85 & 19.6 & 100 & 0 \\
+\textbf{Hierarchical} & 0.815 & 0.503 & 0.81 & \textbf{17.8} & 100 & 0 \\
+\textbf{BRKGA} & 0.817 & 0.509 & 0.79 & 18.5 & 100 & 0 \\
+\textbf{BRKGA-Fair} ($w = 20$) & \textbf{0.819} & 0.474 & 0.86 & 18.7 & 100 & 0 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.808 & 0.484 & 0.82 & 19.4 & 100 & 0 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.809 & 0.493 & 0.81 & 18.8 & \textbf{93} & 0 \\
+\hline
+\multicolumn{7}{l}{\textit{Bucaramanga (5 instances)}} \\
+\textbf{Greedy} & 0.730 & \textbf{0.306} & \textbf{0.97} & 19.6 & 100 & 100 \\
+\textbf{ILP} & 0.714 & 0.593 & 0.63 & 19.1 & 100 & 0 \\
+\textbf{Hierarchical} & 0.743 & 0.579 & 0.71 & \textbf{18.3} & 100 & 0 \\
+\textbf{BRKGA} & 0.743 & 0.637 & 0.59 & 18.6 & 100 & 0 \\
+\textbf{BRKGA-Fair} ($w = 20$) & 0.743 & 0.607 & 0.65 & 18.6 & 100 & 0 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.741 & 0.625 & 0.60 & 18.7 & 100 & 0 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.726 & 0.613 & 0.61 & 18.8 & \textbf{85} & 0 \\
+\hline
+\multicolumn{7}{l}{\textit{Cali (3 instances)}} \\
+\textbf{Greedy} & 0.748 & \textbf{0.322} & \textbf{0.96} & 20.7 & 100 & 100 \\
+\textbf{ILP} & 0.727 & 0.530 & 0.70 & 19.9 & 100 & 0 \\
+\textbf{Hierarchical} & 0.762 & 0.563 & 0.71 & \textbf{18.5} & 100 & 0 \\
+\textbf{BRKGA} & 0.762 & 0.591 & 0.63 & 18.8 & 100 & 0 \\
+\textbf{BRKGA-Fair} ($w = 20$) & \textbf{0.763} & 0.562 & 0.69 & 18.9 & 100 & 0 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.759 & 0.554 & 0.68 & 19.2 & 100 & 0 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.743 & 0.564 & 0.66 & 19.2 & \textbf{86} & 0 \\
+\hline
+\multicolumn{7}{l}{\textit{Medell\'in (4 instances)}} \\
+\textbf{Greedy} & 0.812 & \textbf{0.275} & \textbf{0.99} & 18.7 & 100 & 100 \\
+\textbf{ILP} & 0.797 & 0.448 & 0.82 & 18.0 & 100 & 0 \\
+\textbf{Hierarchical} & 0.823 & 0.457 & 0.85 & \textbf{17.0} & 100 & 0 \\
+\textbf{BRKGA} & 0.824 & 0.490 & 0.79 & 17.4 & 100 & 0 \\
+\textbf{BRKGA-Fair} ($w = 20$) & 0.824 & 0.467 & 0.85 & 17.5 & 100 & 0 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.820 & 0.474 & 0.82 & 17.7 & 100 & 0 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.815 & 0.475 & 0.81 & 17.6 & \textbf{91} & 0 \\
+\hline
+\multicolumn{7}{l}{\textit{Pereira (4 instances)}} \\
+\textbf{Greedy} & 0.762 & \textbf{0.323} & \textbf{0.95} & 20.3 & 100 & 85 \\
+\textbf{ILP} & 0.723 & 0.619 & 0.59 & 20.3 & 100 & 0 \\
+\textbf{Hierarchical} & \textbf{0.776} & 0.564 & 0.73 & \textbf{18.8} & 100 & 0 \\
+\textbf{BRKGA} & 0.775 & 0.637 & 0.61 & 19.1 & 100 & 0 \\
+\textbf{BRKGA-Fair} ($w = 20$) & 0.774 & 0.619 & 0.65 & 19.1 & 100 & 0 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.770 & 0.610 & 0.63 & 19.4 & 100 & 0 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.742 & 0.621 & 0.61 & 19.4 & \textbf{81} & 0 \\
+\hline
+\end{tabular}
+\end{adjustbox}
+\caption{Results by city, manual regime: mean over the instances of the city (ten seeds averaged within each instance) for the configurations of Table~\ref{tab:benchmark}; the last column is the share of (instance, seed) pairs with $\FG \le 0.40$. Best value per column and city in bold.}
+\label{tab:city}
+\end{table}
 
 \subsection{Ablations}
 \label{sec:App_ablations}

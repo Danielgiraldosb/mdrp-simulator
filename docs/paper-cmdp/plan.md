@@ -316,3 +316,7 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   2,19–2,25 de las políticas order-centric (+25 %, menos agrupamiento), desplaza el 29 % de sus km a bicicletas y
   caminantes (16–23 % en las demás) pero eso compensa solo ≈ 15 %; por pedido emite 0,236 kg frente a 0,187–0,189 de
   MIP-Fair e ILP (−21 %). Prosa en la sección de sensibilidad (flota) y figura en el apéndice. 41 pp., 50 todo.
+- **2026-10-25, 01:05 (T8 por ciudad).** `tables_paper.py` escribe ahora `city.tex` (seis bloques manuales de T3 con
+  cumplimiento α = 0,40); pegado en el apéndice con su párrafo: greedy 0,275–0,323 en todas las ciudades y cumple
+  0,40 todos los días salvo tres en Pereira; las políticas order-centric caen más lejos en las flotas pequeñas
+  (Bucaramanga y Pereira, 0,56–0,64, 59–73 % activos) y más cerca en Bogotá y Medellín (0,45–0,51). 42 pp., 50 todo.
