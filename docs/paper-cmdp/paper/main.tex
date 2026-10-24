@@ -725,12 +725,12 @@ One of our main modelling contributions is the equity history in the state. In t
 \subsection{Decision making}
 \label{sec:results_decisions}
 
-We next analyse how the three policies change the dispatching decision compared to \textbf{Greedy}: who receives which route, and what it pays. Figure~\ref{fig:violin} compares the distribution of end-of-day hourly earnings per courier under \textbf{Greedy} and under each policy at its best configuration on the 24 instances; the x-axis lists the policies, the y-axis the hourly earnings, and the horizontal line marks $w^*$. \todo{prose from output/paper/couriers/: whether the policies compress the distribution from above (fewer high earners) or from below (fewer idle couriers), the share of couriers that cross $w^*$ under \textbf{Pay-BRKGA}, and the mean bundle size per policy.} For \textbf{Pay-BRKGA} we further report where the pay goes: the distribution of the multiplier $m_c$ across couriers and its relation to the deficit, and the total payment relative to the tariff by regime; in the manual regime the multiplier buys acceptance on long routes, in the auto-accept regime it moves only $\FD$ and cost \todo{from main.csv, multiplier logs}.
+We next analyse how the three policies change the dispatching decision compared to \textbf{Greedy}: who receives which route, and what it pays. Figure~\ref{fig:violin} compares the distribution of end-of-day hourly earnings over the eligible couriers under \textbf{Greedy} and under each policy at its best configuration, pooled over the 24 instances of one seed (23{,}944 couriers, manual regime); the x-axis lists the policies, the y-axis the earnings per connected hour, and the share of couriers who end the day idle is printed under each violin. The statutory minimum $w^* = 4{,}368$ COP/h lies above the 99th percentile of every distribution, which is the content of $\FD \ge 0.97$. The policies do not compress the distribution of \textbf{Greedy}; they stretch it at both ends. \textbf{Greedy} leaves 3\% of the eligible couriers idle and its interquartile range is $519$--$876$ COP/h around a median of $685$; the six other policies leave 19--25\% idle, their first quartile is between $0$ (\textbf{BRKGA}) and $205$ COP/h, their median is similar ($547$--$621$) and their third quartile is higher ($1{,}066$--$1{,}206$ COP/h): the orders that \textbf{Greedy} spreads over the couriers who happen to be free go, under an order-centric policy, to the couriers who are best placed, who are then best placed again. The reduction of the Gini coefficient of Eq.~\eqref{eqn:gini} under \textbf{Greedy} therefore comes from below (fewer idle couriers) and from above (fewer high earners) at once, at the same total pay: the mean is $801$ COP/h under \textbf{Greedy} and $708$--$796$ under the policies that pay the tariff. \textbf{Pay-BRKGA} shifts the whole distribution down (mean $689$, median $547$) because it pays 12\% less, and still leaves 23\% idle. \todo{the share of couriers that cross $w^*$ under \textbf{Pay-BRKGA} (none up to the 99th percentile) and the mean bundle size per policy, from the multiplier logs.} For \textbf{Pay-BRKGA} we further report where the pay goes: the distribution of the multiplier $m_c$ across couriers and its relation to the deficit, and the total payment relative to the tariff by regime; in the manual regime the multiplier buys acceptance on long routes, in the auto-accept regime it moves only $\FD$ and cost \todo{from main.csv, multiplier logs}.
 
 \begin{figure}[t]
     \centering
-    \figorph{figures/F7_earnings_violin.pdf}{0.7\textwidth}{5cm}{F7: distribution of end-of-day hourly earnings per courier, \textbf{Greedy} vs each policy at its best configuration. \todo{from output/paper/couriers/}}
-    \caption{Distribution of hourly earnings per courier by policy}
+    \figorph{figures/F7_earnings_violin.pdf}{\textwidth}{5cm}{F7: distribution of end-of-day hourly earnings per courier, \textbf{Greedy} vs each policy at its best configuration.}
+    \caption{Distribution of end-of-day hourly earnings over the eligible couriers by policy (manual regime, seed 1, 24 instances pooled; values above the 99th percentile clipped; bar = interquartile range, tick = median)}
     \label{fig:violin}
 \end{figure}
 
@@ -757,10 +757,10 @@ Finally, we study how different operational conditions affect the performance an
 \cline{2-11}
 & \textbf{manual} & \textbf{auto} & \textbf{615} & \textbf{903} & \textbf{1,242} & \textbf{0.20} & \textbf{0.30} & \textbf{0.40} & \textbf{1.0} & \textbf{1.3} \\
 \hline
-\textbf{Greedy} & 0.0 & \todo{} & & 0.0 & & -- & -- & -- & & 0.0 \\
-\textbf{Hierarchical} & 0.0 & & & 0.0 & & -- & -- & -- & & 0.0 \\
-\textbf{MIP-Fair} & 0.0 & & & 0.0 & & & 0.0 & & & 0.0 \\
-\textbf{Pay-BRKGA} & 0.0 & & & 0.0 & & -- & -- & -- & & 0.0 \\
+\textbf{Greedy} & 0.0 & +3.7 & & 0.0 & & -- & -- & -- & & 0.0 \\
+\textbf{Hierarchical} & 0.0 & +2.2 & & 0.0 & & -- & -- & -- & & 0.0 \\
+\textbf{MIP-Fair} & 0.0 & +2.9 & & 0.0 & & 0.0 & 0.0 & 0.0 & & 0.0 \\
+\textbf{Pay-BRKGA} & 0.0 & +4.4 & & 0.0 & & -- & -- & -- & & 0.0 \\
 \hline
 \end{tabular}
 \end{adjustbox}
@@ -768,7 +768,14 @@ Finally, we study how different operational conditions affect the performance an
 \label{tab:sensitivity}
 \end{table}
 
-\paragraph{Acceptance regime} \todo{Prose for the regime loss (F5): the paired difference manual minus auto-accept in coverage and Gini by policy with bootstrap intervals; whether the loss is larger than any difference between policies; where the pay lever of \textbf{Pay-BRKGA} recovers coverage in the manual regime.} We expect the regime to matter more than the policy in the manual world: with a flat tariff and a threshold of 903 COP/km, a 4-km singleton is accepted with probability 0.19, so coverage under manual acceptance is bounded by behaviour rather than by dispatching, and auto-accept removes that bound by moving the courier's decision to connection time.
+\paragraph{Acceptance regime} Figure~\ref{fig:regime_loss} shows the regime loss, the paired difference manual minus auto-accept by instance, for the seven configurations of Table~\ref{tab:benchmark}. In coverage the loss is between $1.6$ points (\textbf{BRKGA}, \textbf{BRKGA-Fair}) and $4.8$ points (\textbf{ILP}), with $2.8$ for \textbf{Greedy}, $2.2$ for \textbf{MIP-Fair} and $3.3$ for \textbf{Pay-BRKGA}; every interval is away from zero, and the loss of \textbf{ILP} alone exceeds the whole spread of coverage between policies within the manual regime ($3.2$ points). The policies that re-optimise the round after a rejection lose least. \textbf{Pay-BRKGA} loses $1.7$ points more than \textbf{BRKGA}: its pay cut lowers the acceptance probability of the long routes on which the multiplier would have to rise, so in the manual regime the pay lever is paid for in coverage, whereas under auto-accept the same lever cuts the bill by 20\% at no coverage cost. The regime moves the end-of-day Gini coefficient by at most $0.02$ ($+0.019$ for \textbf{ILP}, $-0.002$ for the BRKGA family), an order of magnitude less than the gap between \textbf{Greedy} and the other policies, so the ranking of Table~\ref{tab:benchmark} is the same under both regimes. With a flat tariff and a threshold of 903 COP/km, a 4-km singleton is accepted with probability 0.19, so coverage under manual acceptance is bounded by behaviour rather than by dispatching, and auto-accept removes that bound by moving the courier's decision to connection time: the regime matters more than the policy for coverage, and the policy matters more than the regime for equity.
+
+\begin{figure}[t]
+    \centering
+    \figorph{figures/F5_regime_loss.pdf}{\textwidth}{5cm}{F5: regime loss by policy.}
+    \caption{Regime loss, manual minus auto-accept, paired by instance: coverage (left) and end-of-day Gini coefficient over the eligible couriers (right); mean and 95\% bootstrap interval over the 24 instances, ten seeds averaged within each instance}
+    \label{fig:regime_loss}
+\end{figure}
 
 \paragraph{Behavioural threshold} The threshold $\theta$ is a grade-C parameter estimated from 32 decisions. \todo{Prose for X2: coverage and Gini at $\theta \in \{615, 903, 1{,}242\}$ for the five selected configurations; whether the ranking of policies changes within the confidence interval of the logit; the Gini coefficient is expected to be less sensitive than coverage because it is normalised by active time.}
 

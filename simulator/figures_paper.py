@@ -179,9 +179,129 @@ def fig_frontiers(out_dir: str, main_csv: str, couriers_table: str = None, compl
         _save(fig, out_dir, name)
 
 
+SELECTED = ['greedy', 'ilp', 'hier', 'brkga', 'brkga_fair_w20', 'mipfair_a030', 'paybrkga_l05']   # T3 configurations
+SHORT = {'greedy': 'Greedy', 'ilp': 'ILP', 'hier': 'Hierarchical', 'brkga': 'BRKGA', 'brkga_fair_w20': 'BRKGA-Fair\n($w=20$)',
+         'mipfair_a030': 'MIP-Fair\n($\\alpha=0.30$)', 'paybrkga_l05': 'Pay-BRKGA\n($\\lambda_{pay}=0.5$)'}
+
+
+def _colour(method: str) -> str:
+    if method in BENCH:
+        return BENCH[method][1]
+    for fam, (_, col, _, order) in FAMILIES.items():
+        if method in order:
+            return col
+    return '#444444'
+
+
+def _load_runs(main_csv: str, couriers_table: str | None, complete_seeds: bool = True) -> pd.DataFrame:
+    df = pd.read_csv(main_csv)
+    if couriers_table:
+        ct = pd.read_csv(couriers_table)[['run_id', 'gini_elig_hourly']]
+        df = df.merge(ct, on='run_id', how='inner')
+    if complete_seeds:
+        cnt = df.groupby('seed')['run_id'].count()
+        df = df[df['seed'].isin(cnt[cnt == cnt.max()].index)]
+    return df
+
+
+def fig_regime_loss(out_dir: str, main_csv: str, couriers_table: str, methods=SELECTED, n_boot: int = 2000) -> None:
+    """F5: the regime loss (manual minus auto-accept) per policy, paired by instance (seeds averaged within
+    the instance), mean with a 95% bootstrap interval over the instances. Left: coverage (points);
+    right: end-of-day Gini over the eligible couriers (E9)."""
+    plt = _plt()
+    df = _load_runs(main_csv, couriers_table)
+    inst = df.groupby(['method', 'regime', 'instance'])[['coverage_rate', 'gini_elig_hourly']].mean()
+    rng = np.random.default_rng(0)
+    rows = []
+    for m in methods:
+        if m not in inst.index.get_level_values(0):
+            continue
+        man = inst.loc[(m, 'manual')]
+        aut = inst.loc[(m, 'autoaccept')].reindex(man.index)
+        for col, scale in (('coverage_rate', 100.0), ('gini_elig_hourly', 1.0)):
+            d = ((man[col] - aut[col]) * scale).dropna().to_numpy()
+            boots = [rng.choice(d, len(d), replace=True).mean() for _ in range(n_boot)]
+            rows.append({'method': m, 'metric': col, 'mean': d.mean(),
+                         'lo': np.percentile(boots, 2.5), 'hi': np.percentile(boots, 97.5)})
+    t = pd.DataFrame(rows)
+    fig, axes = plt.subplots(1, 2, figsize=(8.4, 3.2))
+    for ax, col, xlabel in zip(axes, ('coverage_rate', 'gini_elig_hourly'),
+                               ('coverage, manual minus auto-accept (points)',
+                                'end-of-day Gini (eligible couriers), manual minus auto-accept')):
+        sub = t[t.metric == col].set_index('method').reindex([m for m in methods if m in set(t.method)])
+        y = np.arange(len(sub))[::-1]
+        for yi, (m, r) in zip(y, sub.iterrows()):
+            ax.errorbar(r['mean'], yi, xerr=[[r['mean'] - r['lo']], [r['hi'] - r['mean']]], fmt='o', ms=5,
+                        color=_colour(m), ecolor=_colour(m), elinewidth=1.2, capsize=2.5)
+        ax.axvline(0, color='#999999', lw=0.8, ls='--')
+        ax.set_yticks(y)
+        ax.set_yticklabels([SHORT.get(m, m) for m in sub.index], fontsize=7.5)
+        ax.set_xlabel(xlabel, fontsize=8)
+        ax.grid(axis='x', lw=0.4, alpha=0.5)
+    fig.suptitle(f'paired by instance ({inst.index.get_level_values(2).nunique()} instances, '
+                 f'{df.seed.nunique()} seeds averaged within each); mean and 95% bootstrap interval', fontsize=7, y=1.0)
+    _save(fig, out_dir, 'F5_regime_loss')
+    t.to_csv(os.path.join(out_dir, 'F5_regime_loss.csv'), index=False)
+
+
+def fig_earnings_violin(out_dir: str, main_csv: str, couriers_dir: str, methods=SELECTED, regime: str = 'manual',
+                        seed: int = 1, min_shift_h: float = 1.0, clip_q: float = 0.99) -> None:
+    """F7: distribution of end-of-day hourly earnings (COP per connected hour) over the ELIGIBLE couriers
+    (shift >= 1 h, idle ones at zero), pooled over the 24 instances of one seed, one violin per policy.
+    The share of eligible couriers without a delivery is printed under each violin."""
+    plt = _plt()
+    df = pd.read_csv(main_csv)
+    df = df[(df.regime == regime) & (df.seed == seed) & (df.method.isin(methods))]
+    data, zeros, n_inst = {}, {}, {}
+    for m in methods:
+        runs = df[df.method == m]
+        vals = []
+        for rid in runs.run_id:
+            p = os.path.join(couriers_dir, f'{rid}.csv')
+            if not os.path.exists(p):
+                continue
+            t = pd.read_csv(p)
+            t = t[t['shift_h'] >= min_shift_h]
+            vals.append((t['payment'] / t['shift_h'].clip(lower=1e-9)).to_numpy())
+        if not vals:
+            continue
+        v = np.concatenate(vals)
+        data[m], zeros[m], n_inst[m] = v, float((v <= 0).mean()), len(vals)
+    cap = np.percentile(np.concatenate(list(data.values())), clip_q * 100)
+    fig, ax = plt.subplots(figsize=(8.4, 3.6))
+    order = [m for m in methods if m in data]
+    parts = ax.violinplot([np.minimum(data[m], cap) for m in order], positions=range(len(order)), showmedians=True,
+                          showextrema=False, widths=0.85, points=200)
+    for body, m in zip(parts['bodies'], order):
+        body.set_facecolor(_colour(m))
+        body.set_edgecolor('none')
+        body.set_alpha(0.55)
+    parts['cmedians'].set_color('k')
+    parts['cmedians'].set_linewidth(1.0)
+    for i, m in enumerate(order):
+        q1, q3 = np.percentile(data[m], [25, 75])
+        ax.plot([i, i], [min(q1, cap), min(q3, cap)], color='k', lw=2.2, solid_capstyle='butt')
+        ax.text(i, -0.06 * cap, f'idle {100 * zeros[m]:.0f}%', ha='center', va='top', fontsize=7, color='#333333')
+    ax.set_xticks(range(len(order)))
+    ax.set_xticklabels([SHORT.get(m, m) for m in order], fontsize=7.5)
+    ax.set_ylabel('end-of-day earnings per connected hour (COP/h)', fontsize=8)
+    ax.set_ylim(-0.14 * cap, cap * 1.02)
+    ax.axhline(0, color='#999999', lw=0.6)
+    ax.set_title(f'eligible couriers (connected $\\geq$ {min_shift_h:g} h), {regime} regime, seed {seed}, '
+                 f'pooled over {max(n_inst.values())} instances; values above the {int(clip_q * 100)}th percentile '
+                 f'({cap:,.0f} COP/h) are clipped; vertical bar = interquartile range, horizontal tick = median', fontsize=7)
+    _save(fig, out_dir, 'F7_earnings_violin')
+    pd.DataFrame({'method': order, 'n_couriers': [len(data[m]) for m in order],
+                  'share_idle': [zeros[m] for m in order],
+                  'p25': [np.percentile(data[m], 25) for m in order], 'median': [np.median(data[m]) for m in order],
+                  'p75': [np.percentile(data[m], 75) for m in order], 'mean': [data[m].mean() for m in order]}
+                 ).to_csv(os.path.join(out_dir, 'F7_earnings_violin.csv'), index=False)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--fig', nargs='+', default=['f1', 'f2'], choices=['f1', 'f2', 'f3f4'])
+    ap.add_argument('--fig', nargs='+', default=['f1', 'f2'], choices=['f1', 'f2', 'f3f4', 'f5', 'f7'])
+    ap.add_argument('--couriers-dir', default=os.path.join(THIS_DIR, 'output', 'paper', 'couriers'))
     ap.add_argument('--out', default=os.path.normpath(os.path.join(THIS_DIR, '..', 'docs', 'paper-cmdp', 'paper', 'figures')))
     ap.add_argument('--main-csv', default=os.path.join(THIS_DIR, 'output', 'paper', 'main.csv'))
     ap.add_argument('--couriers-table', default=os.path.join(THIS_DIR, 'output', 'paper', 'main_couriers.csv'),
@@ -193,6 +313,10 @@ def main() -> None:
         fig_f2(args.out)
     if 'f3f4' in args.fig:
         fig_frontiers(args.out, args.main_csv, args.couriers_table if os.path.exists(args.couriers_table) else None)
+    if 'f5' in args.fig:
+        fig_regime_loss(args.out, args.main_csv, args.couriers_table)
+    if 'f7' in args.fig:
+        fig_earnings_violin(args.out, args.main_csv, args.couriers_dir)
 
 
 if __name__ == '__main__':
