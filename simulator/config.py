@@ -152,6 +152,20 @@ class Config:
     paybrkga_pay_range: float = 0.30
     paybrkga_lambda_deficit: float = 0.5    # weight of projected F_Deficit (coverage-fraction units)
     paybrkga_lambda_pay: float = 0.2        # weight of relative pay excess (eq:cost_plus lambda)
+    # -- Second generation (E10, 2026-10-21; fair_history.py): what BRKGA-Fair, Pay-BRKGA and
+    # MIP-Fair read in H_t. 'active' = earnings per active hour (first generation, A2: a productivity
+    # rate); 'exposure' = earnings per hour connected so far (the paper's w_c). 'round' = the couriers
+    # of the round (+ H_all); 'eligible' = declared connection >= fair_min_shift_min, idle at zero.
+    fair_history: str = 'active'
+    fair_population: str = 'round'
+    fair_min_shift_min: float = 60.0
+    fair_exposure_floor_min: float = 30.0   # floor on connected minutes in the exposure rate
+    # E10b: besides the k nearest idle couriers, every route also tries the fair_cand_deficit_k idle
+    # couriers with the largest deficit (0 = the first-generation prefilter). The order-centric
+    # policies could not reach the idle eligible couriers because they were never candidates.
+    fair_cand_deficit_k: int = 0
+    # E8: MIP-Fair may give up this fraction of the round's maximum coverage for the Gini excess
+    mipfair_cov_slack: float = 0.0
 
     # Extra grace beyond the instance's own "maximum click-to-door" hard SLA.
     # 0 = use the instance's hard window exactly as published.

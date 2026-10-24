@@ -40,10 +40,21 @@ from typing import Any, Dict, List, Tuple
 
 from config import Config
 from brkga_policy import BRKGAPolicy
+import fair_history as fh
+
+
+def deficits_of(w: Dict[int, float]) -> Tuple[Dict[int, float], float]:
+    """{courier_id: max(0, mean_w - w_c) / mean_w} for a value per courier."""
+    if not w:
+        return {}, 0.0
+    mean_w = sum(w.values()) / len(w)
+    if mean_w <= 0.0:
+        return {cid: 0.0 for cid in w}, mean_w
+    return {cid: max(0.0, mean_w - wc) / mean_w for cid, wc in w.items()}, mean_w
 
 
 def relative_deficits(histories: Dict[int, Any], basis: str) -> Tuple[Dict[int, float], float]:
-    """{courier_id: max(0, mean_w - w_c) / mean_w}, mean_w over the given couriers."""
+    """{courier_id: max(0, mean_w - w_c) / mean_w}, mean_w over the given couriers (first generation)."""
     if basis == 'hourly':
         w = {cid: float(h.hourly_earnings) for cid, h in histories.items()}
     elif basis == 'total':
@@ -66,19 +77,32 @@ class BRKGAFairPolicy(BRKGAPolicy):
             raise ValueError("brkga_fair_weight must be >= 0")
         self.basis = cfg.brkga_fair_basis
         relative_deficits({}, self.basis)          # validates the basis early
+        fh.validate(cfg)
+        # second generation (E10): exposure basis and/or eligible population, over every logged-on
+        # eligible courier (the mean is the day's population, not the round's)
+        self.gen2 = cfg.fair_history == 'exposure' or cfg.fair_population == 'eligible'
         self._deficit: Dict[int, float] = {}
         self._mean_w = 0.0
 
     def assign(self, state: Dict[str, Any]) -> List[Tuple[int, List[int], float]]:
         idle = {cid: c for cid, c in state['L_t'].items() if c.is_available}
         hist = state.get('H_t') or {}
-        self._deficit, self._mean_w = relative_deficits(
-            {cid: hist.get(cid, c.history) for cid, c in idle.items()}, self.basis)
+        if self.gen2 and self.basis == 'hourly':
+            pop = fh.population(state, self.cfg, scope='all')
+            t = state['time']
+            w = {cid: fh.hourly(h, c, t, self.cfg) for cid, (c, h) in pop.items()}
+            self._deficit, self._mean_w = deficits_of(w)
+        else:
+            self._deficit, self._mean_w = relative_deficits(
+                {cid: hist.get(cid, c.history) for cid, c in idle.items()}, self.basis)
         out = super().assign(state)
         if self.rounds and self.rounds[-1].get('time') == state['time'] and 'mean_w' not in self.rounds[-1]:
             self.rounds[-1]['mean_w'] = self._mean_w
             self.rounds[-1]['deficit_assigned'] = [round(self._deficit.get(cid, 0.0), 4) for cid, _, _ in out]
         return out
+
+    def _cand_priority(self, state: Dict[str, Any]):
+        return self._deficit if self.cfg.fair_cand_deficit_k > 0 else None
 
     def _score(self, cand: Dict[str, Any], courier_id: int, t: float) -> float:
         return super()._score(cand, courier_id, t) - self.weight * self._deficit.get(courier_id, 0.0)

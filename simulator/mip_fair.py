@@ -57,6 +57,8 @@ from models import Courier, Order
 from policies import Policy, GreedyPolicy
 from ilp_policy import _try_import_pulp, get_solver, _LAMBDA_COST, _MU_DELAY
 from brkga_policy import build_candidates, CandKey
+import fair_history as fh
+from brkga_fair import deficits_of
 
 logger = logging.getLogger(__name__)
 
@@ -64,19 +66,30 @@ _EPS_V = 1e-7
 
 
 def projected_earnings(cands: Dict[CandKey, Dict[str, Any]], histories: Dict[int, Any],
-                       basis: str, pay_per_order: float
+                       basis: str, pay_per_order: float, exposure: Optional[Dict[int, float]] = None,
+                       floor_min: float = 30.0
                        ) -> Tuple[Dict[int, float], Dict[CandKey, float]]:
-    """w_c^0 per courier and w_c(r) per candidate, under the given basis."""
+    """w_c^0 per courier and w_c(r) per candidate, under the given basis. With ``exposure``
+    ({cid: minutes connected so far}, E10) the hourly basis is earnings per hour connected.
+    Candidates of couriers outside ``histories`` get no value (dispatched, not measured)."""
     if basis not in ('hourly', 'total'):
         raise ValueError(f"mipfair_basis must be 'hourly' or 'total', got {basis!r}")
     w0: Dict[int, float] = {}
     for cid, h in histories.items():
-        w0[cid] = float(h.hourly_earnings) if basis == 'hourly' else float(h.earnings)
+        if basis == 'hourly' and exposure is not None:
+            w0[cid] = float(h.earnings) / (max(exposure[cid], floor_min) / 60.0)
+        else:
+            w0[cid] = float(h.hourly_earnings) if basis == 'hourly' else float(h.earnings)
     w_opt: Dict[CandKey, float] = {}
     for (cid, rkey), cand in cands.items():
+        if cid not in histories:
+            continue
         h = histories[cid]
         pay = pay_per_order * len(rkey)
-        if basis == 'hourly':
+        if basis == 'hourly' and exposure is not None:
+            minutes = max(exposure[cid] + cand['total_tt'], floor_min)
+            w_opt[(cid, rkey)] = (h.earnings + pay) / (minutes / 60.0)
+        elif basis == 'hourly':
             hours = (h.active_time + cand['total_tt']) / 60.0
             w_opt[(cid, rkey)] = (h.earnings + pay) / hours if hours > 0 else 0.0
         else:
@@ -114,6 +127,10 @@ class MIPFairPolicy(Policy):
         self.scope = cfg.mipfair_scope
         if self.scope not in ('all', 'idle'):
             raise ValueError(f"mipfair_scope must be 'all' or 'idle', got {self.scope!r}")
+        fh.validate(cfg)
+        self.cov_slack = float(cfg.mipfair_cov_slack)
+        if not 0.0 <= self.cov_slack <= 1.0:
+            raise ValueError("mipfair_cov_slack must be in [0, 1]")
         self.rounds: List[Dict[str, Any]] = []
 
     # -- Policy contract -------------------------------------------------------------------
@@ -126,7 +143,13 @@ class MIPFairPolicy(Policy):
         t: float = state['time']
         if not couriers or not orders:
             return []
-        cands = build_candidates(couriers, orders, t, self.cfg, self.cand_top_k)
+        priority = None
+        if self.cfg.fair_cand_deficit_k > 0:
+            # E10b: deficit of the idle (eligible) couriers under the configured basis
+            pop_idle = fh.population(state, self.cfg, scope='idle')
+            priority = deficits_of({cid: fh.hourly(h, c, t, self.cfg) for cid, (c, h) in pop_idle.items()})[0]
+        cands = build_candidates(couriers, orders, t, self.cfg, self.cand_top_k, priority,
+                                 int(self.cfg.fair_cand_deficit_k))
         if not cands:
             return []
         hist = state.get('H_t') or {}
@@ -135,21 +158,30 @@ class MIPFairPolicy(Policy):
             # busy couriers enter the Gini with fixed earnings (no candidates, so w_c = w_c^0)
             for cid, h in (state.get('H_all') or {}).items():
                 histories.setdefault(cid, h)
+        exposure = None
+        if self.cfg.fair_population == 'eligible' or self.cfg.fair_history == 'exposure':
+            # E10: the Gini population is the eligible couriers; exposure = minutes connected so far
+            pop = fh.population(state, self.cfg, scope=self.scope)
+            histories = {cid: h for cid, (c, h) in pop.items()}
+            if self.cfg.fair_history == 'exposure':
+                exposure = {cid: (t - c.on_time) if c is not None else self.cfg.fair_exposure_floor_min
+                            for cid, (c, h) in pop.items()}
         try:
-            return self._solve(cands, histories, t)
+            return self._solve(cands, histories, t, exposure)
         except Exception as exc:
             logger.warning(f"MIP-Fair solver error ({exc}), falling back to greedy for this round")
             return self._greedy.assign(state)
 
     # -- Model -----------------------------------------------------------------------------
 
-    def _solve(self, cands: Dict[CandKey, Dict[str, Any]], histories: Dict[int, Any], t: float
-               ) -> List[Tuple[int, List[int], float]]:
+    def _solve(self, cands: Dict[CandKey, Dict[str, Any]], histories: Dict[int, Any], t: float,
+               exposure: Optional[Dict[int, float]] = None) -> List[Tuple[int, List[int], float]]:
         pulp = self._pulp
         cfg = self.cfg
         t0 = time.perf_counter()
-        w0, w_opt = projected_earnings(cands, histories, self.basis, cfg.pay_per_order)
-        cids = sorted(histories)
+        w0, w_opt = projected_earnings(cands, histories, self.basis, cfg.pay_per_order, exposure,
+                                       cfg.fair_exposure_floor_min)
+        cids = sorted(histories)                       # the Gini population
         n = len(cids)
         w_ref = sum(max(w0[c], max((w_opt[k] for k in cands if k[0] == c), default=0.0)) for c in cids)
         if w_ref <= 0:
@@ -160,7 +192,7 @@ class MIPFairPolicy(Policy):
         v = pulp.LpVariable("v", lowBound=0.0)
 
         by_order: Dict[int, list] = {}
-        by_courier: Dict[int, list] = {c: [] for c in cids}
+        by_courier: Dict[int, list] = {c: [] for c in set(cids) | {k[0] for k in cands}}
         for (cid, rkey), var in x.items():
             by_courier[cid].append(var)
             for oid in rkey:
@@ -174,7 +206,7 @@ class MIPFairPolicy(Policy):
         # projected earnings, linear in x
         w = {}
         for c in cids:
-            terms = [x[k] * (w_opt[k] - w0[c]) for k in cands if k[0] == c]
+            terms = [x[k] * (w_opt[k] - w0[c]) for k in w_opt if k[0] == c]
             w[c] = w0[c] + pulp.lpSum(terms) if terms else w0[c]
 
         # Sum of |w_i - w_j| over all pairs, split by who can still change this round
@@ -185,7 +217,7 @@ class MIPFairPolicy(Policy):
         #                  many values (w0 or w_opt[k] of the route it gets) and
         #                  sum_j |val - w0_j| over fixed j is a number per value
         #   free-free    : d_ij >= |w_i - w_j| variables, only among free couriers
-        free = [c for c in cids if any(k[0] == c for k in cands)]
+        free = [c for c in cids if any(k[0] == c for k in w_opt)]
         fixed_vals = sorted(w0[c] for c in cids if c not in set(free))
         m = len(fixed_vals)
         prefix = [0.0]
@@ -203,7 +235,7 @@ class MIPFairPolicy(Policy):
         for c in free:
             base = abs_sum_to_fixed(w0[c])
             cross_const += base
-            for k in cands:
+            for k in w_opt:
                 if k[0] == c:
                     cross_terms.append(x[k] * (abs_sum_to_fixed(w_opt[k]) - base))
 
@@ -241,14 +273,16 @@ class MIPFairPolicy(Policy):
             stage_values[name] = val
             if i < len(stages) - 1:
                 if name == 'coverage':
-                    prob += coverage >= val - 0.5, "pin_coverage"
+                    # E8: give up at most cov_slack of the round's maximum coverage to the next stage
+                    prob += coverage >= val * (1.0 - self.cov_slack) - 0.5, "pin_coverage"
                 elif name == 'v':
                     prob += v <= val + _EPS_V, "pin_v"
 
         chosen = [k for k, var in x.items() if (pulp.value(var) or 0.0) > 0.5]
         w_after = dict(w0)
         for cid, rkey in chosen:
-            w_after[cid] = w_opt[(cid, rkey)]
+            if (cid, rkey) in w_opt:
+                w_after[cid] = w_opt[(cid, rkey)]
         self.rounds.append({
             'time': t, 'n_couriers': n, 'candidates': len(cands),
             'coverage': int(round(stage_values.get('coverage', 0.0))),
