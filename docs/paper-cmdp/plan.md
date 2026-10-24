@@ -305,7 +305,7 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   el prefiltro por déficit sí y escala con k_d: k_d = 8 cierra 25–45 % de la brecha padre → greedy, k_d = 25 cierra
   41–53 % (BRKGA-Fair w40 0,55 → 0,46/0,43; MIP-Fair 0,56 → 0,45/0,42) sin perder cobertura; ε no hace nada. Decisión
   E11: ablaciones k_d = 50 en `supp` (480 corridas) tras gen2; α* apunta a 0,45. Detalle en `diseno-experimental.md` §12.10.
-- **2026-10-25, 00:40 (F5 y F7 desde X1).** Mientras corre gen2 (395/1.920 a las 00:03): `figures_paper.py --fig f5 f7`
+- **2026-10-25, 00:10 (F5 y F7 desde X1).** Mientras corre gen2 (395/1.920 a las 00:03): `figures_paper.py --fig f5 f7`
   genera F5 (pérdida por régimen, diferencias pareadas con IC bootstrap, 7 configuraciones) y F7 (violines del
   ingreso por hora conectada sobre elegibles, manual, semilla 1, 23.944 repartidores). Prosa del paper escrita para
   ambas (régimen: pérdida de cobertura 1,6–4,8 pts, Gini ≤ 0,02; violines: el greedy comprime por abajo y por
