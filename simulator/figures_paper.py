@@ -298,9 +298,68 @@ def fig_earnings_violin(out_dir: str, main_csv: str, couriers_dir: str, methods=
                  ).to_csv(os.path.join(out_dir, 'F7_earnings_violin.csv'), index=False)
 
 
+EMISSION_KG_PER_KM = {'motorcycle': 0.114, 'car': 0.167, 'bicycle': 0.0, 'walking': 0.0}   # DEFRA 2023 (T2)
+
+
+def fig_emissions(out_dir: str, main_csv: str, couriers_dir: str, methods=SELECTED, regime: str = 'manual') -> None:
+    """F8: emissions diagnostic. Left: kg CO2e per delivered order by policy and city (mean over seeds),
+    from the per-courier distances and the emission factors of T2. Right: share of the distance driven by
+    each vehicle type, by policy (mean over the 24 instances). Writes F8_emissions.csv with the numbers."""
+    plt = _plt()
+    df = pd.read_csv(main_csv)
+    df = df[(df.regime == regime) & (df.method.isin(methods))]
+    rows = []
+    for r in df.itertuples():
+        p = os.path.join(couriers_dir, f'{r.run_id}.csv')
+        if not os.path.exists(p):
+            continue
+        t = pd.read_csv(p)
+        km = t.groupby('vehicle')['dist_km'].sum()
+        kg = sum(EMISSION_KG_PER_KM.get(v, 0.0) * d for v, d in km.items())
+        rows.append({'run_id': r.run_id, 'instance': r.instance, 'city': r.city, 'method': r.method, 'seed': r.seed,
+                     'n_delivered': r.n_delivered, 'kg_co2e': kg, 'kg_per_order': kg / max(r.n_delivered, 1),
+                     'km_total': km.sum(), **{f'km_{v}': km.get(v, 0.0) for v in EMISSION_KG_PER_KM}})
+    e = pd.DataFrame(rows)
+    e.to_csv(os.path.join(out_dir, 'F8_emissions_runs.csv'), index=False)
+    by_city = e.groupby(['city', 'method'])['kg_per_order'].mean().unstack('method')[[m for m in methods if m in set(e.method)]]
+    inst = e.groupby(['method', 'instance'])[['km_total'] + [f'km_{v}' for v in EMISSION_KG_PER_KM]].mean()
+    share = inst.groupby('method').sum()
+    for v in EMISSION_KG_PER_KM:
+        share[f'share_{v}'] = share[f'km_{v}'] / share['km_total']
+    share = share.reindex([m for m in methods if m in share.index])
+    pd.concat([by_city.T.add_prefix('kg_per_order_'), share[[f'share_{v}' for v in EMISSION_KG_PER_KM]]], axis=1
+              ).to_csv(os.path.join(out_dir, 'F8_emissions.csv'))
+    fig, axes = plt.subplots(1, 2, figsize=(8.4, 3.3), gridspec_kw={'width_ratios': [1.5, 1]})
+    ax = axes[0]
+    cities = list(by_city.index)
+    w = 0.8 / len(by_city.columns)
+    for j, m in enumerate(by_city.columns):
+        ax.bar(np.arange(len(cities)) + (j - len(by_city.columns) / 2 + 0.5) * w, by_city[m], width=w,
+               color=_colour(m), label=SHORT.get(m, m).replace('\n', ' '))
+    ax.set_xticks(range(len(cities)))
+    ax.set_xticklabels(cities, fontsize=7, rotation=20, ha='right')
+    ax.set_ylabel('kg CO$_2$e per delivered order', fontsize=8)
+    ax.legend(fontsize=6, frameon=False, ncol=2)
+    ax.set_title(f'{regime} regime, mean over seeds and instances of the city', fontsize=8)
+    one_line = {m: SHORT.get(m, m).split('\n')[0] for m in methods}
+    ax = axes[1]
+    bottom = np.zeros(len(share))
+    cols = {'motorcycle': '#d94801', 'car': '#7f2704', 'bicycle': '#41ab5d', 'walking': '#c7e9c0'}
+    for v in ('motorcycle', 'car', 'bicycle', 'walking'):
+        ax.bar(range(len(share)), 100 * share[f'share_{v}'], bottom=bottom, color=cols[v], label=v, width=0.7)
+        bottom += 100 * share[f'share_{v}'].to_numpy()
+    ax.set_xticks(range(len(share)))
+    ax.set_xticklabels([one_line.get(m, m) for m in share.index], fontsize=6.5, rotation=30, ha='right')
+    ax.set_ylabel('share of distance by vehicle type (%)', fontsize=8)
+    ax.set_ylim(0, 118)
+    ax.legend(fontsize=6, frameon=False, loc='upper center', ncol=4, columnspacing=0.8, handlelength=1.0)
+    ax.set_title('24 instances pooled, manual regime', fontsize=8)
+    _save(fig, out_dir, 'F8_emissions')
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--fig', nargs='+', default=['f1', 'f2'], choices=['f1', 'f2', 'f3f4', 'f5', 'f7'])
+    ap.add_argument('--fig', nargs='+', default=['f1', 'f2'], choices=['f1', 'f2', 'f3f4', 'f5', 'f7', 'f8'])
     ap.add_argument('--couriers-dir', default=os.path.join(THIS_DIR, 'output', 'paper', 'couriers'))
     ap.add_argument('--out', default=os.path.normpath(os.path.join(THIS_DIR, '..', 'docs', 'paper-cmdp', 'paper', 'figures')))
     ap.add_argument('--main-csv', default=os.path.join(THIS_DIR, 'output', 'paper', 'main.csv'))
@@ -317,6 +376,8 @@ def main() -> None:
         fig_regime_loss(args.out, args.main_csv, args.couriers_table)
     if 'f7' in args.fig:
         fig_earnings_violin(args.out, args.main_csv, args.couriers_dir)
+    if 'f8' in args.fig:
+        fig_emissions(args.out, args.main_csv, args.couriers_dir)
 
 
 if __name__ == '__main__':

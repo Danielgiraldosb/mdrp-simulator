@@ -799,7 +799,7 @@ C: Pareto knee & \todo{} & & \\
 \label{tab:alpha}
 \end{table}
 
-\paragraph{Fleet composition and emissions} Fairness in hourly earnings is neutral to vehicle type by construction; any emissions effect comes from which couriers receive distance, so the diagnostic is informative precisely where fleets are mixed. \todo{One paragraph on F8 (\ref{sec:App_add_results}): emissions by $\alpha$ and city, driven by fleet composition (45\% bicycles in Bogot\'a versus 90\% motorcycles in Pereira); whether fair policies shift distance between vehicle types.} Additionally, \ref{sec:App_add_results} reports the results by city and the ablations of X3: the decoder score, the scope of the Gini constraint, the earnings basis, the equity-first priority, the candidate prefilter and the BRKGA size.
+\paragraph{Fleet composition and emissions} Fairness in hourly earnings is neutral to vehicle type by construction; any emissions effect comes from which couriers receive distance, so the diagnostic is informative precisely where fleets are mixed. Figure~\ref{fig:emissions} in \ref{sec:App_sens_gini} reports the diagnostic from the per-courier distances and the emission factors of Table~\ref{tab:parameters}. Fleet composition sets the level: a delivered order costs $0.13$--$0.18$ kg CO$_2$e in Bogot\'a, where bicycles and walkers carry a quarter of the distance, and $0.25$--$0.36$ in Pereira, where motorcycles carry nine tenths. The policy sets the rest, and in the opposite direction to equity. \textbf{Greedy} drives $2.77$ km per delivered order against $2.19$--$2.25$ for the six order-centric policies, a quarter more, because every free courier takes its best route and the orders are less often bundled; it does shift distance towards bicycles and walkers (29\% of its kilometres against 16--23\% for the others, so its emissions per kilometre, $0.085$ kg, are the lowest with \textbf{ILP}), but the shift offsets only about 15\% of the extra distance. Per delivered order, \textbf{Greedy} emits $0.236$ kg, \textbf{MIP-Fair} and \textbf{ILP} $0.187$--$0.189$ (21\% less) and the BRKGA family and \textbf{Hierarchical} $0.21$--$0.23$; the fair policies that re-optimise the assignment with an ILP are the cleanest because the distance saved by bundling dominates the fleet shift. Equity in hourly earnings, as \textbf{Greedy} produces it, is therefore paid in kilometres as well as in lateness. Additionally, \ref{sec:App_add_results} reports the results by city and the ablations of X3: the decoder score, the scope of the Gini constraint, the earnings basis, the equity-first priority, the candidate prefilter and the BRKGA size.
 
 \section{Findings and Discussion}
 \label{sec:findings_discussion}
@@ -920,7 +920,14 @@ In this section, we provide additional computational analyses that complement th
 \subsection{Gini coefficient under the sensitivity settings and emissions}
 \label{sec:App_sens_gini}
 
-\todo{Companion of Table~\ref{tab:sensitivity} for the end-of-day Gini coefficient, and F8: emissions by $\alpha$ and city from the per-courier distances and the emission factors of Table~\ref{tab:parameters}.}
+\todo{Companion of Table~\ref{tab:sensitivity} for the end-of-day Gini coefficient (X2, X3).} Figure~\ref{fig:emissions} shows the emissions diagnostic discussed in Section~\ref{sec:results_sensitivity}: kg CO$_2$e per delivered order by policy and city (left) and the share of the distance driven by each vehicle type by policy (right), from the per-courier distances of the 240 manual-regime runs of each policy and the emission factors of Table~\ref{tab:parameters}. The numbers behind the figure are in the online supplement (F8\_emissions.csv).
+
+\begin{figure}[htbp]
+    \centering
+    \figorph{figures/F8_emissions.pdf}{\textwidth}{5cm}{F8: emissions by policy and city; share of distance by vehicle type.}
+    \caption{Emissions diagnostic: kg CO$_2$e per delivered order by policy and city, manual regime, mean over the ten seeds and the instances of the city (left); share of the distance driven by each vehicle type, by policy, 24 instances pooled (right)}
+    \label{fig:emissions}
+\end{figure}
 
 %% \bibliographystyleAppx{elsarticle-harv}
 %% \bibliographyAppx{ReferencesAppx}

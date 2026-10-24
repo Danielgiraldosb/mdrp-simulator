@@ -311,3 +311,8 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   ambas (régimen: pérdida de cobertura 1,6–4,8 pts, Gini ≤ 0,02; violines: el greedy comprime por abajo y por
   arriba a la vez, 3 % ociosos frente a 19–25 %, p75 876 frente a 1.066–1.206); celdas de régimen y α de T6 llenas.
   Compila, 40 pp., 51 todo (quedan X2, X3, F6 con snapshots, F8, tabla de literatura).
+- **2026-10-25, 00:50 (F8 emisiones).** `figures_paper.py --fig f8` (factores DEFRA de T2 sobre las distancias por
+  repartidor de las 240 corridas manuales de cada política): el greedy recorre 2,77 km por pedido entregado frente a
+  2,19–2,25 de las políticas order-centric (+25 %, menos agrupamiento), desplaza el 29 % de sus km a bicicletas y
+  caminantes (16–23 % en las demás) pero eso compensa solo ≈ 15 %; por pedido emite 0,236 kg frente a 0,187–0,189 de
+  MIP-Fair e ILP (−21 %). Prosa en la sección de sensibilidad (flota) y figura en el apéndice. 41 pp., 50 todo.
