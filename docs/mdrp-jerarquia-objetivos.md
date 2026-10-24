@@ -412,3 +412,8 @@ cuarto a un tercio de la brecha; 25 → la mitad) sin costo de cobertura; ε no 
 xk25 cuesta 18 min/día frente a 3,7 de BRKGA-Fair xk25 con calidad similar; Pay-BRKGA apenas responde.
 Decisión E11 (pendiente de visto bueno): tras gen2, ablaciones k_d = 50 en `supp` (480 corridas) para cerrar la
 curva k_d ∈ {0, 8, 25, 50}; α* para X2 apunta a 0,45. Detalle en `docs/paper-cmdp/diseno-experimental.md` §12.10.
+
+Actualización con la semilla 1 completa (24 instancias; 2026-10-25, 02:00; 686/1.920): BRKGA-Fair w40 xk25 0,438 /
+0,417 (brecha cerrada 0,44 / 0,54; 12 / 14 días con Gini ≤ 0,40), MIP-Fair xk25 0,434 / 0,403 (0,47 / 0,56; 10 / 12),
+MIP-Fair xk 0,463 / 0,424, BRKGA-Fair w20 xk 0,483 / 0,480; exposición sola y Pay-BRKGA xk ≤ 0,11 de brecha; cobertura
+sin cambio. H1' se cumple en auto y queda justo debajo en manual. La slide 17 lleva estos números.

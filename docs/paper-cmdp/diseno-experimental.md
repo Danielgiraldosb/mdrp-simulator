@@ -622,3 +622,15 @@ manual + auto, 5 semillas (24 × 2 × 2 × 5 = 480 corridas más) para cerrar la
 decidir si la brecha se cierra del todo o satura. No se toca `batch_paper.py` hasta que gen2 termine. α* para
 X2 se decide con la curva completa; con k_d = 25 el valor alcanzable por las políticas propuestas está en
 0,42–0,46, lo que apunta a α* = 0,45 (y no 0,40) como umbral de la rodilla.
+
+**Semilla 1 completa (24 instancias; 2026-10-25, 02:00; 686/1.920 corridas).** Confirma la lectura de las 13
+instancias. Gini de elegibles manual / auto, media de las 24: brkga_fair_w20_x 0,514 / 0,517 (brecha 0,11 / 0,10);
+brkga_fair_w20_xk 0,483 / 0,480 (0,26 / 0,25); **brkga_fair_w40_xk25 0,438 / 0,417 (0,44 / 0,54)**;
+mipfair_a030_x_e000 0,540 / 0,523 (0,01 / 0,04); mipfair_a030_xk_e000 0,463 / 0,424 (0,34 / 0,46); e005 idéntica;
+**mipfair_a030_xk25_e000 0,434 / 0,403 (0,47 / 0,56)**; paybrkga_l05_xk 0,527 / 0,508 (0,09 / 0,11). Cobertura sin
+cambios (MIP-Fair xk +0,4–0,7 pt en manual). Instancias con Gini ≤ 0,40 (de 24): BRKGA-Fair w40 xk25 12 / 14,
+MIP-Fair xk25 10 / 12, MIP-Fair xk 2 / 10; el greedy 24 / 24. Activos entre elegibles 0,85–0,91 con k_d = 25
+(0,69–0,76 en la primera generación); p25 282–342 COP/h (85–134). Tiempos: MIP-Fair xk25 21 min/día en manual,
+BRKGA-Fair xk25 4,5. H1' (> la mitad de la brecha) se cumple en auto (0,54–0,56) y queda justo por debajo en manual
+(0,44–0,47): E11 (k_d = 50) decide si satura. Con k_d = 25 la mitad de los días cumplen α = 0,40 y casi todos
+cumplirían 0,45: α* = 0,45 se mantiene como candidato para X2.

@@ -326,3 +326,7 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   las tres curvas arrancan cerca de 1; greedy cae de 0,79 (10 h) a 0,41 (14 h), cruza 0,40 a las 14:12 y cierra en
   0,23; jerárquico y MIP-Fair cierran en 0,48 y 0,47 sin cruzar nunca, mientras su estadístico sobre activos está en
   0,33–0,39 toda la tarde (reportan cumplimiento). Prosa y figura en el paper; 43 pp., 48 todo.
+- **2026-10-25, 02:00 (gen2 semilla 1 completa, 24 instancias).** 686/1.920. Confirma: k_d = 25 cierra 0,44–0,47 de la
+  brecha en manual y 0,54–0,56 en auto (BRKGA-Fair w40 xk25 0,438 / 0,417; MIP-Fair xk25 0,434 / 0,403) sin costo de
+  cobertura; 12–14 de 24 días cumplen α = 0,40. F6 se completa con brkga_fair_w40_xk25 (corriendo). Detalle en
+  `diseno-experimental.md` §12.10.
