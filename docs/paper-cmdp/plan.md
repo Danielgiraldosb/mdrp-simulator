@@ -300,3 +300,8 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   cuatro (± 0,003): greedy 0,301 frente a 0,501–0,566; cumple α = 0,40 en el 98 % (manual) y 100 % (auto) de
   los días; nadie más cumple α ≤ 0,40. X3 gen2 lanzado a las 20:14 (1.920 corridas, 12 procesos, `gen2.csv`);
   después `supp` (1.080) y X2 con el α* decidido tras X3. Detalle en `diseno-experimental.md` §12.9.
+- **2026-10-24, 22:30 (X3 gen2 al 13 %, lectura preliminar).** 256/1.920 corridas (≈ 125/h; fin ≈ 25 oct 11:30).
+  Semilla 1, 13 instancias pareadas con X1 (`simulator/analyze_gen2.py`): la base de exposición no mueve el Gini;
+  el prefiltro por déficit sí y escala con k_d: k_d = 8 cierra 25–45 % de la brecha padre → greedy, k_d = 25 cierra
+  41–53 % (BRKGA-Fair w40 0,55 → 0,46/0,43; MIP-Fair 0,56 → 0,45/0,42) sin perder cobertura; ε no hace nada. Decisión
+  E11: ablaciones k_d = 50 en `supp` (480 corridas) tras gen2; α* apunta a 0,45. Detalle en `diseno-experimental.md` §12.10.

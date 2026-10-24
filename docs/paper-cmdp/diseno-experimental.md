@@ -581,3 +581,44 @@ Tiempos: MIP-Fair 4,5 min/día (máx. 21,9 en Bogotá); el resto 1,4–3,2.
 y X2 con el α* decidido tras X3. Hipótesis H1' (el prefiltro por déficit cierra más de la mitad de la brecha
 0,30–0,54 sin costo de cobertura) se evalúa con `tables_paper.py output/paper/main.csv output/paper/gen2.csv
 --couriers-table ...` tras `analyze_couriers.py` sobre gen2.
+
+### 12.10 X3 gen2, lectura preliminar (semilla 1, 13 instancias; 2026-10-24, 22:30)
+
+Con 256 de 1.920 corridas (≈ 125/h; fin estimado 25 oct ≈ 11:30), las 13 instancias completas de la semilla 1
+(0, 1, 10–16 y otras cuatro) pareadas con las corridas de X1 de la misma semilla e instancia (`analyze_gen2.py`,
+`output/paper/gen2_prelim_seed1.txt`). Gini de elegibles, media de las 13 instancias; "brecha" = fracción de la
+distancia padre → greedy que cierra la variante:
+
+| variante (manual / auto) | padre | Gini padre | Gini variante | Δ vs padre | brecha cerrada | Δ cobertura | min/corrida | inst. con Gini ≤ 0,40 (de 13) |
+|---|---|---|---|---|---|---|---|---|
+| brkga_fair_w20_x | brkga_fair_w20 | 0,555 / 0,552 | 0,531 / 0,533 | −0,023 / −0,019 | 0,11 / 0,09 | 0,000 | 2,1 | 0 / 0 |
+| brkga_fair_w20_xk (k_d 8) | brkga_fair_w20 | 0,555 / 0,552 | 0,498 / 0,495 | −0,056 / −0,058 | 0,25 / 0,25 | 0,000 | 3,5 | 2 / 2 |
+| brkga_fair_w40_xk25 | brkga_fair_w40 | 0,549 / 0,552 | **0,456 / 0,434** | −0,093 / −0,119 | **0,41 / 0,51** | 0,000 | 3,7 | 5 / 7 |
+| mipfair_a030_x_e000 | mipfair_a030 | 0,558 / 0,548 | 0,553 / 0,538 | −0,006 / −0,010 | 0,02 / 0,04 | +0,002 | 4,0 | 0 / 0 |
+| mipfair_a030_xk_e000 (k_d 8) | mipfair_a030 | 0,558 / 0,548 | 0,479 / 0,437 | −0,079 / −0,111 | 0,32 / 0,45 | **+0,010** / 0,000 | 8,3 | 1 / 3 |
+| mipfair_a030_xk_e005 | mipfair_a030 | 0,558 / 0,548 | 0,474 / 0,437 | −0,084 / −0,112 | 0,34 / 0,46 | +0,009 / 0,000 | 8,3 | 1 / 3 |
+| mipfair_a030_xk25_e000 | mipfair_a030 | 0,558 / 0,548 | **0,447 / 0,420** | −0,111 / −0,128 | **0,46 / 0,53** | +0,005 / 0,000 | 17,9 | 4 / 5 |
+| paybrkga_l05_xk (k_d 8) | paybrkga_l05 | 0,559 / 0,545 | 0,542 / 0,521 | −0,017 / −0,025 | 0,08 / 0,11 | −0,003 / 0,000 | 3,8 | 0 / 0 |
+
+Greedy en las mismas 13 instancias: 0,307 / 0,299. Lecturas:
+
+1. **La base de exposición sola no mueve nada** (−0,01 a −0,02; confirma el piloto). **El prefiltro por déficit es
+   la palanca, y escala con k_d**: k_d = 8 cierra un cuarto a un tercio de la brecha; k_d = 25 cierra la mitad
+   (0,41–0,53), sin costo de cobertura (MIP-Fair incluso gana 0,5–1,0 pt en manual porque los candidatos extra
+   absorben rechazos) y con +0,2–0,4 min de atraso. Los activos entre elegibles suben de 0,70–0,73 a 0,83–0,89 y
+   el p25 de 70–100 a 240–310 COP/h.
+2. **H1' (cerrar más de la mitad) queda en el borde** con k_d = 25: 0,46–0,53 en MIP-Fair y 0,41–0,51 en
+   BRKGA-Fair. El gradiente 8 → 25 sugiere que k_d mayor sigue cerrando. ε (holgura de cobertura E8) no mueve
+   nada: H2 refutada también aquí (e000 ≡ e005).
+3. **Costo**: MIP-Fair xk25 cuesta 17,9 min/día en manual (máximo Bogotá; el ILP por ronda crece con los
+   candidatos); BRKGA-Fair xk25 3,7 min. Si la calidad es similar, BRKGA-Fair w40 xk25 es la variante a
+   recomendar.
+4. **Pay-BRKGA xk** apenas responde (−0,02): el término de déficit en su fitness compite con el de pago; la
+   palanca de pago no llega a los repartidores ociosos (ya dicho en el paper).
+
+**Decisión E11 (tomada, pendiente de visto bueno):** al terminar gen2 se añaden a `supp` dos ablaciones de
+k_d, `brkga_fair_w40_xk50` y `mipfair_a030_xk50_e000` (k_d = 50, ≈ "todos los elegibles ociosos cercanos"),
+manual + auto, 5 semillas (24 × 2 × 2 × 5 = 480 corridas más) para cerrar la curva k_d ∈ {0, 8, 25, 50} y
+decidir si la brecha se cierra del todo o satura. No se toca `batch_paper.py` hasta que gen2 termine. α* para
+X2 se decide con la curva completa; con k_d = 25 el valor alcanzable por las políticas propuestas está en
+0,42–0,46, lo que apunta a α* = 0,45 (y no 0,40) como umbral de la rodilla.

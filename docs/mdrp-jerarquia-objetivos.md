@@ -389,3 +389,26 @@ greedy 0,27–0,32 y el resto 0,43–0,64. Paper: T3, tabla de alcances, T5, F3/
 (`tables_paper.py`); compila, 39 pp. X3 gen2 (1.920 corridas, 8 variantes de segunda generación) corre con
 12 procesos desde el 24 oct 20:14; después supp (1.080) y X2 con el α* decidido tras X3. Detalle en
 `docs/paper-cmdp/diseno-experimental.md` §12.9.
+
+## 17. X3 gen2: lectura preliminar (2026-10-24, 22:30; slide 17 nueva; las antiguas 17 y 18 pasan a 18 y 19)
+
+256 de 1.920 corridas (≈ 125/h; fin ≈ 25 oct 11:30). Semilla 1, 13 instancias completas pareadas con las
+corridas de X1 de la misma semilla e instancia (`simulator/analyze_gen2.py`). Gini de elegibles, manual / auto;
+"brecha cerrada" = fracción de la distancia padre → greedy (0,307 / 0,299) que cierra la variante:
+
+| Variante | Padre | Gini padre | Gini variante | Brecha cerrada | Δ cobertura | Activos/elegibles | p25 COP/h | min/corrida |
+|---|---|---|---|---|---|---|---|---|
+| brkga_fair_w20_x (exposición) | brkga_fair_w20 | 0,555 / 0,552 | 0,531 / 0,533 | 0,11 / 0,09 | 0,000 | 0,74 | 120 | 2,1 |
+| brkga_fair_w20_xk (k_d 8) | brkga_fair_w20 | 0,555 / 0,552 | 0,498 / 0,495 | 0,25 / 0,25 | 0,000 | 0,78 | 159 | 3,5 |
+| brkga_fair_w40_xk25 | brkga_fair_w40 | 0,549 / 0,552 | **0,456 / 0,434** | **0,41 / 0,51** | 0,000 | 0,83 | 240 | 3,7 |
+| mipfair_a030_x_e000 (exposición) | mipfair_a030 | 0,558 / 0,548 | 0,553 / 0,538 | 0,02 / 0,04 | +0,002 | 0,70 | 77 | 4,0 |
+| mipfair_a030_xk_e000 (k_d 8) | mipfair_a030 | 0,558 / 0,548 | 0,479 / 0,437 | 0,32 / 0,45 | +0,010 / 0 | 0,83 | 199 | 8,3 |
+| mipfair_a030_xk_e005 (ε 0,05) | mipfair_a030 | 0,558 / 0,548 | 0,474 / 0,437 | 0,34 / 0,46 | +0,009 / 0 | 0,83 | 209 | 8,3 |
+| mipfair_a030_xk25_e000 | mipfair_a030 | 0,558 / 0,548 | **0,447 / 0,420** | **0,46 / 0,53** | +0,005 / 0 | 0,86 | 246 | 17,9 |
+| paybrkga_l05_xk (k_d 8) | paybrkga_l05 | 0,559 / 0,545 | 0,542 / 0,521 | 0,08 / 0,11 | −0,003 / 0 | 0,72 | 96 | 3,8 |
+
+Lecturas: la base de exposición sola no mueve el Gini; el prefiltro por déficit sí y escala con k_d (8 → un
+cuarto a un tercio de la brecha; 25 → la mitad) sin costo de cobertura; ε no hace nada (H2 refutada); MIP-Fair
+xk25 cuesta 18 min/día frente a 3,7 de BRKGA-Fair xk25 con calidad similar; Pay-BRKGA apenas responde.
+Decisión E11 (pendiente de visto bueno): tras gen2, ablaciones k_d = 50 en `supp` (480 corridas) para cerrar la
+curva k_d ∈ {0, 8, 25, 50}; α* para X2 apunta a 0,45. Detalle en `docs/paper-cmdp/diseno-experimental.md` §12.10.
