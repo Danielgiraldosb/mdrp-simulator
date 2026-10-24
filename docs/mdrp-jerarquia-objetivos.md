@@ -367,3 +367,25 @@ elige primero): ya lee H_t de la forma más barata; el paper lo describía como 
 corrigió; el director confirmó (21 oct, 21:00) que la práctica de la plataforma es centrada en el
 repartidor, así que el greedy la reproduce. Grilla gen2 de X3: 8 configuraciones × 24 × 2 × 5 = 1.920
 corridas. X1 en 5.114/8.640 a las 21:02; completo ≈ 22 oct 12 h.
+
+### X1 cerrado con las diez semillas; X3 gen2 lanzado (2026-10-24, 20:30; slides 16 y 18)
+
+X1 terminó el 22 oct a las 11:01: 8.640 corridas, 0 fallos, 34 h de pared con 12 procesos. `e10-variants`
+fusionada en master (84 tests). Las diez semillas reproducen las cuatro (± 0,003 por celda); régimen manual,
+media de las 24 instancias:
+
+| Configuración | Cobertura | Gini elegibles | Activos/elegibles | p25 COP/h | Gini activos | Atraso (min) | Cumple α 0,40 / 0,50 |
+|---|---|---|---|---|---|---|---|
+| greedy | 0,758 | **0,301** | **0,97** | **481** | 0,509 | 19,9 | **98 % / 100 %** |
+| ilp | 0,738 | 0,521 | 0,73 | 130 | **0,414** | 19,4 | 0 / 52 % |
+| hier | 0,769 | 0,527 | 0,77 | 146 | 0,530 | **18,1** | 0 / 34 % |
+| brkga | 0,770 | 0,565 | 0,70 | 86 | 0,488 | 18,5 | 0 / 24 % |
+| brkga_fair w5–w40 | 0,769–0,770 | 0,545–0,534 | 0,74–0,75 | 122–134 | 0,496–0,504 | 18,5–18,6 | 0 / 38–46 % |
+| mipfair α 0,20–1,00 | 0,764 | 0,544–0,545 | 0,72 | 103–105 | 0,460–0,468 | 19,0 | 0 / 39–40 % |
+| paybrkga λ 0,1–1,0 | 0,758–0,753 | 0,537–0,547 | 0,73–0,71 | 118–95 | 0,488–0,455 | 18,7–18,8 | 0 / 46–35 % |
+
+Diferencias pareadas de Gini contra greedy: +0,205 a +0,270, ningún IC 95 % por debajo de +0,178; por ciudad
+greedy 0,27–0,32 y el resto 0,43–0,64. Paper: T3, tabla de alcances, T5, F3/F4 y prosa con 10 semillas
+(`tables_paper.py`); compila, 39 pp. X3 gen2 (1.920 corridas, 8 variantes de segunda generación) corre con
+12 procesos desde el 24 oct 20:14; después supp (1.080) y X2 con el α* decidido tras X3. Detalle en
+`docs/paper-cmdp/diseno-experimental.md` §12.9.

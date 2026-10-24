@@ -547,3 +547,37 @@ mipfair_a030_x_e000, mipfair_a030_xk_e000, mipfair_a030_xk_e005, mipfair_a030_xk
 X3 ≈ 3.000 corridas, ≈ 12–15 h con 12 procesos. Se lanza al terminar X1 (fusión de `e10-variants` en master
 primero). Hipótesis para X3: H1' el prefiltro cierra más de la mitad de la brecha 0,30–0,54 en las 24 zonas a
 costo de cobertura nulo o negativo; H2 refutada en el piloto (ε no mueve); H3 confirmada en el piloto.
+
+### 12.9 X1 cerrado con las diez semillas; X3 (gen2) lanzado (2026-10-24, 20:30)
+
+**X1 terminó el 22 oct a las 11:01**: 8.640 corridas, 0 fallos, 2.037 min de pared con 12 procesos (≈ 254
+corridas/h). `e10-variants` fusionada en master (e1939e9, 84 tests en verde). Pipeline de cierre ejecutado:
+`analyze_couriers.py --out main_couriers.csv`, `tables_paper.py` (cuerpos de T3, tabla de alcances y T5 en
+`output/paper/tables/`, números de la prosa en `stats.txt`), `figures_paper.py --fig f3f4`. El paper (`main.tex`)
+lleva ya las tablas y la prosa con 10 semillas; los todo "seeds 1–4" desaparecen.
+
+**Las diez semillas confirman las cuatro** (diferencias de ± 0,001–0,003 en todas las celdas). Manual, media de
+las 24 instancias:
+
+| configuración | cobertura | Gini elegibles | activos/elegibles | p25 COP/h | Gini activos | atraso | cumple α 0,40 / 0,50 |
+|---|---|---|---|---|---|---|---|
+| greedy | 0,758 | **0,301** | **0,97** | **481** | 0,509 | 19,9 | **98 % / 100 %** |
+| ilp | 0,738 | 0,521 | 0,73 | 130 | **0,414** | 19,4 | 0 / 52 % |
+| hier | 0,769 | 0,527 | 0,77 | 146 | 0,530 | **18,1** | 0 / 34 % |
+| brkga | 0,770 | 0,565 | 0,70 | 86 | 0,488 | 18,5 | 0 / 24 % |
+| brkga_fair w5–w40 | 0,769–0,770 | 0,545–0,534 | 0,74–0,75 | 122–134 | 0,496–0,504 | 18,5–18,6 | 0 / 38–46 % |
+| mipfair α 0,20–1,00 | 0,764 | 0,544–0,545 | 0,72 | 103–105 | 0,460–0,468 | 19,0 | 0 / 39–40 % |
+| paybrkga λ 0,1–1,0 | 0,758–0,753 | 0,537–0,547 | 0,73–0,71 | 118–95 | 0,488–0,455 | 18,7–18,8 | 0 / 46–35 % |
+
+Diferencias pareadas contra greedy (Gini elegibles): +0,205 (ilp, auto) a +0,270 (brkga, auto); ningún IC 95 %
+baja de +0,178. Por ciudad: greedy 0,27–0,32; el resto 0,43–0,64 (Bucaramanga y Pereira son las zonas más
+desiguales bajo todos los métodos order-centric, 0,58–0,64). Pérdida por régimen (manual − auto) en cobertura:
+greedy 2,8 pts, ilp 4,8, familia BRKGA 1,6–1,7, MIP-Fair 2,2, Pay-BRKGA 2,8–3,3; el régimen mueve el Gini de
+elegibles ≤ 0,02. Pago sobre tarifa: 100 % en todos salvo Pay-BRKGA (λ 0,1–1,0: 95–88 % manual, 80 % auto).
+Tiempos: MIP-Fair 4,5 min/día (máx. 21,9 en Bogotá); el resto 1,4–3,2.
+
+**X3 gen2 lanzado el 24 oct a las 20:14** (`batch_paper.py --experiment gen2 --workers 12 --timeout-min 150`,
+1.920 corridas, `output/paper/gen2.csv`, reanudable); estimación 8–10 h. Después, `--experiment supp` (1.080)
+y X2 con el α* decidido tras X3. Hipótesis H1' (el prefiltro por déficit cierra más de la mitad de la brecha
+0,30–0,54 sin costo de cobertura) se evalúa con `tables_paper.py output/paper/main.csv output/paper/gen2.csv
+--couriers-table ...` tras `analyze_couriers.py` sobre gen2.

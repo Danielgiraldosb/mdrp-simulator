@@ -293,3 +293,10 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   `main_couriers.csv`; reproduce las tablas de 4 semillas. Al cerrar X1: `analyze_couriers.py --out`,
   `tables_paper.py`, `figures_paper.py --fig f3f4`, pegar cuerpos en `main.tex` y reescribir la prosa.
 
+- **2026-10-24, 20:30 (X1 cerrado; X3 en marcha).** X1 terminó el 22 oct a las 11:01 (8.640 corridas, 0 fallos,
+  34 h de pared con 12 procesos). `e10-variants` fusionada en master (e1939e9, 84 tests). Pipeline de cierre
+  ejecutado: `main_couriers.csv` con 10 semillas, `tables_paper.py` → T3, alcances y T5 pegadas en `main.tex`,
+  prosa actualizada, F3/F4 regeneradas; el paper compila (39 pp., 0 errores). Las diez semillas reproducen las
+  cuatro (± 0,003): greedy 0,301 frente a 0,501–0,566; cumple α = 0,40 en el 98 % (manual) y 100 % (auto) de
+  los días; nadie más cumple α ≤ 0,40. X3 gen2 lanzado a las 20:14 (1.920 corridas, 12 procesos, `gen2.csv`);
+  después `supp` (1.080) y X2 con el α* decidido tras X3. Detalle en `diseno-experimental.md` §12.9.
