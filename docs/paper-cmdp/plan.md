@@ -320,3 +320,9 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   cumplimiento α = 0,40); pegado en el apéndice con su párrafo: greedy 0,275–0,323 en todas las ciudades y cumple
   0,40 todos los días salvo tres en Pereira; las políticas order-centric caen más lejos en las flotas pequeñas
   (Bucaramanga y Pereira, 0,56–0,64, 59–73 % activos) y más cerca en Bogotá y Medellín (0,45–0,51). 42 pp., 50 todo.
+- **2026-10-25, 01:30 (F6 trayectoria intradía).** `simulator/snapshots_f6.py run|plot`: corre una configuración del
+  catálogo en una zona-día guardando el log de entregas y las ventanas de conexión, y reconstruye cada 10 min el Gini
+  sobre elegibles conectados (E9) y sobre activos. Instancia_0 (Bogotá, manual, s1; greedy reproduce la celda de X1):
+  las tres curvas arrancan cerca de 1; greedy cae de 0,79 (10 h) a 0,41 (14 h), cruza 0,40 a las 14:12 y cierra en
+  0,23; jerárquico y MIP-Fair cierran en 0,48 y 0,47 sin cruzar nunca, mientras su estadístico sobre activos está en
+  0,33–0,39 toda la tarde (reportan cumplimiento). Prosa y figura en el paper; 43 pp., 48 todo.
