@@ -330,3 +330,6 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   brecha en manual y 0,54–0,56 en auto (BRKGA-Fair w40 xk25 0,438 / 0,417; MIP-Fair xk25 0,434 / 0,403) sin costo de
   cobertura; 12–14 de 24 días cumplen α = 0,40. F6 se completa con brkga_fair_w40_xk25 (corriendo). Detalle en
   `diseno-experimental.md` §12.10.
+- **2026-10-25, 02:20 (F6 con segunda generación).** BRKGA-Fair w40 xk25 en Instancia_0: sigue la trayectoria
+  order-centric hasta mediodía y luego se dobla hacia el greedy: 0,51 a las 14 h, cruza 0,40 a las 15:48 y cierra en
+  0,36 con el 97 % de elegibles activos y cobertura 0,780 (la mayor de las cuatro). Figura de cuatro curvas y prosa.
