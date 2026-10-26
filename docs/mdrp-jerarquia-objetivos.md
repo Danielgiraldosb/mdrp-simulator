@@ -417,3 +417,28 @@ Actualización con la semilla 1 completa (24 instancias; 2026-10-25, 02:00; 686/
 0,417 (brecha cerrada 0,44 / 0,54; 12 / 14 días con Gini ≤ 0,40), MIP-Fair xk25 0,434 / 0,403 (0,47 / 0,56; 10 / 12),
 MIP-Fair xk 0,463 / 0,424, BRKGA-Fair w20 xk 0,483 / 0,480; exposición sola y Pay-BRKGA xk ≤ 0,11 de brecha; cobertura
 sin cambio. H1' se cumple en auto y queda justo debajo en manual. La slide 17 lleva estos números.
+
+### X3 gen2 cerrado con cinco semillas; E11 ejecutada (2026-10-26, 14:10; slide 17 actualizada)
+
+X3 gen2 terminó el 25 oct a las 14:31 (1.920 corridas, 0 fallos, 1.157 min). Análisis con `simulator/analyze_gen2_final.py`
+(`output/paper/gen2_final.txt`): 120 zona-días por régimen, pareados con X1 en las mismas semillas. Gini de elegibles,
+manual / auto:
+
+| variante | padre | Gini variante | brecha cerrada | Δ cobertura vs padre | días ≤ 0,40 (de 120) | min/corrida |
+|---|---|---|---|---|---|---|
+| brkga_fair_w20_x (exposición) | 0,537 / 0,539 | 0,514 / 0,514 | 0,11 / 0,12 | +0,001 / 0 | 0 / 1 | 2,8 |
+| brkga_fair_w20_xk (k_d 8) | 0,537 / 0,539 | 0,483 / 0,482 | 0,25 / 0,25 | 0 | 16 / 14 | 4,6 |
+| **brkga_fair_w40_xk25** | 0,534 / 0,536 | **0,437 / 0,416** | **0,45 / 0,54** | −0,001 / 0 | **59 / 67** | 4,9 |
+| mipfair_a030_x_e000 (exposición) | 0,544 / 0,534 | 0,540 / 0,525 | 0,02 / 0,04 | 0 | 0 / 0 | 5,4 |
+| mipfair_a030_xk_e000 (k_d 8) | 0,544 / 0,534 | 0,465 / 0,426 | 0,33 / 0,46 | +0,005 / 0 | 10 / 42 | 11,3 |
+| mipfair_a030_xk_e005 (ε 0,05) | 0,544 / 0,534 | 0,464 / 0,426 | 0,33 / 0,46 | +0,006 / 0 | 10 / 48 | 11,3 |
+| **mipfair_a030_xk25_e000** | 0,544 / 0,534 | **0,435 / 0,401** | **0,47 / 0,57** | +0,003 / 0 | **48 / 76** | 23,5 (máx. 110) |
+| paybrkga_l05_xk (k_d 8) | 0,547 / 0,534 | 0,526 / 0,507 | 0,09 / 0,12 | 0 | 0 / 0 | 5,2 |
+
+Lecturas: H1' se cumple en auto y queda justo debajo en manual; IC 95 % pareados excluyen cero; ningún zona-día peor
+que su padre con k_d = 25; medias por semilla difieren ≤ 0,008; ε no hace nada (H2 refutada). Cumplimiento con
+α = 0,45: 61–62 % (manual) y 67–83 % (auto); con 0,50: 72–82 % / 81–96 %. Decisión E11 ejecutada: `supp` lanzado el
+26 oct 14:00 con k_d = 50 (1.560 corridas). α* = 0,45 para X2. En el paper: T7 (segunda generación), filas en la tabla
+de cumplimiento, puntos huecos en F3/F4, tabla de criterios de α (A y B en 0,30, C no aplica, intervalo [0,30, 0,45]),
+discusión, introducción y por ciudad; 45 pp., 0 errores, 44 todos.
+

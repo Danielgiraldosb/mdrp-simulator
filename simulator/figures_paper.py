@@ -129,6 +129,16 @@ FAMILIES = {   # sweep family -> (label, colour, parameter name, ordered configs
 }
 BENCH = {'greedy': ('Greedy', 'k', 's'), 'ilp': ('ILP', '#2171b5', 'D'),
          'hier': ('Hierarchical', '#969696', '^'), 'brkga': ('BRKGA', '#41ab5d', 'o')}
+# second generation (E10/E10b, X3 gen2): hollow markers, one dotted path per family from the first-generation
+# parent through k_d = 8 to k_d = 25 (the exposure-only variants are left out: they sit on top of the parent)
+GEN2_PATHS = {   # family -> (label, colour, [(parent, None), (variant, annotation), ...])
+    'mipfair':    ('MIP-Fair, 2nd gen. ($k_d$)', '#d94801',
+                   [('mipfair_a030', None), ('mipfair_a030_xk_e000', '8'), ('mipfair_a030_xk25_e000', '25')]),
+    'brkga_fair': ('BRKGA-Fair, 2nd gen. ($k_d$)', '#238b45',
+                   [('brkga_fair_w20', None), ('brkga_fair_w20_xk', '8'), ('brkga_fair_w40_xk25', '25 ($w=40$)')]),
+    'paybrkga':   ('Pay-BRKGA, 2nd gen. ($k_d$)', '#6a51a3',
+                   [('paybrkga_l05', None), ('paybrkga_l05_xk', '8')]),
+}
 
 
 def _frontier_panel(ax, pts: pd.DataFrame, ycol: str, ylabel: str, title: str) -> None:
@@ -146,24 +156,42 @@ def _frontier_panel(ax, pts: pd.DataFrame, ycol: str, ylabel: str, title: str) -
         if m in pts.index:
             r = pts.loc[m]
             ax.plot([r['F_Gini']], [r[ycol]], mk, c=col, ms=6, label=lab, ls='none')
+    for fam, (lab, col, path) in GEN2_PATHS.items():
+        path = [(m, a) for m, a in path if m in pts.index]
+        if len(path) < 2:
+            continue
+        xs = [pts.loc[m, 'F_Gini'] for m, _ in path]
+        ys = [pts.loc[m, ycol] for m, _ in path]
+        ax.plot(xs, ys, ':', c=col, lw=1.0)
+        ax.plot(xs[1:], ys[1:], 'o', mfc='white', mec=col, ms=5, ls='none', label=lab)
+        for (m, a), x, y in zip(path[1:], xs[1:], ys[1:]):
+            ax.annotate(a, (x, y), textcoords='offset points', xytext=(-3, -9), fontsize=6, color=col, ha='right')
     ax.set_xlabel('end-of-day Gini of hourly earnings, eligible couriers')
     ax.set_ylabel(ylabel)
     ax.set_title(title, fontsize=9)
 
 
-def fig_frontiers(out_dir: str, main_csv: str, couriers_table: str = None, complete_seeds: bool = True) -> None:
+def fig_frontiers(out_dir: str, main_csv: str, couriers_table: str = None, complete_seeds: bool = True,
+                  extra_csvs=()) -> None:
     """F3 (coverage) and F4 (lateness) against the end-of-day Gini, one panel per regime.
     With couriers_table (analyze_couriers.py --out) the x-axis is the Gini over the ELIGIBLE couriers
-    (decision E9, 2026-10-21); without it, the active-courier F_Gini of metrics.py."""
+    (decision E9, 2026-10-21); without it, the active-courier F_Gini of metrics.py. extra_csvs (e.g. gen2.csv,
+    with its <stem>_couriers.csv next to it) add the second-generation points; the complete-seed filter is applied
+    per table, so each configuration is averaged over its own complete seeds (ten in X1, five in X3)."""
     plt = _plt()
-    df = pd.read_csv(main_csv)
-    if couriers_table:
-        ct = pd.read_csv(couriers_table)[['run_id', 'gini_elig_hourly']]
-        df = df.merge(ct, on='run_id', how='inner')
-        df['F_Gini'] = df['gini_elig_hourly']
-    if complete_seeds:
-        cnt = df.groupby('seed')['run_id'].count()
-        df = df[df['seed'].isin(cnt[cnt == cnt.max()].index)]
+    parts = []
+    for i, path in enumerate([main_csv, *extra_csvs]):
+        d = pd.read_csv(path)
+        ct_path = couriers_table if i == 0 else os.path.splitext(path)[0] + '_couriers.csv'
+        if ct_path and os.path.exists(ct_path):
+            ct = pd.read_csv(ct_path)[['run_id', 'gini_elig_hourly']]
+            d = d.merge(ct, on='run_id', how='inner')
+            d['F_Gini'] = d['gini_elig_hourly']
+        if complete_seeds:
+            cnt = d.groupby('seed')['run_id'].count()
+            d = d[d['seed'].isin(cnt[cnt == cnt.max()].index)]
+        parts.append(d)
+    df = pd.concat(parts, ignore_index=True)
     inst = df.groupby(['regime', 'method', 'instance'])[['F_Gini', 'coverage_rate', 'overage_mean']].mean().reset_index()
     pts = inst.groupby(['regime', 'method'])[['F_Gini', 'coverage_rate', 'overage_mean']].mean().reset_index()
     par = df.groupby('method')[['alpha', 'weight', 'lambda_pay']].first().reset_index()
@@ -174,8 +202,10 @@ def fig_frontiers(out_dir: str, main_csv: str, couriers_table: str = None, compl
         fig, axes = plt.subplots(1, 2, figsize=(8.4, 3.4), sharey=True)
         for ax, reg, title in zip(axes, ('manual', 'autoaccept'), ('manual regime', 'auto-accept regime')):
             _frontier_panel(ax, pts[pts.regime == reg].copy(), ycol, ylabel if ax is axes[0] else '', title)
-        axes[0].legend(fontsize=6.5, frameon=False, loc='best')
-        fig.suptitle(f'mean over {inst.instance.nunique()} instances and {nseeds} seed(s)', fontsize=7, y=0.99)
+        axes[0].legend(fontsize=6, frameon=False, loc='lower left', ncol=2, columnspacing=0.8, handletextpad=0.4)
+        seeds_txt = (f'{parts[0].seed.nunique()} seeds (first generation) and {parts[1].seed.nunique()} seeds (second generation, hollow markers)'
+                     if len(parts) > 1 else f'{nseeds} seed(s)')
+        fig.suptitle(f'mean over {inst.instance.nunique()} instances and {seeds_txt}', fontsize=7, y=0.99)
         _save(fig, out_dir, name)
 
 
@@ -363,6 +393,7 @@ def main() -> None:
     ap.add_argument('--couriers-dir', default=os.path.join(THIS_DIR, 'output', 'paper', 'couriers'))
     ap.add_argument('--out', default=os.path.normpath(os.path.join(THIS_DIR, '..', 'docs', 'paper-cmdp', 'paper', 'figures')))
     ap.add_argument('--main-csv', default=os.path.join(THIS_DIR, 'output', 'paper', 'main.csv'))
+    ap.add_argument('--extra-csv', nargs='*', default=[], help='further run tables for F3/F4 (e.g. gen2.csv)')
     ap.add_argument('--couriers-table', default=os.path.join(THIS_DIR, 'output', 'paper', 'main_couriers.csv'),
                     help='analyze_couriers.py --out table; the x-axis of F3/F4 is then the eligible-courier Gini (E9)')
     args = ap.parse_args()
@@ -371,7 +402,8 @@ def main() -> None:
     if 'f2' in args.fig:
         fig_f2(args.out)
     if 'f3f4' in args.fig:
-        fig_frontiers(args.out, args.main_csv, args.couriers_table if os.path.exists(args.couriers_table) else None)
+        fig_frontiers(args.out, args.main_csv, args.couriers_table if os.path.exists(args.couriers_table) else None,
+                      extra_csvs=args.extra_csv)
     if 'f5' in args.fig:
         fig_regime_loss(args.out, args.main_csv, args.couriers_table)
     if 'f7' in args.fig:

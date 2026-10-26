@@ -634,3 +634,48 @@ MIP-Fair xk25 10 / 12, MIP-Fair xk 2 / 10; el greedy 24 / 24. Activos entre eleg
 BRKGA-Fair xk25 4,5. H1' (> la mitad de la brecha) se cumple en auto (0,54–0,56) y queda justo por debajo en manual
 (0,44–0,47): E11 (k_d = 50) decide si satura. Con k_d = 25 la mitad de los días cumplen α = 0,40 y casi todos
 cumplirían 0,45: α* = 0,45 se mantiene como candidato para X2.
+
+### 12.11 X3 gen2 cerrado con cinco semillas; E11 ejecutada; α* = 0,45 (2026-10-26, 14:10)
+
+**X3 gen2 terminó el 25 oct a las 14:31**: 1.920 corridas, 0 fallos, 1.157 min de reloj (12 procesos). Tabla de
+repartidores con `analyze_couriers.py output/paper/gen2.csv --out output/paper/gen2_couriers.csv`; análisis final con
+`analyze_gen2_final.py` (`output/paper/gen2_final.txt`): 120 zona-días por régimen, pareados con X1 (mismas semillas
+1–5). Resultados (Gini de elegibles, manual / auto):
+
+- La base de exposición sola cierra 0,02–0,12 de la brecha greedy → padre (BRKGA-Fair 0,514; MIP-Fair 0,540 / 0,525).
+- k_d = 8 cierra 0,25 (BRKGA-Fair) y 0,33 / 0,46 (MIP-Fair); k_d = 25 cierra 0,45 / 0,54 (BRKGA-Fair w40: 0,437 /
+  0,416) y 0,47 / 0,57 (MIP-Fair: 0,435 / 0,401). Activos 0,85–0,91 de los elegibles; p25 282–343 COP/h.
+- IC 95 % pareados frente al padre excluyen cero en todos los casos; con k_d = 25 ningún zona-día es peor que su padre;
+  las medias por semilla difieren ≤ 0,008.
+- Costo de servicio nulo: Δ cobertura −0,001 … +0,003 frente al padre; tardanza +0,1–0,3 min; pérdida de régimen igual.
+- ε = 0,05 frente a 0: Gini dentro de 0,002, cobertura dentro de 0,001 (H2 refutada).
+- Pay-BRKGA responde 0,09–0,12 de la brecha.
+- CPU: BRKGA-Fair xk25 4,3–4,9 min/corrida (máx. 25); MIP-Fair xk25 11,1–23,5 min (máx. 110 en Bogotá manual).
+- Cumplimiento (fracción de zona-días con Gini ≤ α), manual / auto, k_d = 25: α 0,40: 0,49 / 0,56 (BRKGA-Fair) y
+  0,40 / 0,63 (MIP-Fair); α 0,45: 0,62 / 0,67 y 0,61 / 0,83; α 0,50: 0,72 / 0,81 y 0,82 / 0,96; α 0,30: 0 (0,03).
+- Por ciudad (manual, k_d = 25): Barranquilla, Bogotá y Medellín 0,37–0,38; Cali 0,45–0,47; Bucaramanga y Pereira
+  0,49–0,55 (el greedy está en 0,27–0,32).
+
+**Veredicto de H1'**: se cumple en auto (0,54–0,57) y queda justo debajo en manual (0,45–0,47). La mitad de la brecha
+que queda se atribuye a la estructura de la ronda order-centric (una ruta por repartidor y cobertura primero); la
+ablación k_d = 50 (E11) prueba si es cuestión de candidatos.
+
+**E11 ejecutada**: `batch_paper.py` añade a `ABLATIONS` `brkga_fair_w40_xk50` y `mipfair_a030_xk50_e000`
+(`fair_cand_deficit_k = 50`) y la rama `supp` corre esas dos también en auto-aceptación (`E11_BOTH_REGIMES`). Grilla
+supp: 11 ablaciones × 24 × 5 en manual + 2 × 24 × 5 en auto = 1.560 corridas. **Lanzado el 26 oct a las 14:00**
+(`batch_paper.py --experiment supp --workers 12 --timeout-min 240`, `output/paper/supp.csv`, stdout en
+`supp.stdout.txt`); estimación 12–16 h por el costo de MIP-Fair con k_d = 50.
+
+**α\* = 0,45 para X2** (criterios del paper, tabla de α): A (Gini histórico del greedy) y B (banda) coinciden en 0,30,
+que ninguna política order-centric alcanza ningún día; C (codo de Pareto) no aplica porque la cobertura es plana
+(±0,3 puntos) a lo largo de α y de k_d; el intervalo es [0,30, 0,45] y el punto de operación recomendado es 0,45 con
+BRKGA-Fair w40 xk25 (4–5 min/día frente a 11–24 de MIP-Fair con el mismo cumplimiento). Pendiente (E12, al terminar
+supp, para no tocar código de corrida mientras corre): la rama `threshold` de `batch_paper.py` debe usar
+`{**METHODS, **GEN2}` y los métodos greedy, hier, brkga_fair_w40_xk25, mipfair_a030_xk25_e000 y paybrkga_l05
+(la `--mipfair-knee` original ya no tiene sentido porque α es inerte en MIP-Fair).
+
+**En el paper** (`main.tex`, 45 pp., 0 errores, 44 todos): párrafo y tabla T7 (`tab:gen2`, de
+`tables_paper.py main.csv gen2.csv --out-dir output/paper/tables_gen2 --configs …`), bloque de segunda generación en
+la tabla de cumplimiento con la elección de α*, puntos huecos de la segunda generación en F3/F4
+(`figures_paper.py --fig f3f4 --extra-csv output/paper/gen2.csv`), tabla de criterios de α completa, discusión
+(pregunta 2), viñetas de la introducción sin todos de X1, y prosa por ciudad.

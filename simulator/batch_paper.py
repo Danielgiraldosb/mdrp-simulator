@@ -130,6 +130,17 @@ for _e in (0.0, 0.05):
                                 'mipfair_basis': 'hourly', 'mipfair_cand_top_k': 8, 'mipfair_cov_slack': _e, **_GEN2K},
         alpha=0.30)
 
+# E11 (2026-10-25, after X3 gen2): k_d = 50 closes the k_d curve {0, 8, 25, 50} of the two second-generation winners.
+# Both regimes, 5 seeds (2 x 24 x 2 x 5 = 480 runs), run inside the supp experiment; CPU: MIP-Fair k_d = 25 took
+# up to 110 min on a Bogota day under the manual regime, so --timeout-min 240 for supp.
+_GEN2K50 = {**_GEN2, 'fair_cand_deficit_k': 50}
+ABLATIONS['brkga_fair_w40_xk50'] = dict(policy='brkga_fair', cfg={'brkga_fair_weight': 40.0, 'brkga_fair_basis': 'hourly', **_GEN2K50},
+                                        weight=40.0)
+ABLATIONS['mipfair_a030_xk50_e000'] = dict(policy='mip_fair', cfg={'mipfair_alpha': 0.30, 'mipfair_scope': 'all', 'mipfair_priority': 'coverage',
+                                                                    'mipfair_basis': 'hourly', 'mipfair_cand_top_k': 8, 'mipfair_cov_slack': 0.0,
+                                                                    **_GEN2K50}, alpha=0.30)
+E11_BOTH_REGIMES = ['brkga_fair_w40_xk50', 'mipfair_a030_xk50_e000']
+
 PILOT_METHODS = ['greedy', 'ilp', 'hier', 'brkga', 'brkga_fair_w10', 'mipfair_a030', 'paybrkga_l02']
 THRESHOLD_METHODS = ['greedy', 'hier', 'brkga_fair_w10', 'paybrkga_l02']   # + mipfair at the knee
 
@@ -198,7 +209,10 @@ def build_grid(experiment: str, instances: List[str], cities: Dict[str, str], ra
             mkeys.append(knee)
         add(instances, mkeys, ['manual', 'autoaccept'], range(1, (seeds or 5) + 1), list(PPK_THRESHOLD_CI))
     elif experiment == 'supp':
-        add(instances, methods or list(ABLATIONS), ['manual'], range(1, (seeds or 5) + 1),
+        mkeys = list(methods or list(ABLATIONS))
+        add(instances, mkeys, ['manual'], range(1, (seeds or 5) + 1), [PPK_THRESHOLD_POINT], catalogue=ABLATIONS)
+        # the E11 k_d = 50 ablations are paired with gen2 (both regimes)
+        add(instances, [k for k in mkeys if k in E11_BOTH_REGIMES], ['autoaccept'], range(1, (seeds or 5) + 1),
             [PPK_THRESHOLD_POINT], catalogue=ABLATIONS)
     elif experiment == 'gen2':
         add(instances, methods or list(GEN2), ['manual', 'autoaccept'], range(1, (seeds or 5) + 1),

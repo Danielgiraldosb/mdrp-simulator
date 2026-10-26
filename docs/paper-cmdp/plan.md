@@ -333,3 +333,10 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
 - **2026-10-25, 02:20 (F6 con segunda generación).** BRKGA-Fair w40 xk25 en Instancia_0: sigue la trayectoria
   order-centric hasta mediodía y luego se dobla hacia el greedy: 0,51 a las 14 h, cruza 0,40 a las 15:48 y cierra en
   0,36 con el 97 % de elegibles activos y cobertura 0,780 (la mayor de las cuatro). Figura de cuatro curvas y prosa.
+- **2026-10-26, 14:10 (cierre de gen2; E11 lanzada; α* = 0,45).** X3 gen2 terminó el 25 oct 14:31 (1.920, 0 fallos).
+  Análisis final con cinco semillas (`analyze_gen2_final.py`): k_d = 25 cierra 0,45–0,57 de la brecha con el greedy
+  sin costo de cobertura (BRKGA-Fair w40 0,437 / 0,416; MIP-Fair 0,435 / 0,401); ε no hace nada; MIP-Fair xk25 cuesta
+  5× su padre en CPU. Paper: T7 de segunda generación, cumplimiento, F3/F4 con puntos huecos, tabla de criterios de α
+  (intervalo [0,30, 0,45], α* = 0,45), discusión, introducción y por ciudad; 45 pp., 0 errores, 44 todos. E11:
+  `supp` con k_d = 50 (1.560 corridas) corriendo desde las 14:00 con `--timeout-min 240`. Diseño §12.11; deck slide
+  17 y roadmap. Pendiente E12 (rama threshold con las variantes xk25) al terminar supp.
