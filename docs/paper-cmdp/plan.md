@@ -340,3 +340,6 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   (intervalo [0,30, 0,45], α* = 0,45), discusión, introducción y por ciudad; 45 pp., 0 errores, 44 todos. E11:
   `supp` con k_d = 50 (1.560 corridas) corriendo desde las 14:00 con `--timeout-min 240`. Diseño §12.11; deck slide
   17 y roadmap. Pendiente E12 (rama threshold con las variantes xk25) al terminar supp.
+- **2026-10-27, 16:05 (supp relanzado sin fairfirst).** 429/1.560 en 26 h con 6 timeouts (MIP-Fair en Bogotá manual);
+  fairfirst (98 min/corrida, degenerada) sale de la grilla con `--methods`; relanzado reanudando: 1.011 celdas por
+  correr, fin estimado 29 oct. Diseño §12.12.

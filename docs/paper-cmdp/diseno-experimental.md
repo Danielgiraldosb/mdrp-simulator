@@ -679,3 +679,16 @@ supp, para no tocar código de corrida mientras corre): la rama `threshold` de `
 la tabla de cumplimiento con la elección de α*, puntos huecos de la segunda generación en F3/F4
 (`figures_paper.py --fig f3f4 --extra-csv output/paper/gen2.csv`), tabla de criterios de α completa, discusión
 (pregunta 2), viñetas de la introducción sin todos de X1, y prosa por ciudad.
+
+### 12.12 supp relanzado sin fairfirst (2026-10-27, 16:05)
+
+Tras 26 h el lote supp llevaba 429 de 1.560 corridas (16/h; fin estimado 30 oct) con 6 timeouts de 240 min, todos de
+MIP-Fair en la Instancia_0 de Bogotá en manual (total, fairfirst, idle, k25, xk50) y fairfirst en la Instancia_12.
+`mipfair_a030_fairfirst` costaba 98 min/corrida (el 40 % del tiempo restante) y ya se sabe desde el piloto que es
+degenerada (equidad-primero no asigna nada desde el arranque en frío; E5'). **Decisión**: se detiene el lote y se
+relanza con `--methods` excluyendo fairfirst (las 27 corridas hechas bastan para la fila de la tabla de ablaciones);
+el lote es reanudable, así que las 429 filas de `supp.csv` se conservan. Quedan 10 ablaciones × 24 × 5 en manual
++ 2 × 24 × 5 en auto = 1.440 celdas, 1.011 por correr; fin estimado 29 oct por la mañana. Los timeouts de Bogotá se
+reportan como tales en el apéndice (el día más grande con los solvers más pesados). Primera lectura de E11: MIP-Fair
+k_d = 50 en auto llega a 0,36 en la Instancia_8 (k_d = 25: 0,40 de media) y BRKGA-Fair k_d = 50 cuesta 6,7 min/corrida.
+Registro del primer lote en `output/paper/supp.stdout.run1.txt`.

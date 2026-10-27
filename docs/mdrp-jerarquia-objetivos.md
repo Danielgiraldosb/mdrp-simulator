@@ -438,7 +438,8 @@ manual / auto:
 Lecturas: H1' se cumple en auto y queda justo debajo en manual; IC 95 % pareados excluyen cero; ningún zona-día peor
 que su padre con k_d = 25; medias por semilla difieren ≤ 0,008; ε no hace nada (H2 refutada). Cumplimiento con
 α = 0,45: 61–62 % (manual) y 67–83 % (auto); con 0,50: 72–82 % / 81–96 %. Decisión E11 ejecutada: `supp` lanzado el
-26 oct 14:00 con k_d = 50 (1.560 corridas). α* = 0,45 para X2. En el paper: T7 (segunda generación), filas en la tabla
+26 oct 14:00 con k_d = 50 (1.560 corridas); relanzado el 27 oct 16:05 sin fairfirst (degenerada, 98 min/corrida;
+1.440 celdas, fin estimado 29 oct). α* = 0,45 para X2. En el paper: T7 (segunda generación), filas en la tabla
 de cumplimiento, puntos huecos en F3/F4, tabla de criterios de α (A y B en 0,30, C no aplica, intervalo [0,30, 0,45]),
 discusión, introducción y por ciudad; 45 pp., 0 errores, 44 todos.
 
