@@ -692,3 +692,45 @@ el lote es reanudable, así que las 429 filas de `supp.csv` se conservan. Quedan
 reportan como tales en el apéndice (el día más grande con los solvers más pesados). Primera lectura de E11: MIP-Fair
 k_d = 50 en auto llega a 0,36 en la Instancia_8 (k_d = 25: 0,40 de media) y BRKGA-Fair k_d = 50 cuesta 6,7 min/corrida.
 Registro del primer lote en `output/paper/supp.stdout.run1.txt`.
+
+### 12.13 supp: lectura preliminar con cuatro semillas; E12 (2026-10-29, 18:30)
+
+El lote supp murió con la sesión el 28 oct a las 21:49 con 1.012 filas en `supp.csv` (de 1.453 celdas: 1.440 sin
+fairfirst más las 27 de fairfirst; 13 timeouts de 240 min: MIP-Fair idle / k25 / total / xk50 en la Instancia_0 de
+Bogotá, semillas 1–3, e idle en la Instancia_6). Reanudado el 29 oct a las 17:48 con `output/paper/supp_resume.cmd`
+lanzado con Start-Process (sobrevive a la sesión; log en `supp.stdout.txt`): (A) 428 celdas en las 23 instancias
+restantes con `--retries 1`; (B) 13 celdas en la Instancia_0 sin las cuatro MIP-Fair manual que no terminan en 4 h
+(`--retries 0`). **Decisión**: esas celdas (seis timeouts conocidos por semilla) no se reintentan; la tabla del
+apéndice las reporta como timeout y usa 76–80 pares para esas filas.
+
+Lectura preliminar (`analyze_supp.py` → `supp_analysis.txt`; cuerpo LaTeX en `tables/ablations.tex`; pareada con la
+base de cada ablación en los mismos pares instancia-semilla; semillas 1–4, 84 pares por fila salvo las anteriores):
+
+- **E11 (k_d = 50).** BRKGA-Fair w40: 0,403 / 0,351 (manual / auto) frente a 0,436 / 0,415 con k_d = 25
+  (Δ −0,033 [−0,036, −0,030] y −0,064 [−0,069, −0,060]); ningún par peor; cobertura −0,001 / 0; 45/84 y 61/84 días
+  ≤ 0,40; brecha cerrada 0,59 / 0,81 (k_d = 25: 0,45 / 0,54); 7,1 / 6,1 min por día (1,5×), máximo 34. MIP-Fair:
+  0,418 / 0,399 frente a 0,440 / 0,402 (Δ −0,023 [−0,029, −0,017] y −0,003 [−0,008, +0,002], no significativa);
+  cobertura −0,004 en manual; 52 / 25 min por día (2,7× / 2,3×), máximo 234, Instancia_0 manual fuera de las 4 h.
+  Curvas k_d: BRKGA-Fair 0,533 → 0,436 → 0,403 (manual), 0,535 → 0,415 → 0,351 (auto), sigue bajando con costo
+  lineal; MIP-Fair 0,549 → 0,468 → 0,440 → 0,418 y 0,533 → 0,426 → 0,402 → 0,399, se aplana con costo superlineal.
+  Respuesta a la pregunta abierta en el paper: candidatos para la heurística; estructura de la ronda (una ruta por
+  mensajero) y límite de 10 s para el modelo exacto. α* se mantiene en 0,45 (manual es el régimen de referencia;
+  con k_d = 50 BRKGA-Fair cumple 0,40 el 54 % de los días en manual).
+- **Ablaciones de primera generación (manual).** BRKGA score finish: −0,007, 1,6× CPU. BRKGA 20×20: +0,007 (peor en
+  56/84), cobertura igual, 3× CPU: se mantiene 10×10. BRKGA-Fair w10 base total: −0,004. MIP-Fair sobre libres:
+  −0,046 y +0,006 de cobertura (la expectativa de un Gini de cierre mayor no se cumple); base total: −0,035; k = 25:
+  −0,041 y +0,007; las tres a 9–10× CPU (30–37 min/día, hasta 240 en Bogotá; consistente con rondas al límite de
+  10 s cuando la restricción muerde) y ninguna alcanza a k_d = 25 (0,435). Equidad-primero (27 pares): cobertura
+  0,285, Gini 0,153 por no asignar, 36× CPU. ε 0,02 / 0,05: dentro de 0,001 de la base.
+- **Paper.** Tabla C.12 (`tab:ablations`) con cinco párrafos en el apéndice de ablaciones; cierre del párrafo de
+  segunda generación con k_d = 50; párrafo de calibración (20×20 y k = 25) en el apéndice; timeouts por experimento
+  (90 / 150 / 240 min) en implementación. 47 pp., 0 errores, 41 todos (uno nuevo: refrescar la tabla con la quinta
+  semilla).
+
+**E12 (decisión, 2026-10-29).** La rama `threshold` de `batch_paper.py` pasa al catálogo METHODS ∪ GEN2 con
+THRESHOLD_METHODS = greedy, hier, brkga_fair_w40_xk25, mipfair_a030_xk25_e000, paybrkga_l05; θ ∈ {615, 1.242}
+(IC 95 % del ajuste); **solo régimen manual** porque bajo auto-accept el umbral nunca se lee (`acceptance.py`,
+toda oferta se acepta) y las filas de X1/gen2 con θ = 903 son la referencia; 5 semillas; `--mipfair-knee` se
+acepta y se ignora. X2 pasa de 2.400 a 1.200 corridas (dry-run verificado). Hecho en el worktree `C:/MDRP-dev`
+(rama `e12-threshold`) para no tocar el código mientras supp corre; se fusiona y se lanza (`--timeout-min 150`,
+12 workers) al terminar supp.

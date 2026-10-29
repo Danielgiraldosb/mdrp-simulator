@@ -343,3 +343,13 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
 - **2026-10-27, 16:05 (supp relanzado sin fairfirst).** 429/1.560 en 26 h con 6 timeouts (MIP-Fair en Bogotá manual);
   fairfirst (98 min/corrida, degenerada) sale de la grilla con `--methods`; relanzado reanudando: 1.011 celdas por
   correr, fin estimado 29 oct. Diseño §12.12.
+- **2026-10-29, 18:30 (supp lectura preliminar; E12 preparada).** supp murió con la sesión el 28 oct 21:49 en 1.012
+  filas; reanudado el 29 oct 17:48 con `output/paper/supp_resume.cmd` (Start-Process; 441 celdas; las MIP-Fair
+  manual de la Instancia_0 que superan 4 h quedan fuera). `analyze_supp.py` (semillas 1–4, pareado con la base):
+  k_d = 50 lleva a BRKGA-Fair a 0,403 / 0,351 (brecha cerrada 0,59 / 0,81, ningún par peor, 1,5× CPU) y MIP-Fair
+  se aplana en 0,418 / 0,399 (2,7× CPU, Bogotá fuera de las 4 h); las ablaciones que aprietan la restricción de
+  ronda de MIP-Fair bajan 0,035–0,046 a 9–10× CPU sin alcanzar a k_d = 25; 20×20 peor; ε inerte; equidad-primero
+  colapsa. Paper: tabla C.12 y prosa, cierre de k_d = 50, calibración; 47 pp., 0 errores, 41 todos. E12 en la rama
+  `e12-threshold` (worktree): X2 = 1.200 corridas, manual, θ ∈ {615, 1.242}, variantes xk25. Diseño §12.13.
+  **Siguiente:** al terminar supp (≈ 30 oct), refrescar `analyze_supp.py`/tabla C.12 con la quinta semilla, fusionar
+  e12-threshold y lanzar X2.

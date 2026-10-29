@@ -443,3 +443,36 @@ que su padre con k_d = 25; medias por semilla difieren ≤ 0,008; ε no hace nad
 de cumplimiento, puntos huecos en F3/F4, tabla de criterios de α (A y B en 0,30, C no aplica, intervalo [0,30, 0,45]),
 discusión, introducción y por ciudad; 45 pp., 0 errores, 44 todos.
 
+### supp: lectura preliminar con cuatro semillas; E12 preparada (2026-10-29, 18:30; slide 17 ampliada)
+
+supp murió con la sesión el 28 oct a las 21:49 con 1.012 filas (de 1.453 celdas; 13 timeouts de 240 min, todos MIP-Fair
+manual en la Instancia_0 de Bogotá y dos en la 6). Reanudado el 29 oct a las 17:48 con `output/paper/supp_resume.cmd`
+(Start-Process, sobrevive a la sesión): 428 celdas en 23 instancias y 13 en la Instancia_0 sin las MIP-Fair manual que
+no terminan (idle, k25, total, xk50; se reportan como timeout). Lectura con `simulator/analyze_supp.py`
+(`output/paper/supp_analysis.txt`; tabla C.12 del paper, `tables/ablations.tex`), pareada con la base de cada ablación
+en los mismos pares instancia-semilla (semillas 1–4; manual / auto):
+
+| ablación (base) | n | cobertura Δ | Gini | Δ Gini vs base [IC 95 %] | peor / mejor | CPU × base |
+|---|---|---|---|---|---|---|
+| BRKGA score finish (finish/orden) | 84 | −0,001 | 0,558 | −0,007 [−0,009, −0,005] | 11 / 52 | 1,6 |
+| BRKGA 20×20 (10×10) | 84 | 0 | 0,572 | +0,007 [+0,005, +0,009] | 56 / 5 | 3,0 |
+| BRKGA-Fair w10 base total (horaria) | 84 | 0 | 0,534 | −0,004 [−0,006, −0,002] | 10 / 37 | 1,6 |
+| MIP-Fair Gini sobre libres (conectados) | 76 | +0,006 | 0,504 | −0,046 [−0,057, −0,036] | 6 / 63 | 9,5 |
+| MIP-Fair base total (horaria) | 80 | +0,006 | 0,512 | −0,035 [−0,048, −0,023] | 22 / 54 | 9,6 |
+| MIP-Fair equidad primero (cobertura primero) | 27 | −0,469 | 0,153 | −0,407 [−0,496, −0,317] | 1 / 26 | 36,3 |
+| MIP-Fair k = 25 (k = 8) | 79 | +0,007 | 0,507 | −0,041 [−0,050, −0,031] | 5 / 67 | 9,3 |
+| MIP-Fair ε = 0,02 / 0,05 (0) | 84 | 0 | 0,542 / 0,543 | −0,001 / 0,000 | 17 / 28; 19 / 17 | 1,6 |
+| **BRKGA-Fair w40 k_d = 50 (k_d = 25)** | 84 | −0,001 / 0 | **0,403 / 0,351** | **−0,033 / −0,064** | 0 / 82; 0 / 84 | 1,5 |
+| **MIP-Fair k_d = 50 (k_d = 25)** | 78 / 84 | −0,004 / 0 | 0,418 / 0,399 | −0,023 / −0,003 (n.s.) | 11 / 58; 31 / 47 | 2,7 / 2,3 |
+
+Lecturas: (1) E11: para BRKGA-Fair es cuestión de candidatos (curva k_d 0,533 → 0,436 → 0,403 en manual y 0,535 →
+0,415 → 0,351 en auto; cierra 0,59 / 0,81 de la brecha; 54 % / 73 % de los días ≤ 0,40; 7 min/día); para MIP-Fair la
+curva se aplana (0,549 → 0,468 → 0,440 → 0,418 / 0,533 → 0,426 → 0,402 → 0,399) y la CPU crece a 52 min/día con la
+Instancia_0 fuera de las 4 h: mandan la estructura de la ronda y el límite de 10 s. (2) Las tres ablaciones que aprietan
+la restricción de ronda de MIP-Fair (libres, total, k = 25) bajan 0,035–0,046 pero a 9–10× CPU y no alcanzan a k_d = 25.
+(3) 20×20 es peor y 3× más caro; ε inerte; equidad-primero colapsa. α* sigue en 0,45 (manual es el régimen de
+referencia). En el paper: tabla C.12 con cinco párrafos, cierre del párrafo de segunda generación (k_d = 50), ajuste en
+el apéndice de calibración y timeouts por experimento; 47 pp., 0 errores, 41 todos. **E12** (decisión, worktree
+`C:/MDRP-dev`, rama `e12-threshold`): la rama `threshold` de `batch_paper.py` usa el catálogo METHODS ∪ GEN2 con
+greedy, jerárquico, brkga_fair_w40_xk25, mipfair_a030_xk25_e000 y paybrkga_l05 en θ ∈ {615, 1.242}, solo manual
+(auto-accept nunca lee θ; `acceptance.py`), 5 semillas = 1.200 corridas; se fusiona y lanza al terminar supp.
