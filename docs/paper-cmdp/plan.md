@@ -382,3 +382,10 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   escenarios generados con distintas densidades y disponibilidad de mensajeros, así que la celda queda vacía
   (inferido del resumen; verificar si el autor tiene el PDF). La fila `rl2025fairdelivery` sigue con la clave bib de
   relleno ("TODO title") y necesita al autor. 23 todos.
+- **2026-10-30, 17:40 (issues para el autor).** A petición del director, los pendientes que necesitan a Daniel quedaron
+  como issues en GitHub (Danielgiraldosb/mdrp-simulator #1-#10, etiqueta `author-decision`, asignadas a Daniel): #1
+  referencia rl2025fairdelivery y su fila en la Tabla 1; #2 w1/w2; #3 nombre de la plataforma; #4 compartir instancias
+  (y 16/17); #5 agradecimientos; #6 correo y autor de correspondencia; #7 estructura del apéndice de literatura
+  (multibib); #8-#10 ampliar los tres bloques del apéndice (y confirmar la celda de Simoni & Winkenbach en #8). Las dos
+  marcas de F1/F2 eran notas inertes (las figuras existen) y se quitaron. Quedan 21 marcas `\todo`: 15 de las issues
+  (7 de #1), 5 de X2 y la nota de seguimiento. La carpeta `papers/` (los dos EJOR del director) sigue sin versionar.
