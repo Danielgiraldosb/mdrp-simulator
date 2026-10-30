@@ -360,3 +360,14 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   (≈ 31 oct), `analyze_couriers.py` sobre threshold.csv, celdas de umbral de T6 y F5, prosa de X2 (sección de
   sensibilidad, todo "Behavioural threshold"), cumplimiento con α* = 0,45; después quedan los todos de literatura y
   front matter.
+- **2026-10-30, 15:10 (todos de X1/X3 cerrados mientras corre X2).** Diez todos cerrados sin depender de X2:
+  introducción (cierre del primer párrafo y frase de resultados con diez semillas), método (lectura de H_t de primera y
+  segunda generación y prefiltro por déficit en el Algoritmo 1), 84 tests, nota de seguimiento de resultados, Pay-BRKGA
+  (nadie cruza w*; tamaño de lote 1,00–1,03; pago 88 / 80 % del tarifario con mediana de pago por km 929 vs 816 del
+  greedy), discusión (confirmación con gen2 y k_d = 50; brecha restante: candidatos para la heurística, estructura
+  para el exacto), conclusión, pesos λ_tt = 0,01 y μ = 0,02 del apéndice. El log de multiplicadores de Pay-BRKGA no
+  existe (las tablas por mensajero traen pago = ganancias de pedidos), así que la distribución de m_c no se reporta.
+  47 pp., 0 errores, 30 todos: 5 dependen de X2 (T6 umbral, prosa de umbral, "does / does not", tabla compañera de
+  Gini, nota de seguimiento), el resto son literatura (tabla, apéndice), front matter y datos (plataforma, instancias,
+  financiación), que necesitan al autor. X2 en 23/1.200 a las 15:00 (las celdas MIP-Fair xk25 manual de la semilla 1
+  dominan el arranque).
