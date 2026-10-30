@@ -4,8 +4,8 @@ batch_paper.py -- Etapa 4 grid for the CMDP-with-equity paper (docs/paper-cmdp/d
 Experiments
   pilot      6 instances (one per city) x 7 methods at defaults x manual x seed 1     (42 runs)
   main       18 method configurations x 2 regimes x 24 instances x 10 seeds           (8,640 runs)
-  threshold  5 selected configurations x logit threshold {615, 1242} x 2 regimes
-             x 24 instances x 5 seeds                                                 (2,400 runs)
+  threshold  5 selected configurations x logit threshold {615, 1242} x greedy/hier/BRKGA-Fair xk25/MIP-Fair xk25/Pay-BRKGA, manual (E12)
+             x 24 instances x 5 seeds                                                 (1,200 runs)
   supp       4 ablations x manual x 24 instances x 5 seeds                            (480 runs)
 
 Every run executes in its OWN Python subprocess with retries and a timeout
@@ -142,7 +142,7 @@ ABLATIONS['mipfair_a030_xk50_e000'] = dict(policy='mip_fair', cfg={'mipfair_alph
 E11_BOTH_REGIMES = ['brkga_fair_w40_xk50', 'mipfair_a030_xk50_e000']
 
 PILOT_METHODS = ['greedy', 'ilp', 'hier', 'brkga', 'brkga_fair_w10', 'mipfair_a030', 'paybrkga_l02']
-THRESHOLD_METHODS = ['greedy', 'hier', 'brkga_fair_w10', 'paybrkga_l02']   # + mipfair at the knee
+THRESHOLD_METHODS = ['greedy', 'hier', 'brkga_fair_w40_xk25', 'mipfair_a030_xk25_e000', 'paybrkga_l05']   # E12
 
 
 # ---------------------------------------------------------------- instances
@@ -197,17 +197,14 @@ def build_grid(experiment: str, instances: List[str], cities: Dict[str, str], ra
         add(instances, methods or list(METHODS), ['manual', 'autoaccept'],
             range(1, (seeds or 10) + 1), [PPK_THRESHOLD_POINT])
     elif experiment == 'threshold':
+        # E12 (2026-10-29, after X3): X2 runs the two ends of the 95 % CI of the behavioural threshold with Greedy,
+        # Hierarchical, the two second-generation winners of X3 (k_d = 25) and Pay-BRKGA (lambda = 0.5), manual
+        # regime only (under auto-accept the threshold is never read, and the theta = 903 rows of X1/gen2 are the
+        # reference). alpha = 0.30 for MIP-Fair: alpha is inert in the first generation (X1) and 0.30 is the anchor.
+        # --mipfair-knee is accepted and ignored (kept for the old command lines).
         mkeys = list(methods or THRESHOLD_METHODS)
-        if not methods:
-            if mipfair_knee is None:
-                raise SystemExit('--mipfair-knee ALPHA is required for --experiment threshold '
-                                 '(the knee alpha found in the main experiment)')
-            knee = f'mipfair_a{int(round(mipfair_knee * 100)):03d}'
-            if knee not in METHODS:
-                raise SystemExit(f'{knee} is not one of the main-grid alphas: '
-                                 f'{[k for k in METHODS if k.startswith("mipfair")]}')
-            mkeys.append(knee)
-        add(instances, mkeys, ['manual', 'autoaccept'], range(1, (seeds or 5) + 1), list(PPK_THRESHOLD_CI))
+        add(instances, mkeys, ['manual'], range(1, (seeds or 5) + 1), list(PPK_THRESHOLD_CI),
+            catalogue={**METHODS, **GEN2})
     elif experiment == 'supp':
         mkeys = list(methods or list(ABLATIONS))
         add(instances, mkeys, ['manual'], range(1, (seeds or 5) + 1), [PPK_THRESHOLD_POINT], catalogue=ABLATIONS)
