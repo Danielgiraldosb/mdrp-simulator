@@ -734,3 +734,29 @@ toda oferta se acepta) y las filas de X1/gen2 con θ = 903 son la referencia; 5 
 acepta y se ignora. X2 pasa de 2.400 a 1.200 corridas (dry-run verificado). Hecho en el worktree `C:/MDRP-dev`
 (rama `e12-threshold`) para no tocar el código mientras supp corre; se fusiona y se lanza (`--timeout-min 150`,
 12 workers) al terminar supp.
+
+### 12.14 supp cerrado con cinco semillas; X2 lanzado (2026-10-30, 14:40)
+
+La reanudación terminó el 30 oct a las 05:36: parte A 428/428 (561 min) y parte B 13/13 (147 min), 0 fallos; 1.453
+filas en `supp.csv`. Las celdas MIP-Fair manual de la Instancia_0 para idle / total / k25 quedan como timeout en
+cuatro o cinco semillas (115–116 pares); xk50 sí completó las 120 (los reintentos y la parte B entraron en 240 min).
+`supp_couriers.csv` recalculado; `analyze_supp.py` → `supp_analysis.txt` y `tables/ablations.tex` con cinco semillas.
+
+Números finales (manual / auto; Δ pareada frente a la base, IC 95 %):
+- BRKGA-Fair w40 k_d = 50: 0,404 / 0,352; Δ −0,033 [−0,036, −0,030] / −0,064 [−0,068, −0,061]; 0 de 120 pares peor;
+  cobertura −0,001 / 0; 66/120 y 88/120 días ≤ 0,40; brecha cerrada 0,59 / 0,81; 6,4 / 5,5 min por día (1,3×), máx. 34.
+- MIP-Fair k_d = 50: 0,412 / 0,398; Δ −0,023 [−0,028, −0,018] / −0,002 [−0,007, +0,002]; cobertura −0,004 / 0;
+  60/120 y 70/120 días ≤ 0,40; brecha 0,58 / 0,60; 51 / 22 min por día (2,2× / 2,0×), máx. 234.
+- Curvas k_d (mismos pares): BRKGA-Fair 0,534 → 0,437 → 0,404 y 0,536 → 0,416 → 0,352; MIP-Fair 0,544 → 0,465 →
+  0,435 → 0,412 y 0,534 → 0,426 → 0,401 → 0,398. Conclusión de §12.13 confirmada.
+- Ablaciones de primera generación (manual): score finish −0,007 (1,4×); 20×20 +0,007, peor en 76/120 (2,7×);
+  BRKGA-Fair w10 base total −0,005; MIP-Fair libres −0,050 (+0,006 cobertura, 8,6×), total −0,032 (8,3×), k = 25
+  −0,039 (+0,007, 8,0×), ninguna por debajo de 0,498; ε 0,02 / 0,05 dentro de 0,001; equidad-primero sin cambio (27).
+- Paper: tabla C.12 y prosa (apéndice de ablaciones, párrafo de segunda generación, calibración) con los números
+  finales; 47 pp., 0 errores, 40 todos.
+
+**X2 lanzado** (30 oct 14:24; `output/paper/x2_launch.cmd` con Start-Process; 12 workers; `--timeout-min 150`;
+rama e12-threshold fusionada en master, merge 581ecd7): 5 configuraciones × 24 instancias × 2 umbrales × 5 semillas =
+1.200 corridas, régimen manual, en `output/paper/threshold.csv` (log `threshold.stdout.txt`). Costo estimado: ~1 día
+(MIP-Fair xk25 23 min/corrida en manual). Análisis previsto: T6 (celdas de umbral: cobertura y Gini de elegibles en
+θ = 615 y 1.242 frente a 903 de X1/gen2, mismas semillas), F5 con los extremos del IC, cumplimiento con α = 0,45.

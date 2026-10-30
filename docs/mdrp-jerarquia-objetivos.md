@@ -476,3 +476,19 @@ el apéndice de calibración y timeouts por experimento; 47 pp., 0 errores, 41 t
 `C:/MDRP-dev`, rama `e12-threshold`): la rama `threshold` de `batch_paper.py` usa el catálogo METHODS ∪ GEN2 con
 greedy, jerárquico, brkga_fair_w40_xk25, mipfair_a030_xk25_e000 y paybrkga_l05 en θ ∈ {615, 1.242}, solo manual
 (auto-accept nunca lee θ; `acceptance.py`), 5 semillas = 1.200 corridas; se fusiona y lanza al terminar supp.
+
+### supp cerrado con cinco semillas; E12 fusionada; X2 lanzado (2026-10-30, 14:40; slide 17 y roadmap)
+
+supp terminó el 30 oct a las 05:36 (parte A 428/428 y parte B 13/13, 0 fallos; 1.453 filas con las 27 de fairfirst).
+`analyze_couriers.py` y `analyze_supp.py` rehechos con las cinco semillas; la tabla C.12 y la prosa del paper quedaron
+con los números finales (se quitó el todo de la quinta semilla). Los números cambian poco frente a la lectura
+preliminar: BRKGA-Fair w40 k_d = 50 0,404 / 0,352 (Δ −0,033 / −0,064; 0 de 120 pares peor; 1,3× CPU, 6 min/día);
+MIP-Fair k_d = 50 0,412 / 0,398 (Δ −0,023 / −0,002 n.s.; −0,004 de cobertura en manual; 2,2× CPU, 51 min/día, máx. 234);
+curvas k_d: 0,534 → 0,437 → 0,404 / 0,536 → 0,416 → 0,352 (BRKGA-Fair) y 0,544 → 0,465 → 0,435 → 0,412 /
+0,534 → 0,426 → 0,401 → 0,398 (MIP-Fair). Ablaciones: sobre libres −0,050, total −0,032, k = 25 −0,039 (8–9× CPU;
+115–116 pares por los timeouts de la Instancia_0); 20×20 +0,007 (peor en 76/120, 2,7× CPU); score finish −0,007; base
+total en BRKGA-Fair −0,005; ε inerte; equidad-primero colapsa. Paper: 47 pp., 0 errores, 40 todos.
+
+E12 fusionada en master (merge 581ecd7). X2 lanzado el 30 oct a las 14:24 con `output/paper/x2_launch.cmd`
+(Start-Process; 12 workers; `--timeout-min 150`): 1.200 corridas en `threshold.csv`, log `threshold.stdout.txt`.
+Al terminar: cumplimiento y cobertura en θ ∈ {615, 1.242} frente a 903 (T6 celdas de umbral, F5 con los extremos del IC).

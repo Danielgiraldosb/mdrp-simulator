@@ -353,3 +353,10 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   `e12-threshold` (worktree): X2 = 1.200 corridas, manual, θ ∈ {615, 1.242}, variantes xk25. Diseño §12.13.
   **Siguiente:** al terminar supp (≈ 30 oct), refrescar `analyze_supp.py`/tabla C.12 con la quinta semilla, fusionar
   e12-threshold y lanzar X2.
+- **2026-10-30, 14:40 (supp cerrado; X2 lanzado).** supp terminó a las 05:36 (1.453 filas, 0 fallos en la
+  reanudación). Tabla C.12 y prosa del paper con cinco semillas (BRKGA-Fair k_d = 50 0,404 / 0,352, MIP-Fair 0,412 /
+  0,398; conclusiones iguales); 47 pp., 0 errores, 40 todos. E12 fusionada (581ecd7) y X2 corriendo desde las 14:24
+  (1.200 corridas, manual, θ ∈ {615, 1.242}; `threshold.csv`). Diseño §12.14. **Siguiente:** al terminar X2
+  (≈ 31 oct), `analyze_couriers.py` sobre threshold.csv, celdas de umbral de T6 y F5, prosa de X2 (sección de
+  sensibilidad, todo "Behavioural threshold"), cumplimiento con α* = 0,45; después quedan los todos de literatura y
+  front matter.
