@@ -371,3 +371,14 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   Gini, nota de seguimiento), el resto son literatura (tabla, apéndice), front matter y datos (plataforma, instancias,
   financiación), que necesitan al autor. X2 en 23/1.200 a las 15:00 (las celdas MIP-Fair xk25 manual de la semilla 1
   dominan el arranque).
+- **2026-10-30, 17:00 (tabla de literatura verificada).** Celdas "?" de la Tabla 1 resueltas con los textos completos:
+  Steever et al. 2019 (clientes uniformes aleatorios, ventanas de 4 h simuladas: sin datos reales); Neria et al. 2025
+  (demanda sintética sobre la geografía de Iowa City: sin datos reales); Sobhanan et al. 2024 (80 instancias aleatorias;
+  cinco medidas de equidad sobre carga de trabajo, recomiendan el CV: sin datos reales); FairFoody (brecha de ingreso
+  por hora como objetivo, Gini de ingreso por hora como métrica, amortizada en el día; seis días de una plataforma en
+  tres ciudades indias: "hourly-income gap / day"); Martínez-Sykora et al. 2024 (rango de pedidos por mensajero y de
+  tiempo de espera, plan estático por turno; instancias Grubhub más datos de un courier de Londres: "orders range /
+  shift"). Simoni & Winkenbach 2023: el texto completo no es accesible sin navegador (403); el resumen describe
+  escenarios generados con distintas densidades y disponibilidad de mensajeros, así que la celda queda vacía
+  (inferido del resumen; verificar si el autor tiene el PDF). La fila `rl2025fairdelivery` sigue con la clave bib de
+  relleno ("TODO title") y necesita al autor. 23 todos.
