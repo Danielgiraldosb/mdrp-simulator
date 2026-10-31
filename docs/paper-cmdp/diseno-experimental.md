@@ -812,3 +812,22 @@ experimentos del diseño (X0 42, X1 8.640, X3 gen2 1.920 + supp 1.453, X2 1.200:
 - Códigos internos fuera del .tex: "(X3, supp)", "(decision E11)", "decision E5", "decision E8", "SLA-infeasible",
   "zone-days"; nota de seguimiento de §6 eliminada (la trazabilidad queda en este documento y en plan.md).
 - 16 marcas `\todo`: 15 de las issues #1–#10 (7 de #1) y el comentario del preámbulo (línea 8).
+
+
+### 12.17 Nivel 1 de la revisión tipo referee aplicado (2026-11-01, 00:03)
+
+- Ver `referee-review.md`, sección "Estado tras el nivel 1". Cambios de código: `tables_paper.py` (CONFIGS con
+  `brkga_fair_w40`, negritas por dirección, pago sin negrita, γ), `figures_paper.py` (SELECTED w40, F3/F4 apiladas
+  6,2 × 5,2 in, γ en leyendas), `analyze_supp.py` (columna F_G^act = `F_Gini`), `snapshots_f6.py` (título),
+  `analyze_review.py` (nuevo: `tables/review_gen2.tex`, `review_metrics.tex`, `review_emissions.tex`).
+- Tablas regeneradas y empalmadas: T3, C.9, C.10, C.8 (ciudades), C.11 (ablaciones); nuevas C.3 (segunda
+  generación pareada, con T4 movida al lado), C.4 (frontera de atraso F4 y métricas no reportadas), tabla de
+  emisiones en C.7, tabla de notación en B.1, decodificador en B.2, verificación en B.4.
+- Estadístico "brecha cerrada": cociente de medias sobre instancias en las mismas semillas (definido en §5.4);
+  valores: k_d = 8 BRKGA-Fair 23/23 %, MIP-Fair 33/45 %; k_d = 25 42/50 % y 45/56 %; k_d = 50 56/77 %
+  (manual/auto). La media de cocientes por par que usaba el paper (45–57 %, 59–81 %) queda en los scripts de
+  análisis pero no en el texto.
+- Presupuesto: 52 pp., cuerpo 1–33, referencias 33–35, apéndice 36–52. Para volver a 35 tras las adiciones
+  (+580 palabras, +10 referencias) se condensaron ~600 palabras y pasaron al apéndice T4, F1–F2, F4, el
+  Algoritmo 2 y la verificación. Se quitó la cita a Mandell (1991) por espacio.
+- Pendiente de autor (nivel 3) sin cambios; la instancia 3 sigue en todas las tablas (N = 24) hasta la decisión.

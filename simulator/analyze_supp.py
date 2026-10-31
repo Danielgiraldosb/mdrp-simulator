@@ -101,7 +101,7 @@ def main() -> None:
             tex.append(f"{label} & {len(x)} & {x.coverage_rate.mean():.3f} & ${d_c.mean():+.3f}$ & "
                        f"{x.gini_elig_hourly.mean():.3f} & ${d_p.mean():+.3f}$ [{d_p.mean() - hp:+.3f}, {d_p.mean() + hp:+.3f}] & "
                        f"{int((d_p > 0.005).sum())}/{int((d_p < -0.005).sum())} & {x.share_active_elig.mean():.2f} & "
-                       f"{x.gini_elig_active_hourly.mean():.3f} & {x.wall_min.mean():.1f} ({x.wall_min.max():.0f}) & "
+                       f"{x.F_Gini.mean():.3f} & {x.wall_min.mean():.1f} ({x.wall_min.max():.0f}) & "
                        f"{x.wall_min.mean() / p.wall_min.mean():.1f} \\\\")
         print(pd.DataFrame(mean_rows).to_string(index=False))
         print()

@@ -30,7 +30,7 @@ from typing import Dict, List
 import numpy as np
 import pandas as pd
 
-CONFIGS = ['greedy', 'ilp', 'hier', 'brkga', 'brkga_fair_w20', 'mipfair_a030', 'paybrkga_l05']
+CONFIGS = ['greedy', 'ilp', 'hier', 'brkga', 'brkga_fair_w40', 'mipfair_a030', 'paybrkga_l05']   # rule of Sec. 6.1 on the eligible statistic
 BENCHMARKS = {'greedy', 'ilp', 'hier', 'brkga'}
 ALPHAS = [0.30, 0.35, 0.40, 0.45, 0.50]
 GINI_COL = 'gini_elig_hourly'
@@ -48,7 +48,7 @@ def display_name(method: str) -> str:
         return r'\texttt{' + method.replace('_', r'\_') + '}'
     fam, kind, num, suffix = m.groups()
     if fam == 'brkga_fair':
-        par = f'$w = {int(num)}$'
+        par = f'$\gamma = {int(num)}$'
         name = r'\textbf{BRKGA-Fair}'
     elif fam == 'mipfair':
         par = f'$\\alpha = {int(num) / 100:.2f}$'
@@ -95,8 +95,10 @@ def load(run_paths: List[str], couriers_table: str | None, all_seeds: bool) -> p
     return df
 
 
-def fmt_bold(values: pd.Series, best: str, fmt: str) -> Dict[str, str]:
+def fmt_bold(values: pd.Series, best: str | None, fmt: str) -> Dict[str, str]:
     texts = {k: fmt.format(v) for k, v in values.items()}
+    if best is None:            # no direction is 'best' for this column (e.g. payment: lower for the platform, worse for couriers)
+        return texts
     nums = {k: float(t) for k, t in texts.items()}
     target = min(nums.values()) if best == 'min' else max(nums.values())
     winners = [k for k, v in nums.items() if v == target]
@@ -113,8 +115,8 @@ def benchmark_rows(blk: pd.DataFrame, regime: str, configs: List[str]) -> str:
                                     pay=('pay_pct', 'mean'), cpu=('cpu_min', 'mean')).loc[[c for c in configs if c in sub.method.unique()]]
     cols = {'cov': fmt_bold(agg['cov'], 'max', '{:.3f}'), 'gini': fmt_bold(agg['gini'], 'min', '{:.3f}'),
             'act': fmt_bold(agg['act'], 'max', '{:.2f}'), 'gact': fmt_bold(agg['gact'], 'min', '{:.3f}'),
-            'late': fmt_bold(agg['late'], 'min', '{:.1f}'), 'fd': fmt_bold(agg['fd'], 'max', '{:.3f}'),
-            'pay': fmt_bold(agg['pay'].round(0), 'min', '{:.0f}'), 'cpu': fmt_bold(agg['cpu'], 'min', '{:.1f}')}
+            'late': fmt_bold(agg['late'], 'min', '{:.1f}'), 'fd': fmt_bold(agg['fd'], 'min', '{:.3f}'),
+            'pay': fmt_bold(agg['pay'].round(0), None, '{:.0f}'), 'cpu': fmt_bold(agg['cpu'], 'min', '{:.1f}')}
     lines = []
     sep_done = False
     for m in agg.index:
@@ -144,7 +146,7 @@ def city_rows(blk: pd.DataFrame, df: pd.DataFrame, configs: List[str], regime: s
                                       pay=('pay_pct', 'mean')).loc[[c for c in configs if c in s.method.unique()]]
         cols = {'cov': fmt_bold(agg['cov'], 'max', '{:.3f}'), 'gini': fmt_bold(agg['gini'], 'min', '{:.3f}'),
                 'act': fmt_bold(agg['act'], 'max', '{:.2f}'), 'late': fmt_bold(agg['late'], 'min', '{:.1f}'),
-                'pay': fmt_bold(agg['pay'].round(0), 'min', '{:.0f}')}
+                'pay': fmt_bold(agg['pay'].round(0), None, '{:.0f}')}
         lines.append(r'\multicolumn{7}{l}{\textit{' + city.replace('Bogota', "Bogot\\'a").replace('Medellin', "Medell\\'in")
                      + f' ({n_inst} instances)' + r'}} \\')
         for m in agg.index:

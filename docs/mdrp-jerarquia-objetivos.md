@@ -554,3 +554,17 @@ las referencias, resumen de 403 palabras). El informe cierra con un plan en tres
 corridas baratas (ILP con k = 8, benchmark courier-céntrico por orden de llegada, flota adelgazada a la razón de
 campo); y decisiones de autor (instancia duplicada, título sin "guarantee", déficit en escala absoluta con rerun de
 k_d, evidencia de que la plataforma sirve primero al menos servido, anclas de la encuesta).
+
+
+### Nivel 1 de la revisión aplicado (2026-11-01, 00:03; slide 17 y roadmap)
+
+Todo el nivel 1 del plan de `referee-review.md` está en el paper (detalle en la sección "Estado tras el nivel 1"):
+formulación coherente con el código (historial con tiempo ocupado y conectado, déficit que satura en 1, prefiltro
+k_d, Pay-BRKGA sin término de déficit), cifras alineadas con las tablas (brecha cerrada como cociente de medias,
+dispersión de cobertura, cumplimiento, Pay-BRKGA), α* = 0,45 como punto de operación condicional, regla de mejor
+configuración aplicada (BRKGA-Fair γ = 40 en T3, C.9, C.10, F5, F7, F8), negritas por dirección, columna F_G^act
+unificada, notación ρ/γ/c/z con tabla, notas del .bib fuera, diez referencias nuevas, tablas nuevas en el apéndice
+(segunda generación pareada, métricas no reportadas, emisiones), F3/F4 legibles (F4 al apéndice). Para volver al
+presupuesto tras las adiciones pasaron al apéndice T4, F1–F2, el decodificador y la verificación, y se condensaron
+unas 600 palabras. 52 pp., cuerpo y referencias hasta la p. 35, 0 errores, 16 todos. Niveles 2 (corridas baratas) y
+3 (decisiones de autor) pendientes.

@@ -416,3 +416,13 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   ilegibles, negritas al revés, resumen de 403 palabras. **Siguiente:** nivel 1 del plan (texto y tablas, sin
   corridas) en cuanto el director lo apruebe; nivel 2 (ILP k = 8, benchmark courier-céntrico por llegada, diagnóstico
   de oferta) y nivel 3 (instancia duplicada, título, déficit absoluto) son decisiones de autor.
+- **2026-11-01, 00:03 (nivel 1 de la revisión aplicado).** Paper corregido en los puntos de texto y tablas del informe
+  (`referee-review.md`, "Estado tras el nivel 1"): formulación coherente con el código (busy/conn, déficit que
+  satura, prefiltro k_d, Pay-BRKGA), cifras alineadas con las tablas (brecha cerrada como cociente de medias,
+  dispersión de cobertura, cumplimiento, Pay-BRKGA), α* condicional, notación (ρ, γ, c, z), negritas, notas del
+  .bib, diez referencias nuevas, tablas nuevas en el apéndice (pareada, métricas, emisiones, notación), F3/F4
+  legibles. 52 pp., cuerpo y referencias hasta la 35, 0 errores, 16 todos (15 de Daniel + comentario línea 8).
+  Diseño §12.17. **Siguiente:** nivel 2 si el director lo aprueba (ILP con k = 8, ≈ 480 corridas; benchmark
+  courier-céntrico por orden de llegada, ≈ 480; diagnóstico de oferta) y nivel 3 con Daniel (instancia 3
+  duplicada, título, déficit absoluto, evidencia del "menos servido primero", anclas de la encuesta); verificar
+  volúmenes/páginas de las diez referencias nuevas; respuestas a las issues #1–#10.

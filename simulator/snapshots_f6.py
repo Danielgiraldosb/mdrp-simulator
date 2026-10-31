@@ -148,7 +148,7 @@ def plot(args) -> None:
         ax.set_title(title, fontsize=7.5)
     axes[0].set_ylabel('Gini of earnings per connected hour so far')
     axes[0].legend(fontsize=7, frameon=False, loc='upper right')
-    fig.suptitle(f'{args.instance} ({args.regime} regime, seed {args.seed})', fontsize=8, y=1.0)
+    fig.suptitle(f"instance {args.instance.split('_')[-1]} ({args.regime} regime, seed {args.seed})", fontsize=8, y=1.0)
     os.makedirs(FIG_DIR, exist_ok=True)
     for ext in ('pdf', 'png'):
         fig.savefig(os.path.join(FIG_DIR, f'F6_intraday_gini.{ext}'), bbox_inches='tight')

@@ -122,7 +122,7 @@ def fig_f2(out_dir: str) -> None:
 FAMILIES = {   # sweep family -> (label, colour, parameter name, ordered configs)
     'mipfair':    ('MIP-Fair ($\\alpha$)', '#d94801', 'alpha',
                    ['mipfair_a020', 'mipfair_a025', 'mipfair_a030', 'mipfair_a035', 'mipfair_a040', 'mipfair_a100']),
-    'brkga_fair': ('BRKGA-Fair ($w$)', '#238b45', 'weight',
+    'brkga_fair': ('BRKGA-Fair ($\\gamma$)', '#238b45', 'weight',
                    ['brkga_fair_w5', 'brkga_fair_w10', 'brkga_fair_w20', 'brkga_fair_w40']),
     'paybrkga':   ('Pay-BRKGA ($\\lambda_{pay}$)', '#6a51a3', 'lambda_pay',
                    ['paybrkga_l01', 'paybrkga_l02', 'paybrkga_l05', 'paybrkga_l10']),
@@ -135,7 +135,7 @@ GEN2_PATHS = {   # family -> (label, colour, [(parent, None), (variant, annotati
     'mipfair':    ('MIP-Fair, 2nd gen. ($k_d$)', '#d94801',
                    [('mipfair_a030', None), ('mipfair_a030_xk_e000', '8'), ('mipfair_a030_xk25_e000', '25')]),
     'brkga_fair': ('BRKGA-Fair, 2nd gen. ($k_d$)', '#238b45',
-                   [('brkga_fair_w20', None), ('brkga_fair_w20_xk', '8'), ('brkga_fair_w40_xk25', '25 ($w=40$)')]),
+                   [('brkga_fair_w20', None), ('brkga_fair_w20_xk', '8'), ('brkga_fair_w40_xk25', '25 ($\\gamma=40$)')]),
     'paybrkga':   ('Pay-BRKGA, 2nd gen. ($k_d$)', '#6a51a3',
                    [('paybrkga_l05', None), ('paybrkga_l05_xk', '8')]),
 }
@@ -199,18 +199,19 @@ def fig_frontiers(out_dir: str, main_csv: str, couriers_table: str = None, compl
     nseeds = df['seed'].nunique()
     for name, ycol, ylabel in (('F3_pareto_coverage', 'coverage_rate', 'coverage (fraction of orders delivered)'),
                                ('F4_pareto_lateness', 'overage_mean', 'mean lateness of delivered orders (min)')):
-        fig, axes = plt.subplots(1, 2, figsize=(8.4, 3.4), sharey=True)
+        fig, axes = plt.subplots(2, 1, figsize=(6.2, 5.2), sharex=True)
         for ax, reg, title in zip(axes, ('manual', 'autoaccept'), ('manual regime', 'auto-accept regime')):
-            _frontier_panel(ax, pts[pts.regime == reg].copy(), ycol, ylabel if ax is axes[0] else '', title)
-        axes[0].legend(fontsize=6, frameon=False, loc='lower left', ncol=2, columnspacing=0.8, handletextpad=0.4)
+            _frontier_panel(ax, pts[pts.regime == reg].copy(), ycol, ylabel, title)
+        axes[0].set_xlabel('')
+        axes[0].legend(fontsize=7, frameon=False, loc='lower left', ncol=2, columnspacing=0.8, handletextpad=0.4)
         seeds_txt = (f'{parts[0].seed.nunique()} seeds (first generation) and {parts[1].seed.nunique()} seeds (second generation, hollow markers)'
                      if len(parts) > 1 else f'{nseeds} seed(s)')
         fig.suptitle(f'mean over {inst.instance.nunique()} instances and {seeds_txt}', fontsize=7, y=0.99)
         _save(fig, out_dir, name)
 
 
-SELECTED = ['greedy', 'ilp', 'hier', 'brkga', 'brkga_fair_w20', 'mipfair_a030', 'paybrkga_l05']   # T3 configurations
-SHORT = {'greedy': 'Greedy', 'ilp': 'ILP', 'hier': 'Hierarchical', 'brkga': 'BRKGA', 'brkga_fair_w20': 'BRKGA-Fair\n($w=20$)',
+SELECTED = ['greedy', 'ilp', 'hier', 'brkga', 'brkga_fair_w40', 'mipfair_a030', 'paybrkga_l05']   # T3 configurations
+SHORT = {'greedy': 'Greedy', 'ilp': 'ILP', 'hier': 'Hierarchical', 'brkga': 'BRKGA', 'brkga_fair_w40': 'BRKGA-Fair\n($\\gamma=40$)',
          'mipfair_a030': 'MIP-Fair\n($\\alpha=0.30$)', 'paybrkga_l05': 'Pay-BRKGA\n($\\lambda_{pay}=0.5$)'}
 
 
