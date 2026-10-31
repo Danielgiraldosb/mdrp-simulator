@@ -515,3 +515,22 @@ menos de cumplimiento en el extremo alto. En el paper: T9 (columnas θ, filas de
 piloto), párrafo "Behavioural threshold", discusión ("does not change"), tabla compañera de Gini en el apéndice y nota
 de seguimiento; 48 pp., 0 errores, 17 todos. Con esto E5 (corridas y análisis) queda cerrada; E6 depende de las
 issues #1–#10.
+
+
+### Presupuesto de páginas y pasada de estilo (2026-10-31, 21:50; slide 17 y roadmap)
+
+EJOR admite 35 páginas de manuscrito (11 pt, 1,5 espacios, una columna); la práctica del director es sacar al apéndice
+lo que no cabe ("Due to EJOR's strict page limit, we have added the experiments to Appendix D.4", response.tex). El
+cuerpo más referencias ocupaba 39 de las 48 páginas. Se movieron al apéndice C las tablas de instancias, parámetros
+y factores (nueva C.1), cumplimiento, Gini por población y los violines de ingreso (nueva C.3), y la pérdida por
+régimen y los criterios de α (C.5); la figura intradía pasó a 0,75 del ancho; y se condensaron 755 palabras en la
+introducción, el proceso de decisión secuencial, instancias y diseño, la revisión, calidad de solución, hallazgos y
+conclusión, quitando solo duplicados (la pérdida por régimen estaba en 6.1 y 6.4; el detalle de k_d = 50 estaba en 6.1
+y en el apéndice). Resultado: 47 pp., cuerpo y referencias hasta la 35, 0 errores. Correcciones de contenido
+encontradas en la pasada: §5.3 describía un X2 y un X3 anteriores al diseño real (2.400 y 840 corridas, w = 10,
+λ = 0,2, ambos regímenes) y ahora describe lo corrido (X2 1.200 manual; X3 1.920 + 1.453; 13.255 corridas y 1.239
+CPU-h medidas: 2,9 min por corrida en X1, 7,1 en gen2 y X2, 18,7 en las ablaciones); la fila θ de la tabla de factores
+dice "(X2, manual regime)" y la de semillas "10 in X1, five in X2 and X3"; el criterio A citaba 0,42 del piloto
+contra el 0,30 de la tabla (ahora 0,30; 0,27–0,32 por ciudad). Fuera del apéndice los códigos internos E5, E8, E11,
+`supp`, "SLA-infeasible" y "zone-days", y la nota de seguimiento de §6. Quedan 16 marcas: 15 de las issues #1–#10 y
+el comentario del preámbulo. Ortografía británica consistente.

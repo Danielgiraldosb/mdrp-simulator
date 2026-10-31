@@ -789,3 +789,26 @@ MIP-Fair xk25, Pay-BRKGA λ 0,5), columnas θ de X2, régimen y α de X1 (diez s
 greedy, +6,0 % a 1,0); párrafo "Behavioural threshold"; discusión ("the fairness ranking does not change…");
 `tab:sensitivity_gini` en el apéndice; nota de seguimiento. 48 pp., 0 errores, 17 todos. Con X2 cierran los cuatro
 experimentos del diseño (X0 42, X1 8.640, X3 gen2 1.920 + supp 1.453, X2 1.200: 13.255 corridas).
+
+
+### 12.16 Presupuesto de páginas y pasada de estilo (2026-10-31, 21:50)
+
+- Regla: EJOR, 35 páginas de manuscrito (11 pt, 1,5 espacios); el apéndice no cuenta en la práctica del director
+  (response.tex de 2024: "Due to EJOR's strict page limit, we have added the experiments to Appendix D.4").
+- Antes: 48 pp. = título a conclusión 36, referencias 37–39, apéndice 40–48. Después: 47 pp. = cuerpo 1–33,
+  referencias 33–35, apéndice 36–47.
+- Al apéndice C: `tab:instances`, `tab:parameters`, `tab:factors` (C.1 "Instances, parameters and factors");
+  `tab:compliance`, `tab:scope`, `fig:violin` (C.3 "Compliance and earnings by population"); `fig:regime_loss`,
+  `tab:alpha` (C.5). Cada cita en el cuerpo dice "in \ref{sec:App_...}". `fig:intraday` a 0,75\textwidth.
+- Prosa: −755 palabras (introducción −240, SDP −170, instancias y diseño −100, revisión −80, calidad de solución
+  −110, hallazgos y conclusión −55). Duplicados eliminados: pérdida por régimen en 6.1 (queda en 6.4), detalle de
+  k_d = 50 en 6.1 (queda en C.4), "this is the first half of the research question", reglas pre-registradas del
+  radio y de la malla de α (no se activaron; la malla queda justificada por el piloto, 0,409).
+- Correcciones: §5.3 (X2: cinco configuraciones reales, manual, 1.200; X3: gen2 1.920 + ablaciones 1.453; total
+  13.255 corridas y 1.239 CPU-h medidas de `child_wall_sec`: X1 412 h, gen2 227, supp 453, X2 147); `tab:factors`
+  (θ "X2, manual regime"; semillas "10 in X1, five in X2 and X3"); timeouts "90 in X1, 150 in X2 and the second
+  generation of X3, 240 in the ablations"; criterio A: "on the ten seeds of X1 this is 0.30 (0.27–0.32 by city)" en
+  vez de "in the pilot 0.42 (0.36–0.53)".
+- Códigos internos fuera del .tex: "(X3, supp)", "(decision E11)", "decision E5", "decision E8", "SLA-infeasible",
+  "zone-days"; nota de seguimiento de §6 eliminada (la trazabilidad queda en este documento y en plan.md).
+- 16 marcas `\todo`: 15 de las issues #1–#10 (7 de #1) y el comentario del preámbulo (línea 8).

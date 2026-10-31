@@ -395,3 +395,12 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   umbral, discusión, tabla compañera de Gini; 48 pp., 0 errores, 17 todos (15 en las issues #1–#10 + nota de
   seguimiento + fila rl2025). Diseño §12.15. **Siguiente:** aplicar las respuestas de Daniel a las issues conforme
   lleguen; opcional: F5 con los extremos del IC de θ, y una pasada de estilo final (estilo-ejor.md) antes de enviar.
+- **2026-10-31, 21:50 (presupuesto de páginas y pasada de estilo).** Regla EJOR: 35 páginas de manuscrito; el cuerpo
+  más referencias iba en 39. Siete flotantes al apéndice C (C.1 instancias/parámetros/factores; C.3 cumplimiento,
+  Gini por población, violines; C.5 pérdida por régimen y criterios de α) y 755 palabras condensadas sin quitar
+  resultados: 47 pp., cuerpo y referencias hasta la 35, 0 errores. Correcciones encontradas: §5.3 describía un
+  X2/X3 anterior al diseño real (ahora 1.200 manual; 1.920 + 1.453; 13.255 corridas, 1.239 CPU-h medidas), criterio
+  A con el 0,42 del piloto contra el 0,30 de la tabla, códigos internos E5/E8/E11/supp en el apéndice, nota de
+  seguimiento. 16 todos (15 de las issues + comentario del preámbulo). Diseño §12.16. **Siguiente:** aplicar las
+  respuestas de Daniel; antes de enviar, quitar el comentario de la línea 8 y revisar que el apéndice de literatura
+  (issue #7, multibib) no empuje las referencias del cuerpo más allá de la página 35.
