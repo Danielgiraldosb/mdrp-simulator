@@ -534,3 +534,23 @@ dice "(X2, manual regime)" y la de semillas "10 in X1, five in X2 and X3"; el cr
 contra el 0,30 de la tabla (ahora 0,30; 0,27–0,32 por ciudad). Fuera del apéndice los códigos internos E5, E8, E11,
 `supp`, "SLA-infeasible" y "zone-days", y la nota de seguimiento de §6. Quedan 16 marcas: 15 de las issues #1–#10 y
 el comentario del preámbulo. Ortografía británica consistente.
+
+
+### Revisión tipo referee de EJOR (2026-10-31, 23:14; slide 17)
+
+Informe en `docs/paper-cmdp/referee-review.md`: tres lecturas independientes (modelo y método; estudio computacional y
+estadística; posicionamiento y presentación) cruzadas y verificadas contra el .tex, el PDF, el código de análisis y los
+archivos de instancias. Veredicto: revisión mayor. Cinco bloques: el marco promete una "garantía" que ninguna política
+impone ni cumple en la banda baja y los "first to" chocan con la Tabla 1; el historial de equidad define tiempo activo
+como conectado mientras la primera generación lee tiempo en movimiento (que no está en el estado) y el déficit de
+BRKGA-Fair satura en 1 para todo ocioso, así que el prefiltro k_d es "los k_d ociosos más cercanos" y no "el déficit
+crece con cada hora de espera"; cifras del resumen e introducción que no cuadran con las tablas (dispersión de
+cobertura 1/1,2/3,2 puntos; Pay-BRKGA "mantiene cobertura"; brecha cerrada calculada como media de cocientes por par sin
+definirlo; columna F_G^act con dos definiciones entre T3/T4 y C.11; regla de "mejor configuración" que daría w = 40 y
+la tabla muestra w = 20; α* = 0,45 circular); las instancias 1 y 3 de Bucaramanga comparten `orders.csv` y
+`stores.csv` byte a byte (solo difiere el archivo de mensajeros: N = 23 días de pedidos); y presentación (figuras 3–4
+ilegibles, negritas que marcan el peor déficit salarial como mejor, notación sobrecargada, notas del .bib impresas en
+las referencias, resumen de 403 palabras). El informe cierra con un plan en tres niveles: texto y tablas sin corridas;
+corridas baratas (ILP con k = 8, benchmark courier-céntrico por orden de llegada, flota adelgazada a la razón de
+campo); y decisiones de autor (instancia duplicada, título sin "guarantee", déficit en escala absoluta con rerun de
+k_d, evidencia de que la plataforma sirve primero al menos servido, anclas de la encuesta).

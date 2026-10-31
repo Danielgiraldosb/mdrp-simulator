@@ -404,3 +404,15 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   seguimiento. 16 todos (15 de las issues + comentario del preámbulo). Diseño §12.16. **Siguiente:** aplicar las
   respuestas de Daniel; antes de enviar, quitar el comentario de la línea 8 y revisar que el apéndice de literatura
   (issue #7, multibib) no empuje las referencias del cuerpo más allá de la página 35.
+- **2026-10-31, 23:14 (revisión tipo referee).** A petición del director, revisión estricta estilo EJOR con tres lecturas
+  independientes verificadas: `docs/paper-cmdp/referee-review.md`. Veredicto: revisión mayor. Hallazgos verificados que
+  cambian el trabajo pendiente: (a) instancias 1 y 3 comparten `orders.csv` y `stores.csv` (N = 23 días de pedidos;
+  decisión de autor); (b) el estado define act_c como tiempo conectado y la primera generación lee tiempo en movimiento;
+  el déficit satura en 1 para ociosos (código `brkga_policy.py` l.113), así que la narrativa "el déficit crece con la
+  espera" es falsa; (c) `tables_paper.py` usa `F_Gini` y `analyze_supp.py` `gini_elig_active_hourly` bajo el mismo
+  rótulo F_G^act; (d) "brecha cerrada" = media de cocientes por par, no definida; (e) T3 muestra w = 20 cuando la regla
+  daría w = 40; (f) ILP con k = 25 frente a MIP-Fair con k = 8 confunde la comparación que debía aislar la restricción;
+  (g) Greedy incluye "menos servido primero" sin evidencia de campo; (h) notas del .bib impresas, figuras 3–4
+  ilegibles, negritas al revés, resumen de 403 palabras. **Siguiente:** nivel 1 del plan (texto y tablas, sin
+  corridas) en cuanto el director lo apruebe; nivel 2 (ILP k = 8, benchmark courier-céntrico por llegada, diagnóstico
+  de oferta) y nivel 3 (instancia duplicada, título, déficit absoluto) son decisiones de autor.
