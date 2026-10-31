@@ -760,3 +760,32 @@ rama e12-threshold fusionada en master, merge 581ecd7): 5 configuraciones × 24 
 1.200 corridas, régimen manual, en `output/paper/threshold.csv` (log `threshold.stdout.txt`). Costo estimado: ~1 día
 (MIP-Fair xk25 23 min/corrida en manual). Análisis previsto: T6 (celdas de umbral: cobertura y Gini de elegibles en
 θ = 615 y 1.242 frente a 903 de X1/gen2, mismas semillas), F5 con los extremos del IC, cumplimiento con α = 0,45.
+
+### 12.15 X2 cerrado (2026-10-31, 07:00)
+
+X2 (E12) terminó el 31 oct a las 06:30 tras 966 min con 12 workers: 1.197 de 1.200 celdas; los tres fallos son
+timeouts de 150 min de `mipfair_a030_xk25_e000` en la Instancia_0 (Bogotá) a θ = 1.242, semillas 1–3 (a θ alto hay
+más rechazos y más rondas con el MIP al límite; 32,6 min/corrida de media en esa celda frente a 23,5 a θ = 903). No
+se reintentan: la fila queda con 117 pares. `threshold_couriers.csv` calculado; `analyze_x2.py` →
+`output/paper/x2_analysis.txt` y `tables/threshold.txt`.
+
+Resultados (manual, pareado con θ = 903 de X1/gen2 en los mismos pares; cinco semillas, 120 pares por celda):
+- Cobertura: Δ a θ = 615 de +0,015 (jerárquico) a +0,027 (Pay-BRKGA), es decir +2,0 a +3,6 %; a θ = 1.242 de
+  −0,042 (jerárquico) a −0,069 (greedy), −5,5 a −9,0 %. Todos los IC 95 % pareados fuera de cero. Asimetría explicada
+  por la tarifa plana: P(aceptar) = 0,5 para un pedido suelto a 2.200/θ km = 3,6 / 2,4 / 1,8 km.
+- Ranking de cobertura: a 615 las cinco configuraciones están dentro de 0,005 (0,780–0,785); a 903, jerárquico =
+  BRKGA-Fair 0,769 > MIP-Fair 0,767 > greedy 0,758 > Pay-BRKGA 0,753; a 1.242, jerárquico 0,727 > BRKGA-Fair 0,725 >
+  MIP-Fair 0,713 > Pay-BRKGA 0,698 > greedy 0,690. El greedy (courier-centric, sin reoptimización tras rechazo) es el
+  más sensible; Pay-BRKGA lo adelanta en el extremo alto (pago 91 % del tarifario a 1.242 frente a 85 % a 615: el
+  multiplicador sube donde hay rechazo).
+- Gini de elegibles: Δ a 615 de −0,002 (greedy) a −0,012 (MIP-Fair xk25), −0,7 a −2,8 %; a 1.242 de +0,011 a +0,017,
+  +2,2 a +3,8 %. Ranking idéntico en los tres θ. Activos: BRKGA-Fair 0,86 / 0,85 / 0,83; MIP-Fair 0,89 / 0,88 / 0,85.
+- Cumplimiento α = 0,45: BRKGA-Fair xk25 0,63 / 0,62 / 0,52; MIP-Fair xk25 0,73 / 0,61 / 0,50; α = 0,40: 0,51 / 0,49 /
+  0,40 y 0,46 / 0,40 / 0,39. La recomendación α* = 0,45 se sostiene dentro del IC.
+- CPU: greedy 2,0 / 2,2 / 3,1 min; MIP-Fair xk25 13,6 / 23,5 / 32,6 (el tiempo crece con θ).
+
+Paper: T9 (`tab:sensitivity`) reescrita con seis filas (greedy, jerárquico, MIP-Fair α 0,30, BRKGA-Fair xk25,
+MIP-Fair xk25, Pay-BRKGA λ 0,5), columnas θ de X2, régimen y α de X1 (diez semillas) y circuity del piloto (solo
+greedy, +6,0 % a 1,0); párrafo "Behavioural threshold"; discusión ("the fairness ranking does not change…");
+`tab:sensitivity_gini` en el apéndice; nota de seguimiento. 48 pp., 0 errores, 17 todos. Con X2 cierran los cuatro
+experimentos del diseño (X0 42, X1 8.640, X3 gen2 1.920 + supp 1.453, X2 1.200: 13.255 corridas).

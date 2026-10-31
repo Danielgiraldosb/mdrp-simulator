@@ -389,3 +389,9 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   (multibib); #8-#10 ampliar los tres bloques del apéndice (y confirmar la celda de Simoni & Winkenbach en #8). Las dos
   marcas de F1/F2 eran notas inertes (las figuras existen) y se quitaron. Quedan 21 marcas `\todo`: 15 de las issues
   (7 de #1), 5 de X2 y la nota de seguimiento. La carpeta `papers/` (los dos EJOR del director) sigue sin versionar.
+- **2026-10-31, 07:00 (X2 cerrado; E5 completa).** X2 terminó a las 06:30 (1.197/1.200; 3 timeouts de MIP-Fair xk25 en
+  Bogotá a θ = 1.242). Cobertura asimétrica (+2,0 a +3,6 % a θ = 615; −5,5 a −9,0 % a 1.242; greedy el más sensible),
+  Gini a lo sumo ±3,8 % y ranking de equidad invariante; α* = 0,45 se sostiene. Paper: T9 con columnas θ, párrafo de
+  umbral, discusión, tabla compañera de Gini; 48 pp., 0 errores, 17 todos (15 en las issues #1–#10 + nota de
+  seguimiento + fila rl2025). Diseño §12.15. **Siguiente:** aplicar las respuestas de Daniel a las issues conforme
+  lleguen; opcional: F5 con los extremos del IC de θ, y una pasada de estilo final (estilo-ejor.md) antes de enviar.

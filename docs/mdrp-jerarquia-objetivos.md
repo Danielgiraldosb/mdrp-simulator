@@ -492,3 +492,26 @@ total en BRKGA-Fair −0,005; ε inerte; equidad-primero colapsa. Paper: 47 pp.,
 E12 fusionada en master (merge 581ecd7). X2 lanzado el 30 oct a las 14:24 con `output/paper/x2_launch.cmd`
 (Start-Process; 12 workers; `--timeout-min 150`): 1.200 corridas en `threshold.csv`, log `threshold.stdout.txt`.
 Al terminar: cumplimiento y cobertura en θ ∈ {615, 1.242} frente a 903 (T6 celdas de umbral, F5 con los extremos del IC).
+
+### X2 cerrado; E5 completa (2026-10-31, 07:00; slide 17 y roadmap)
+
+X2 terminó el 31 oct a las 06:30: 1.197 de 1.200 corridas (3 timeouts de 150 min: MIP-Fair xk25 en la Instancia_0 a
+θ = 1.242, semillas 1–3). `analyze_couriers.py` y `analyze_x2.py` (`output/paper/x2_analysis.txt`,
+`tables/threshold.txt`), pareado con θ = 903 de X1/gen2 en los mismos pares instancia-semilla, manual:
+
+| configuración | cobertura 615 / 903 / 1.242 | Δ % | Gini 615 / 903 / 1.242 | Δ % | ≤ 0,45 (615 / 903 / 1.242) |
+|---|---|---|---|---|---|
+| greedy | 0,783 / 0,758 / 0,690 | +3,2 / −9,0 | 0,299 / 0,301 / 0,312 | −0,7 / +3,5 | 1,00 / 1,00 / 1,00 |
+| jerárquico | 0,784 / 0,769 / 0,727 | +2,0 / −5,5 | 0,520 / 0,526 / 0,538 | −1,2 / +2,2 | 0,04 / 0,04 / 0,04 |
+| BRKGA-Fair w40 xk25 | 0,785 / 0,769 / 0,725 | +2,0 / −5,7 | 0,427 / 0,437 / 0,453 | −2,3 / +3,8 | 0,63 / 0,62 / 0,52 |
+| MIP-Fair xk25 | 0,784 / 0,767 / 0,713 | +2,3 / −7,0 | 0,423 / 0,435 / 0,451 | −2,8 / +3,2 | 0,73 / 0,61 / 0,50 |
+| Pay-BRKGA λ 0,5 | 0,780 / 0,753 / 0,698 | +3,6 / −7,3 | 0,539 / 0,547 / 0,560 | −1,4 / +2,5 | 0,04 / 0,03 / 0,00 |
+
+Lecturas: respuesta asimétrica de la cobertura (con tarifa plana de 2.200 COP el pedido suelto cae al 50 % de aceptación
+a 3,6 / 2,4 / 1,8 km); pierden menos las políticas que reoptimizan tras un rechazo y más el greedy, que pasa de 4.º a
+último a θ = 1.242 (Pay-BRKGA lo adelanta porque su multiplicador mantiene las rutas largas sobre el umbral); el Gini
+se mueve a lo sumo 0,017 y su ranking no cambia; la recomendación α* = 0,45 se sostiene dentro del IC con diez puntos
+menos de cumplimiento en el extremo alto. En el paper: T9 (columnas θ, filas de segunda generación, circuity del
+piloto), párrafo "Behavioural threshold", discusión ("does not change"), tabla compañera de Gini en el apéndice y nota
+de seguimiento; 48 pp., 0 errores, 17 todos. Con esto E5 (corridas y análisis) queda cerrada; E6 depende de las
+issues #1–#10.

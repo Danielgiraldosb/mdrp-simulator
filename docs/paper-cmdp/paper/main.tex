@@ -597,7 +597,7 @@ The parameters of the policies were tuned in preliminary experiments. The BRKGA 
 
 In this section, we present our computational study. We first compare the policies with respect to coverage, punctuality and the end-of-day Gini coefficient, and report whether they comply with the guarantee. Then, we perform an in-depth analysis of the equity history: how the Gini coefficient evolves within the day under the per-window policy and under the policies that read $\Hist_t$, and how the three policies change who receives which route and what it pays. Finally, we examine how policy performance changes across operational settings: the acceptance regime, the behavioural threshold, the tolerated inequality and the fleet composition of the six cities.
 
-\todo{Numbers in this section are the ten seeds of X1 (8{,}640 runs, completed 2026-10-22; output/paper/main.csv and main\_couriers.csv via simulator/tables\_paper.py). The second-generation variants are the five seeds of X3 gen2 (1{,}920 runs, completed 2026-10-25; output/paper/gen2.csv, gen2\_couriers.csv; simulator/analyze\_gen2\_final.py), paired with the same seeds of X1. The supplement ablations are the five seeds of X3 supp (1{,}453 runs, completed 2026-10-30; output/paper/supp.csv, supp\_couriers.csv; simulator/analyze\_supp.py). X2 (threshold, 1{,}200 runs) is running since 2026-10-30; its cells in Table~\ref{tab:sensitivity} and the threshold paragraph are pending.}
+\todo{Numbers in this section are the ten seeds of X1 (8{,}640 runs, completed 2026-10-22; output/paper/main.csv and main\_couriers.csv via simulator/tables\_paper.py). The second-generation variants are the five seeds of X3 gen2 (1{,}920 runs, completed 2026-10-25; output/paper/gen2.csv, gen2\_couriers.csv; simulator/analyze\_gen2\_final.py), paired with the same seeds of X1. The supplement ablations are the five seeds of X3 supp (1{,}453 runs, completed 2026-10-30; output/paper/supp.csv, supp\_couriers.csv; simulator/analyze\_supp.py). X2 (threshold, 1{,}200 runs, completed 2026-10-31; output/paper/threshold.csv, threshold\_couriers.csv; simulator/analyze\_x2.py).}
 
 \subsection{Solution quality and compliance}
 \label{sec:results_quality}
@@ -780,7 +780,7 @@ We next analyse how the three policies change the dispatching decision compared 
 \subsection{Sensitivity analysis across operational settings}
 \label{sec:results_sensitivity}
 
-Finally, we study how different operational conditions affect the performance and relative advantages of the policies. We vary one factor at a time around the base case (manual regime, $\theta = 903$ COP/km, the $\alpha$ grid, circuity 1.3) and report, for three representative policies, the relative difference over the base-case value of the policy, following the one-factor-at-a-time design. Table~\ref{tab:sensitivity} reports the results. \todo{fill from main.csv (regime, $\alpha$), threshold.csv ($\theta$) and the per-city blocks (fleet composition).}
+Finally, we study how different operational conditions affect the performance and relative advantages of the policies. We vary one factor at a time around the base case (manual regime, $\theta = 903$ COP/km, the $\alpha$ grid, circuity 1.3) and report, for the benchmark dispatchers and the proposed policies at their selected configurations, the relative difference over the base-case value of the policy, following the one-factor-at-a-time design. Table~\ref{tab:sensitivity} reports the results for coverage; the regime and $\alpha$ columns come from X1, the $\theta$ columns from X2, which re-runs five configurations at the ends of the 95\% interval of the logit, and the circuity column from the pilot, where only \textbf{Greedy} was run at circuity 1.0.
 
 \begin{table}[htbp]
 \centering
@@ -800,14 +800,16 @@ Finally, we study how different operational conditions affect the performance an
 \cline{2-11}
 & \textbf{manual} & \textbf{auto} & \textbf{615} & \textbf{903} & \textbf{1,242} & \textbf{0.20} & \textbf{0.30} & \textbf{0.40} & \textbf{1.0} & \textbf{1.3} \\
 \hline
-\textbf{Greedy} & 0.0 & +3.7 & & 0.0 & & -- & -- & -- & & 0.0 \\
-\textbf{Hierarchical} & 0.0 & +2.2 & & 0.0 & & -- & -- & -- & & 0.0 \\
-\textbf{MIP-Fair} & 0.0 & +2.9 & & 0.0 & & 0.0 & 0.0 & 0.0 & & 0.0 \\
-\textbf{Pay-BRKGA} & 0.0 & +4.4 & & 0.0 & & -- & -- & -- & & 0.0 \\
+\textbf{Greedy} & 0.0 & +3.6 & +3.2 & 0.0 & $-9.0$ & -- & -- & -- & +6.0 & 0.0 \\
+\textbf{Hierarchical} & 0.0 & +2.2 & +2.0 & 0.0 & $-5.5$ & -- & -- & -- & -- & 0.0 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.0 & +2.9 & -- & 0.0 & -- & 0.0 & 0.0 & 0.0 & -- & 0.0 \\
+\textbf{BRKGA-Fair} ($w = 40$, $k_d = 25$) & 0.0 & +2.2 & +2.0 & 0.0 & $-5.7$ & -- & -- & -- & -- & 0.0 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$, $k_d = 25$) & 0.0 & +2.5 & +2.3 & 0.0 & $-7.0$ & -- & -- & -- & -- & 0.0 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.0 & +4.3 & +3.6 & 0.0 & $-7.3$ & -- & -- & -- & -- & 0.0 \\
 \hline
 \end{tabular}
 \end{adjustbox}
-\caption{Sensitivity analysis across operational settings (coverage; the Gini coefficient in \ref{sec:App_add_results})}
+\caption{Sensitivity analysis across operational settings: relative difference of coverage over the base case (manual regime, $\theta = 903$, $\alpha = 0.30$, circuity 1.3). Regime and $\alpha$ from X1 (ten seeds); $\theta$ from X2 (five seeds, the five configurations of the threshold experiment); circuity from the pilot (\textbf{Greedy}, one instance per city). The companion for the Gini coefficient is Table~\ref{tab:sensitivity_gini} in \ref{sec:App_sens_gini}}
 \label{tab:sensitivity}
 \end{table}
 
@@ -820,7 +822,7 @@ Finally, we study how different operational conditions affect the performance an
     \label{fig:regime_loss}
 \end{figure}
 
-\paragraph{Behavioural threshold} The threshold $\theta$ is a grade-C parameter estimated from 32 decisions. \todo{Prose for X2: coverage and Gini at $\theta \in \{615, 903, 1{,}242\}$ for the five selected configurations; whether the ranking of policies changes within the confidence interval of the logit; the Gini coefficient is expected to be less sensitive than coverage because it is normalised by active time.}
+\paragraph{Behavioural threshold} The threshold $\theta$ is a grade-C parameter estimated from 32 decisions, so X2 re-runs \textbf{Greedy}, \textbf{Hierarchical}, \textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) and the two second-generation policies ($k_d = 25$) at the ends of its 95\% interval, $\theta = 615$ and $1{,}242$ COP/km, under the manual regime (under auto-accept the threshold is never read), on the five seeds of X3 and paired with the same seeds at $\theta = 903$ (1{,}200 runs; three \textbf{MIP-Fair} runs on the largest Bogot\'a day exceeded the 150-minute timeout at $\theta = 1{,}242$). With a flat tariff of 2{,}200 COP per order, a single order is accepted with probability one half at $3.6$ km when $\theta = 615$, at $2.4$ km when $\theta = 903$ and at $1.8$ km when $\theta = 1{,}242$, so the response of coverage is asymmetric: the lower threshold adds $1.5$--$2.7$ points ($+2.0$ to $+3.6\%$) and the upper one removes $4.2$--$6.9$ points ($-5.5$ to $-9.0\%$). The policies that re-optimise the round after a rejection lose least (\textbf{Hierarchical} $-5.5\%$, \textbf{BRKGA-Fair} $-5.7\%$) and \textbf{Greedy} loses most ($-9.0\%$), so the coverage ranking changes at the upper end of the interval: \textbf{Greedy}, fourth of five at $\theta = 903$, is last at $1{,}242$, $3.7$ points below \textbf{Hierarchical}, and \textbf{Pay-BRKGA}, last at $903$, overtakes it because its multiplier keeps the long routes above the threshold. At $\theta = 615$ the five configurations cover within half a point of each other. The end-of-day Gini coefficient is less sensitive than coverage, as expected from a statistic normalised by connected time: it moves by $-0.7$ to $-2.8\%$ at $615$ and by $+2.2$ to $+3.8\%$ at $1{,}242$, every paired interval away from zero but no difference larger than $0.017$, and the fairness ranking is the same at the three thresholds (\textbf{Greedy} $0.30$--$0.31$, the two second-generation policies $0.42$--$0.45$, \textbf{Hierarchical} $0.52$--$0.54$, \textbf{Pay-BRKGA} $0.54$--$0.56$). Compliance with $\alpha = 0.45$ is 63\%, 62\% and 52\% of the zone-days for \textbf{BRKGA-Fair} and 73\%, 61\% and 50\% for \textbf{MIP-Fair} at $615$, $903$ and $1{,}242$: the recommendation of Table~\ref{tab:alpha} holds inside the interval, with ten points of compliance lost at its upper end.
 
 \paragraph{Tolerated inequality and the choice of $\alpha$} Three complementary criteria are used to choose $\alpha$. Criterion A (historical anchor) sets $\alpha$ equal to the end-of-day Gini coefficient observed under \textbf{Greedy}, so the fair policy must be no less equal than the status quo; in the pilot this is 0.42 on average and ranges from 0.36 to 0.53 across cities. Criterion B (inequality bands) sets $\alpha$ at the upper bound of a conventional severity band, a Gini coefficient below about 0.30 read as low and above about 0.40 as high; the survey anchors are 0.26 inside the bonus ladder and 0.39 outside it, so $\alpha = 0.30$. Criterion C (Pareto knee) sweeps $\alpha$ and selects the point of maximum distance from the chord between the extremes of the coverage--Gini frontier. Table~\ref{tab:alpha} reports $\alpha$ under the three criteria, the policy that satisfies each at the least coverage cost, and that cost. Criteria A and B coincide at $0.30$ on these data, because the corporate dispatcher is itself inside the low-inequality band, and the only policy that meets it is \textbf{Greedy}, on half of the days. Criterion C does not apply: coverage does not fall along either sweep, so there is no knee to find. The interval is therefore $[0.30, 0.45]$: $0.30$ is the status quo, which the order-centric policies do not reach on any day; $0.40$, the upper bound of the band, is met on 40--63\% of the days by the second generation at no coverage cost; and $0.45$ is the smallest value met on most days under both regimes. We recommend operating at $\alpha^* = 0.45$ with \textbf{BRKGA-Fair} ($w = 40$, $k_d = 25$), which costs $4$--$5$ minutes of CPU per day against $11$--$24$ for \textbf{MIP-Fair} at the same compliance, and keeping the courier-centric rule as the reference for $\alpha \le 0.35$.
 
@@ -853,7 +855,7 @@ We begin by addressing the first research question concerning whether an end-of-
 
 We next address the second research question concerning which lever satisfies the guarantee at the lowest cost. On the ten seeds of X1 the answer is the assignment rule itself: the courier-centric rule, which lets every free courier take its best route with the least-served courier first, meets $\alpha = 0.40$ on every day under auto-accept and on 98\% of the days under the manual regime at a cost of $1.1$--$1.2$ points of coverage and $0.5$--$1.8$ minutes of lateness with respect to the order-centric policies, which meet it on none. Among the three proposed policies, \textbf{BRKGA-Fair} is the only one whose parameter moves the end-of-day statistic in the right direction at no coverage cost; the $\alpha$ of \textbf{MIP-Fair} is inert because coverage has priority in every round; and \textbf{Pay-BRKGA} is the only policy that moves pay, which lowers the platform's bill by 12\% (manual) to 20\% (auto-accept) of the tariff but does not reach the couriers who are left idle. The second generation of X3 narrows but does not close this difference: reading exposure instead of activity and offering the most-deprived free couriers to the solver halves the gap to \textbf{Greedy} ($\FG = 0.44$ manual, $0.40$--$0.42$ auto-accept) at no coverage cost and $0.1$--$0.3$ minutes of lateness, so a second-generation \textbf{BRKGA-Fair} meets $\alpha = 0.45$ on 62--67\% of the days while keeping the point of coverage that \textbf{Greedy} gives up. Part of the remaining gap is a matter of candidates and part is structural: with $k_d = 50$ the heuristic reaches $0.40$ (manual) and $0.35$ (auto-accept) at a third more CPU time, whereas the exact round model flattens at $0.41$--$0.40$ at twice the CPU time, because an order-centric round assigns at most one route per courier and the coverage objective fixes which couriers it needs, while the courier-centric rule revisits the least-served courier at every round. Because coverage is flat across policies at the scale of a dispatching zone, the cost of the guarantee is paid mainly in lateness and in who receives the routes, which is the quantity the platform can explain to its couriers. We also find that dispatching alone cannot lift couriers to the statutory minimum wage at the current tariff; what dispatching can do is distribute the shortfall evenly, which is the practical content of using $\FG$ as the constraint and $\FD$ as a diagnostic.
 
-Finally, we address the third research question concerning the operational conditions under which the guarantee is affordable. The acceptance regime matters more than the policy in the manual world, where coverage is bounded by behaviour; the sanctions that moved the workforce to auto-accept are the platform's way of removing that bound, and our results quantify what the bound costs. Within the confidence interval of the behavioural threshold the ranking of policies \todo{does / does not} change. The three criteria for $\alpha$ give an interval rather than a point; the recommendation is the policy that satisfies the band criterion on most days at the least coverage cost, with the historical anchor as the fallback where the band is not reachable. From a managerial perspective, the central implication is that a fairness guarantee should be stated, measured and enforced on the day, not on the window, and that the pay lever and the assignment lever are complements: the first buys acceptance where couriers reject, the second distributes work where they do not.
+Finally, we address the third research question concerning the operational conditions under which the guarantee is affordable. The acceptance regime matters more than the policy in the manual world, where coverage is bounded by behaviour; the sanctions that moved the workforce to auto-accept are the platform's way of removing that bound, and our results quantify what the bound costs. Within the confidence interval of the behavioural threshold the fairness ranking of the policies does not change, and the coverage ranking changes only at the upper end, where the courier-centric dispatcher, which does not re-optimise after a rejection, loses most (9\% of its coverage against 5.5\% for the policies that do). The three criteria for $\alpha$ give an interval rather than a point; the recommendation is the policy that satisfies the band criterion on most days at the least coverage cost, with the historical anchor as the fallback where the band is not reachable. From a managerial perspective, the central implication is that a fairness guarantee should be stated, measured and enforced on the day, not on the window, and that the pay lever and the assignment lever are complements: the first buys acceptance where couriers reject, the second distributes work where they do not.
 
 \section{Conclusion}
 \label{sec:Conclusion}
@@ -1072,7 +1074,40 @@ Table~\ref{tab:ablations} reports the ablations of the supplement experiment (X3
 \subsection{Gini coefficient under the sensitivity settings and emissions}
 \label{sec:App_sens_gini}
 
-\todo{Companion of Table~\ref{tab:sensitivity} for the end-of-day Gini coefficient (X2, X3).} Figure~\ref{fig:emissions} shows the emissions diagnostic discussed in Section~\ref{sec:results_sensitivity}: kg CO$_2$e per delivered order by policy and city (left) and the share of the distance driven by each vehicle type by policy (right), from the per-courier distances of the 240 manual-regime runs of each policy and the emission factors of Table~\ref{tab:parameters}. The numbers behind the figure are in the online supplement (F8\_emissions.csv).
+Table~\ref{tab:sensitivity_gini} is the companion of Table~\ref{tab:sensitivity} for the end-of-day Gini coefficient over the eligible couriers. The statistic moves less than coverage under every factor: the regime lowers it by $2$\% for the first-generation policies and by $5$--$8$\% for the second-generation ones, whose deficit-aware prefilter reaches more idle couriers when every offer is accepted; the threshold moves it by at most $3.8$\%; $\alpha$ leaves it unchanged in the first generation; the pilot did not record the eligible-courier statistic at circuity 1.0.
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\begin{adjustbox}{max width=\textwidth}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{l|cc|ccc|ccc|cc}
+\hline
+\multicolumn{1}{c}{} & \multicolumn{10}{c}{\textbf{Relative difference of $\FG$ over the base-case setting (in \%)}} \\
+\hline
+\multirow{2}{*}{\textbf{Policy\textbackslash Setting}}
+& \multicolumn{2}{c|}{\textbf{Regime}}
+& \multicolumn{3}{c|}{\textbf{Threshold} $\theta$ (COP/km)}
+& \multicolumn{3}{c|}{\textbf{Tolerated inequality} $\alpha$}
+& \multicolumn{2}{c}{\textbf{Circuity}} \\
+\cline{2-11}
+& \textbf{manual} & \textbf{auto} & \textbf{615} & \textbf{903} & \textbf{1,242} & \textbf{0.20} & \textbf{0.30} & \textbf{0.40} & \textbf{1.0} & \textbf{1.3} \\
+\hline
+\textbf{Greedy} & 0.0 & $-1.7$ & $-0.7$ & 0.0 & +3.5 & -- & -- & -- & -- & 0.0 \\
+\textbf{Hierarchical} & 0.0 & $-2.2$ & $-1.2$ & 0.0 & +2.2 & -- & -- & -- & -- & 0.0 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.0 & $-1.9$ & -- & 0.0 & -- & 0.0 & 0.0 & +0.1 & -- & 0.0 \\
+\textbf{BRKGA-Fair} ($w = 40$, $k_d = 25$) & 0.0 & $-4.7$ & $-2.3$ & 0.0 & +3.8 & -- & -- & -- & -- & 0.0 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$, $k_d = 25$) & 0.0 & $-7.8$ & $-2.8$ & 0.0 & +3.2 & -- & -- & -- & -- & 0.0 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.0 & $-2.1$ & $-1.4$ & 0.0 & +2.5 & -- & -- & -- & -- & 0.0 \\
+\hline
+\end{tabular}
+\end{adjustbox}
+\caption{Sensitivity of the end-of-day Gini coefficient over the eligible couriers across operational settings: relative difference over the base case (manual regime, $\theta = 903$, $\alpha = 0.30$, circuity 1.3); sources as in Table~\ref{tab:sensitivity}}
+\label{tab:sensitivity_gini}
+\end{table}
+
+Figure~\ref{fig:emissions} shows the emissions diagnostic discussed in Section~\ref{sec:results_sensitivity}: kg CO$_2$e per delivered order by policy and city (left) and the share of the distance driven by each vehicle type by policy (right), from the per-courier distances of the 240 manual-regime runs of each policy and the emission factors of Table~\ref{tab:parameters}. The numbers behind the figure are in the online supplement (F8\_emissions.csv).
 
 \begin{figure}[htbp]
     \centering
