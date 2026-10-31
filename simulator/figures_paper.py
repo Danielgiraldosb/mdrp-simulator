@@ -199,7 +199,7 @@ def fig_frontiers(out_dir: str, main_csv: str, couriers_table: str = None, compl
     nseeds = df['seed'].nunique()
     for name, ycol, ylabel in (('F3_pareto_coverage', 'coverage_rate', 'coverage (fraction of orders delivered)'),
                                ('F4_pareto_lateness', 'overage_mean', 'mean lateness of delivered orders (min)')):
-        fig, axes = plt.subplots(2, 1, figsize=(6.2, 5.2), sharex=True)
+        fig, axes = plt.subplots(2, 1, figsize=(6.2, 5.2), sharex=True, sharey=True)
         for ax, reg, title in zip(axes, ('manual', 'autoaccept'), ('manual regime', 'auto-accept regime')):
             _frontier_panel(ax, pts[pts.regime == reg].copy(), ycol, ylabel, title)
         axes[0].set_xlabel('')
