@@ -158,3 +158,8 @@ Lote `review` de 1.680 corridas (0 fallos, 4,2 h, 50 CPU-h; `batch_paper.py --ex
 En el paper: resumen, insights, §5.1 (oferta), §5.2 (benchmarks), §5.3 (14.935 corridas, 1.289 CPU-h), §4.2 (α = 1), §6.1 (ILP), párrafo nuevo en §6.4, hallazgos (pregunta 1 y 3), conclusión y limitaciones, apéndice C.? con tres tablas y B.4 con el chequeo de bloques. Para mantener 35 páginas se condensaron los párrafos de régimen, umbral y emisiones (el detalle de emisiones pasó al apéndice). 53 pp., cuerpo y referencias hasta la 35, 0 errores, 16 marcas.
 
 **Consecuencia para el nivel 3.** El hallazgo de oferta y el de la prioridad del Greedy cambian el encuadre: el resultado central pasa de "las políticas orientadas a pedidos dejan ociosa a una cuarta parte" a "donde los mensajeros superan al trabajo, solo una regla que lea el historial reparte el trabajo; a la razón de campo todas lo hacen". Conviene que el título y las contribuciones (decisión de autor) reflejen esto.
+
+
+## Nivel 3 enviado como issues (2026-11-03)
+
+Decisiones de autor abiertas en GitHub para Daniel (etiqueta `author-decision`): #11 instancias 1 y 3 duplicadas; #12 título y contribuciones tras el hallazgo de sobreoferta; #13 déficit en escala absoluta y rerun de k_d; #14 evidencia de la regla "menos servido primero" de Greedy; #15 anclas de la encuesta para α. Se suman a #1–#10.

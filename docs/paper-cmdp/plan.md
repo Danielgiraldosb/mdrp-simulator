@@ -434,3 +434,4 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   recupera el ILP"). Bloques = todos los pares en 117 rondas reales. Paper actualizado: 53 pp., cuerpo y referencias en
   35, 16 todos. **Siguiente:** nivel 3 con Daniel (instancia 3 duplicada; título y contribuciones a la luz del hallazgo de
   oferta; déficit absoluto; evidencia del "menos servido primero"; anclas); verificar las diez referencias nuevas.
+- **2026-11-03 (nivel 3 como issues).** #11 instancias 1/3; #12 título y contribuciones; #13 déficit absoluto; #14 evidencia de Greedy; #15 anclas de la encuesta. Abiertas en total: #1–#15, todas de Daniel.
