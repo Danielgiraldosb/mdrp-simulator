@@ -568,3 +568,13 @@ unificada, notación ρ/γ/c/z con tabla, notas del .bib fuera, diez referencias
 presupuesto tras las adiciones pasaron al apéndice T4, F1–F2, el decodificador y la verificación, y se condensaron
 unas 600 palabras. 52 pp., cuerpo y referencias hasta la p. 35, 0 errores, 16 todos. Niveles 2 (corridas baratas) y
 3 (decisiones de autor) pendientes.
+
+
+### Nivel 2 de la revisión cerrado (2026-11-03, 20:42; slide 17 y roadmap)
+
+- **Oferta (diagnóstico, sin corridas; `diag_supply.py`).** 0,40 pedidos por mensajero-hora conectada en las zonas y 0,35 en el día completo de la ciudad, contra 1,19 implícito en la encuesta. La sobreoferta es de los registros de conexión, no del recorte de 3 km: el informe (C8) atribuía la causa a la zona y eso era incorrecto. Igualar la razón de campo es conservar un tercio de la flota.
+- **Flota adelgazada a 1/3 (720 corridas, 5 semillas, ambos regímenes).** Cobertura −2,6 a −4,8 puntos para las tres políticas; 96–100 % de elegibles activos; Gini de elegibles 0,21 (Greedy), 0,24–0,25 (BRKGA-Fair γ = 40), 0,21–0,22 (segunda generación k_d = 25, que cumple α = 0,30 en 83–92 % de los días); brecha frente a Greedy de 0,23 a 0,03–0,04; mediana de ingreso por hora de 600–800 a 1.800–1.960 COP (encuesta 2.622); F_D sigue en 0,95–0,98. **El resultado central es una propiedad de la sobreoferta.**
+- **Greedy por orden de llegada (480 corridas, 10 semillas).** Misma cobertura que el "menos servido primero", pero Gini 0,75 con 37 % de elegibles activos; no cumple ningún α ≤ 0,40. Toda la equidad del benchmark viene de su regla de prioridad, que lee un número de H_t: la pregunta 1 queda reforzada (el historial es necesario también para el benchmark que cumple).
+- **ILP con k = 8 (480 corridas, 10 semillas).** Cubre 1,1 puntos menos que con k = 25 y 3,8 menos que MIP-Fair α = 1 con los mismos candidatos (manual; igual en auto); Gini a 0,008 de MIP-Fair. La ventaja de cobertura de MIP-Fair viene de su etapa de desempate (tiempo + atraso), no de los candidatos; la afirmación "α = 1 recupera el ILP" era falsa y se corrigió; la restricción de Gini es inerte también frente a un programa de cobertura con los mismos candidatos.
+- **Linealización por bloques en rondas reales (`diag_blocks.py`).** 117 rondas de dos días de Pereira (instancias 10 y 4), restricción activa en todas: óptimos de cobertura y de v idénticos; 78–105 variables de pares frente a 7.381–14.028; 0,04–0,05 s frente a 1,2–2,1 s por ronda.
+- **Elegibilidad.** El código usa el turno declarado (on/off de los datos) para la población elegible; el texto ahora lo dice (los mensajeros se revelan al conectarse con su turno declarado).

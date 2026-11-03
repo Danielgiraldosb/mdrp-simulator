@@ -1,0 +1,41 @@
+C:\MDRP\simulator\analyze_review2.py:91: FutureWarning: DataFrameGroupBy.apply operated on the grouping columns. This behavior is deprecated, and in a future version of pandas the grouping columns will be excluded from the operation. Either pass `include_groups=False` to exclude the groupings or explicitly select the grouping columns after groupby to silence this warning.
+  oc_g = oc.groupby('method').apply(lambda d: d.groupby('instance').gini_elig_hourly.mean().mean())
+C:\MDRP\simulator\analyze_review2.py:91: FutureWarning: DataFrameGroupBy.apply operated on the grouping columns. This behavior is deprecated, and in a future version of pandas the grouping columns will be excluded from the operation. Either pass `include_groups=False` to exclude the groupings or explicitly select the grouping columns after groupby to silence this warning.
+  oc_g = oc.groupby('method').apply(lambda d: d.groupby('instance').gini_elig_hourly.mean().mean())
+review rows 1680 (5 configs); failed rows excluded by the inner merge
+
+===== manual =====
+-- A. ILP with k = 8 (n = 240) --
+  ilp_k8 - ilp           : coverage -0.011 [-0.013, -0.010]  F_G +0.030 [+0.028, +0.033]  lateness -0.25
+  ilp_k8 - mipfair_a100  : coverage -0.038 [-0.040, -0.036]  F_G +0.008 [+0.006, +0.009]  lateness +0.17
+  ilp_k8 - mipfair_a030  : coverage -0.037 [-0.039, -0.035]  F_G +0.007 [+0.005, +0.008]  lateness +0.18
+  ilp_k8 means: coverage 0.727  F_G 0.551  active 0.71  late 19.2  min/run 1.9
+-- B. Greedy in arrival order (n = 240) --
+  arrival - least-served: coverage +0.001 [+0.001, +0.002]  F_G +0.451 [+0.443, +0.459]  active -0.596 [-0.609, -0.583]  lateness -0.20
+  means: arrival F_G 0.753 active 0.37 cov 0.760 | least-served F_G 0.301 active 0.97 | best order-centric F_G 0.521
+  share of the Greedy advantage kept in arrival order: -1.06
+  compliance arrival / least-served: 0.30: 0%/50%, 0.35: 0%/90%, 0.40: 0%/98%, 0.45: 0%/100%
+-- C. fleet thinned to 1/3 (seeds 1-5) --
+  greedy_thin                n=120  cov 0.758 -> 0.721   F_G 0.301 -> 0.211   active 0.97 -> 0.99   F_D 0.981 -> 0.966   median COP/h 602 -> 1811   late 19.9 -> 19.7
+  brkga_fair_w40_thin        n=120  cov 0.770 -> 0.722   F_G 0.534 -> 0.249   active 0.75 -> 0.96   F_D 0.986 -> 0.977   median COP/h 775 -> 1847   late 18.6 -> 19.2
+  brkga_fair_w40_xk25_thin   n=120  cov 0.769 -> 0.721   F_G 0.437 -> 0.222   active 0.85 -> 0.97   F_D 0.995 -> 0.981   median COP/h 683 -> 1796   late 18.8 -> 19.3
+  gap order-centric - Greedy: full fleet 0.233, thinned 0.037; gap closed by k_d = 25: full 0.42, thinned 0.71
+
+===== autoaccept =====
+-- A. ILP with k = 8 (n = 240) --
+  ilp_k8 - ilp           : coverage +0.000 [-0.000, +0.000]  F_G +0.027 [+0.025, +0.030]  lateness -0.04
+  ilp_k8 - mipfair_a100  : coverage +0.000 [+0.000, +0.000]  F_G -0.003 [-0.004, -0.002]  lateness -0.00
+  ilp_k8 - mipfair_a030  : coverage +0.000 [+0.000, +0.000]  F_G -0.006 [-0.007, -0.004]  lateness -0.00
+  ilp_k8 means: coverage 0.786  F_G 0.529  active 0.74  late 18.8  min/run 1.4
+-- B. Greedy in arrival order (n = 240) --
+  arrival - least-served: coverage -0.000 [-0.000, +0.000]  F_G +0.450 [+0.441, +0.459]  active -0.594 [-0.608, -0.581]  lateness -0.08
+  means: arrival F_G 0.747 active 0.38 cov 0.786 | least-served F_G 0.296 active 0.97 | best order-centric F_G 0.501
+  share of the Greedy advantage kept in arrival order: -1.19
+  compliance arrival / least-served: 0.30: 0%/54%, 0.35: 0%/96%, 0.40: 0%/100%, 0.45: 0%/100%
+-- C. fleet thinned to 1/3 (seeds 1-5) --
+  greedy_thin                n=120  cov 0.786 -> 0.755   F_G 0.296 -> 0.210   active 0.97 -> 1.00   F_D 0.973 -> 0.955   median COP/h 625 -> 1914   late 19.0 -> 19.2
+  brkga_fair_w40_thin        n=120  cov 0.786 -> 0.760   F_G 0.536 -> 0.240   active 0.76 -> 0.97   F_D 0.983 -> 0.969   median COP/h 794 -> 1959   late 18.2 -> 18.7
+  brkga_fair_w40_xk25_thin   n=120  cov 0.786 -> 0.760   F_G 0.416 -> 0.205   active 0.87 -> 0.97   F_D 0.995 -> 0.977   median COP/h 686 -> 1895   late 18.3 -> 18.8
+  gap order-centric - Greedy: full fleet 0.240, thinned 0.029; gap closed by k_d = 25: full 0.50, thinned 1.17
+
+wrote tables/review2_{ilp,arrival,thin}.tex

@@ -426,3 +426,11 @@ Pendiente del autor: visto bueno a E5' y las decisiones de la Etapa 1. Siguiente
   courier-céntrico por orden de llegada, ≈ 480; diagnóstico de oferta) y nivel 3 con Daniel (instancia 3
   duplicada, título, déficit absoluto, evidencia del "menos servido primero", anclas de la encuesta); verificar
   volúmenes/páginas de las diez referencias nuevas; respuestas a las issues #1–#10.
+- **2026-11-03, 20:42 (nivel 2 de la revisión cerrado).** Lote `review` (1.680 corridas, 0 fallos) y dos diagnósticos.
+  Con la flota adelgazada a la razón de campo (1/3) todas las políticas terminan en Gini 0,21–0,25 y la brecha frente
+  a Greedy cae de 0,23 a 0,03–0,04; la sobreoferta es de los registros (ciudad 0,35, zona 0,40, campo 1,19 pedidos por
+  mensajero-hora), no de la zona. Greedy por orden de llegada: 0,75 (toda su equidad es la prioridad "menos servido
+  primero"). ILP con k = 8: −3,8 puntos frente a MIP-Fair α = 1 en manual (la ventaja es el desempate; corregido "α = 1
+  recupera el ILP"). Bloques = todos los pares en 117 rondas reales. Paper actualizado: 53 pp., cuerpo y referencias en
+  35, 16 todos. **Siguiente:** nivel 3 con Daniel (instancia 3 duplicada; título y contribuciones a la luz del hallazgo de
+  oferta; déficit absoluto; evidencia del "menos servido primero"; anclas); verificar las diez referencias nuevas.
