@@ -141,6 +141,22 @@ ABLATIONS['mipfair_a030_xk50_e000'] = dict(policy='mip_fair', cfg={'mipfair_alph
                                                                     **_GEN2K50}, alpha=0.30)
 E11_BOTH_REGIMES = ['brkga_fair_w40_xk50', 'mipfair_a030_xk50_e000']
 
+# Review level 2 (2026-11-03): ILP on MIP-Fair's candidate pairs (k = 8), a courier-centric benchmark without the
+# least-served priority (arrival order), and the fleet thinned to the field ratio of orders per connected hour
+# (keep 1/3: zone 0.40, city 0.35, survey 1.19 orders per connected courier-hour; diag_supply.py).
+THIN_KEEP = 1.0 / 3.0
+REVIEW: Dict[str, Dict[str, Any]] = {
+    'ilp_k8':         dict(policy='ilp', cfg={'objective': 'max_coverage', 'ilp_cand_top_k': 8}),
+    'greedy_arrival': dict(policy='greedy', cfg={'greedy_order': 'arrival'}),
+    'greedy_thin':    dict(policy='greedy', cfg={'real_courier_keep': THIN_KEEP}),
+    'brkga_fair_w40_thin': dict(policy='brkga_fair', cfg={**METHODS['brkga_fair_w40']['cfg'], 'real_courier_keep': THIN_KEEP},
+                                weight=40.0),
+    'brkga_fair_w40_xk25_thin': dict(policy='brkga_fair', cfg={**GEN2['brkga_fair_w40_xk25']['cfg'], 'real_courier_keep': THIN_KEEP},
+                                     weight=40.0),
+}
+REVIEW_TEN_SEEDS = ['ilp_k8', 'greedy_arrival']          # paired with X1 (ten seeds)
+REVIEW_FIVE_SEEDS = ['greedy_thin', 'brkga_fair_w40_thin', 'brkga_fair_w40_xk25_thin']   # five seeds, both regimes
+
 PILOT_METHODS = ['greedy', 'ilp', 'hier', 'brkga', 'brkga_fair_w10', 'mipfair_a030', 'paybrkga_l02']
 THRESHOLD_METHODS = ['greedy', 'hier', 'brkga_fair_w40_xk25', 'mipfair_a030_xk25_e000', 'paybrkga_l05']   # E12
 
@@ -214,6 +230,12 @@ def build_grid(experiment: str, instances: List[str], cities: Dict[str, str], ra
     elif experiment == 'gen2':
         add(instances, methods or list(GEN2), ['manual', 'autoaccept'], range(1, (seeds or 5) + 1),
             [PPK_THRESHOLD_POINT], catalogue=GEN2)
+    elif experiment == 'review':
+        sel = set(methods or REVIEW)
+        add(instances, [m for m in REVIEW_TEN_SEEDS if m in sel], ['manual', 'autoaccept'], range(1, 11),
+            [PPK_THRESHOLD_POINT], catalogue=REVIEW)
+        add(instances, [m for m in REVIEW_FIVE_SEEDS if m in sel], ['manual', 'autoaccept'], range(1, (seeds or 5) + 1),
+            [PPK_THRESHOLD_POINT], catalogue=REVIEW)
     else:
         raise SystemExit(f'unknown experiment {experiment}')
     return cells
@@ -378,7 +400,7 @@ def estimate(pilot_csv: str, instances_dir: str, radius: float, seeds: int, work
 # ---------------------------------------------------------------- main
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--experiment', choices=['pilot', 'main', 'threshold', 'supp', 'gen2'], default='pilot')
+    ap.add_argument('--experiment', choices=['pilot', 'main', 'threshold', 'supp', 'gen2', 'review'], default='pilot')
     ap.add_argument('--instances-dir', default=DEFAULT_INSTANCES_DIR)
     ap.add_argument('--instances', nargs='+', default=None, help='subset of instance names')
     ap.add_argument('--methods', nargs='+', default=None, help='subset of method keys')

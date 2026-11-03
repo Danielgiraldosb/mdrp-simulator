@@ -301,7 +301,7 @@ class ILPPolicy(Policy):
 
         for route in routes:
             store_loc = route[0].store_loc
-            nearest = sorted(couriers, key=lambda c: dist_km(c.location, store_loc))[:_ROUTE_TOP_K]
+            nearest = sorted(couriers, key=lambda c: dist_km(c.location, store_loc))[:int(getattr(self.cfg, 'ilp_cand_top_k', _ROUTE_TOP_K))]
 
             for c in nearest:
                 result = route_feasibility(c, route, t, self.cfg)

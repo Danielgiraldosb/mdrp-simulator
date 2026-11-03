@@ -107,7 +107,11 @@ class GreedyPolicy(Policy):
         pending:   Dict[int, Order]   = dict(state['O_t'])
         now = state['time']
 
-        sorted_couriers = sorted(available.values(), key=lambda c: c.history.orders_delivered)
+        if getattr(self.cfg, 'greedy_order', 'least_served') == 'arrival':
+            # review level 2: courier-centric without the fairness priority (first logged in, first served)
+            sorted_couriers = sorted(available.values(), key=lambda c: (c.on_time, c.courier_id))
+        else:
+            sorted_couriers = sorted(available.values(), key=lambda c: c.history.orders_delivered)
 
         assignments = []
         by_store = _group_by_store(pending)       # maintained incrementally (was rebuilt per courier)

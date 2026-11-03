@@ -217,7 +217,21 @@ class MIPFairPolicy(Policy):
         #                  many values (w0 or w_opt[k] of the route it gets) and
         #                  sum_j |val - w0_j| over fixed j is a number per value
         #   free-free    : d_ij >= |w_i - w_j| variables, only among free couriers
-        free = [c for c in cids if any(k[0] == c for k in w_opt)]
+        if getattr(cfg, 'mipfair_pairs', 'blocks') == 'all':
+            # review level 2: the all-pairs model, d_ij for every pair of the population (exactness check)
+            d = {}
+            for i in range(n):
+                for j in range(i + 1, n):
+                    ci, cj = cids[i], cids[j]
+                    d[ci, cj] = pulp.LpVariable(f"d_{ci}_{cj}", lowBound=0.0)
+                    prob += d[ci, cj] >= w[ci] - w[cj], f"dpos_{ci}_{cj}"
+                    prob += d[ci, cj] >= w[cj] - w[ci], f"dneg_{ci}_{cj}"
+            if n > 1:
+                prob += (pulp.lpSum(d.values()) - self.alpha * n * pulp.lpSum(w[c] for c in cids)
+                         <= v * n * w_ref), "gini_elastic"
+            else:
+                prob += v == 0.0, "gini_trivial"
+        free = [c for c in cids if any(k[0] == c for k in w_opt)] if getattr(cfg, 'mipfair_pairs', 'blocks') != 'all' else []
         fixed_vals = sorted(w0[c] for c in cids if c not in set(free))
         m = len(fixed_vals)
         prefix = [0.0]
@@ -246,7 +260,9 @@ class MIPFairPolicy(Policy):
                 d[ci, cj] = pulp.LpVariable(f"d_{ci}_{cj}", lowBound=0.0)
                 prob += d[ci, cj] >= w[ci] - w[cj], f"dpos_{ci}_{cj}"
                 prob += d[ci, cj] >= w[cj] - w[ci], f"dneg_{ci}_{cj}"
-        if n > 1:
+        if getattr(cfg, 'mipfair_pairs', 'blocks') == 'all':
+            pass
+        elif n > 1:
             prob += (pulp.lpSum(d.values()) + pulp.lpSum(cross_terms) + (cross_const + const_ff)
                      - self.alpha * n * pulp.lpSum(w[c] for c in cids)
                      <= v * n * w_ref), "gini_elastic"

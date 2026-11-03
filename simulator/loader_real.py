@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import math
 import os
+import hashlib
 import random
 import re
 import statistics
@@ -212,6 +213,10 @@ def load_real_instance(name: str, instances_dir: str, cfg: Config,
 
     # -- Couriers ------------------------------------------------------------------
     c_df = pd.read_csv(os.path.join(base, 'couriers.csv'))
+    keep = float(getattr(cfg, 'real_courier_keep', 1.0))
+    if keep < 1.0:
+        # review level 2: fleet thinning, the same subset for every policy and seed of an instance
+        c_df = c_df.sample(frac=keep, random_state=int(hashlib.md5(name.encode()).hexdigest()[:8], 16)).sort_index()
     rng = random.Random(cfg.seed)
     couriers: List[Courier] = []
     veh_counts: Dict[str, int] = {}

@@ -166,6 +166,11 @@ class Config:
     fair_cand_deficit_k: int = 0
     # E8: MIP-Fair may give up this fraction of the round's maximum coverage for the Gini excess
     mipfair_cov_slack: float = 0.0
+    # -- Review, level 2 (2026-11-03). Defaults reproduce X0-X3 exactly. ------------------
+    ilp_cand_top_k: int = 25                # nearest couriers per route in the ILP prefilter (8 = MIP-Fair's)
+    greedy_order: str = 'least_served'      # least_served (orders delivered so far) | arrival (log-in time)
+    real_courier_keep: float = 1.0          # fraction of the zone's couriers kept (fleet thinning; seeded by instance)
+    mipfair_pairs: str = 'blocks'           # blocks (exact split) | all (every pair; exactness check only)
 
     # Extra grace beyond the instance's own "maximum click-to-door" hard SLA.
     # 0 = use the instance's hard window exactly as published.
