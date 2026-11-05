@@ -76,7 +76,7 @@ def metrics_table() -> str:
     d = d[d.seed.isin(cnt[cnt == cnt.max()].index)]
     lines = []
     for reg, title in REG:
-        lines.append(r'\multicolumn{7}{l}{\textit{' + title + r'}} \\')
+        lines.append(r'\multicolumn{6}{l}{\textit{' + title + r'}} \\')
         sub = d[(d.regime == reg) & d.method.isin(MAIN)]
         inst = sub.groupby(['method', 'instance'])[['F_MaxMin', 'c2d_mean', 'c2d_p90', 'solve_mean', 'solve_max']].mean()
         agg = inst.groupby('method').mean()

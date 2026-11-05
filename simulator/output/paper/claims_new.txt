@@ -1,0 +1,87 @@
+
+######## manual
+Greedy FG 0.3036 | order-centric FG min ilp 0.5192 max brkga 0.5637
+  sweeps FG range 0.5329 0.5454
+coverage {'ilp': np.float64(0.7372), 'hier': np.float64(0.7686), 'brkga': np.float64(0.7693), 'brkga_fair_w40': np.float64(0.7701), 'mipfair_a030': np.float64(0.7634), 'paybrkga_l05': np.float64(0.7528), 'greedy': np.float64(0.758)}
+  best order-centric - greedy (pts) 1.21 | spread incl ILP 3.28
+  paired FG diff vs greedy (instance means) min 0.2155 max 0.26
+  active {'greedy': np.float64(0.968), 'brkga': np.float64(0.696), 'brkga_fair_w5': np.float64(0.74), 'brkga_fair_w40': np.float64(0.755)}
+  FD range all configs 0.9807 0.9937
+  MIP alpha FG range [np.float64(0.5424), np.float64(0.543), np.float64(0.5422), np.float64(0.5427), np.float64(0.5428), np.float64(0.5416)]
+  BRKGA-Fair gamma FG [np.float64(0.544), np.float64(0.5385), np.float64(0.5357), np.float64(0.5329)]
+  share eligible (greedy) 0.9289
+  compliance greedy {0.3: np.float64(45.4), 0.35: np.float64(90.0), 0.4: np.float64(97.5)}
+regime loss pts {'greedy': np.float64(2.8), 'ilp': np.float64(4.88), 'brkga': np.float64(1.68), 'brkga_fair_w40': np.float64(1.6), 'mipfair_a030': np.float64(2.25), 'paybrkga_l05': np.float64(3.33), 'hier': np.float64(1.73)}
+-- gen2 (5 seeds)
+  brkga_fair_w20_x         FG 0.5125 dFG -0.0228 dcov +0.0003 dlate +0.03 gap 0.098 active 0.758 cpu 2.8 max 13 c40 0 c45 28 c50 50 c30 0
+  brkga_fair_w20_xk        FG 0.4814 dFG -0.0538 dcov -0.0001 dlate +0.07 gap 0.232 active 0.800 cpu 4.6 max 24 c40 13 c45 50 c50 60 c30 0
+  brkga_fair_w40_xk25      FG 0.4363 dFG -0.0964 dcov -0.0010 dlate +0.17 gap 0.420 active 0.853 cpu 4.9 max 25 c40 49 c45 63 c50 72 c30 0
+  mipfair_a030_x_e000      FG 0.5377 dFG -0.0045 dcov +0.0003 dlate -0.03 gap 0.019 active 0.728 cpu 5.4 max 27 c40 0 c45 4 c50 42 c30 0
+  mipfair_a030_xk_e000     FG 0.4649 dFG -0.0772 dcov +0.0055 dlate +0.10 gap 0.323 active 0.852 cpu 11.3 max 54 c40 8 c45 50 c50 75 c30 0
+  mipfair_a030_xk_e005     FG 0.4646 dFG -0.0775 dcov +0.0062 dlate +0.10 gap 0.325 active 0.852 cpu 11.3 max 54 c40 8 c45 50 c50 76 c30 0
+  mipfair_a030_xk25_e000   FG 0.4350 dFG -0.1072 dcov +0.0031 dlate +0.29 gap 0.449 active 0.875 cpu 23.5 max 110 c40 40 c45 61 c50 82 c30 0
+  paybrkga_l05_xk          FG 0.5245 dFG -0.0208 dcov +0.0004 dlate +0.08 gap 0.086 active 0.744 cpu 5.2 max 25 c40 0 c45 9 c50 49 c30 0
+  brkga_fair_w40_xk50      FG 0.4038 (k25 0.4363) cov 0.7682 (k25 0.7688) gap from grandparent 0.562 c40 54 cpu 6.4 max 34 cpu ratio 1.30
+  mipfair_a030_xk50_e000   FG 0.4116 (k25 0.4350) cov 0.7623 (k25 0.7662) gap from grandparent 0.546 c40 50 cpu 50.9 max 234 cpu ratio 2.17
+
+######## autoaccept
+Greedy FG 0.2989 | order-centric FG min ilp 0.5011 max brkga 0.5654
+  sweeps FG range 0.5282 0.5462
+coverage {'ilp': np.float64(0.7861), 'hier': np.float64(0.786), 'brkga': np.float64(0.7861), 'brkga_fair_w40': np.float64(0.7861), 'mipfair_a030': np.float64(0.786), 'paybrkga_l05': np.float64(0.7861), 'greedy': np.float64(0.786)}
+  best order-centric - greedy (pts) 0.01 | spread incl ILP 0.02
+  paired FG diff vs greedy (instance means) min 0.2022 max 0.2665
+  active {'greedy': np.float64(0.973), 'brkga': np.float64(0.696), 'brkga_fair_w5': np.float64(0.738), 'brkga_fair_w40': np.float64(0.757)}
+  FD range all configs 0.9736 0.9931
+  MIP alpha FG range [np.float64(0.5302), np.float64(0.5332), np.float64(0.5319), np.float64(0.5299), np.float64(0.5282), np.float64(0.5297)]
+  BRKGA-Fair gamma FG [np.float64(0.5462), np.float64(0.5415), np.float64(0.538), np.float64(0.5351)]
+  share eligible (greedy) 0.9289
+  compliance greedy {0.3: np.float64(50.0), 0.35: np.float64(95.8), 0.4: np.float64(100.0)}
+-- gen2 (5 seeds)
+  brkga_fair_w20_x         FG 0.5126 dFG -0.0253 dcov +0.0000 dlate +0.02 gap 0.106 active 0.761 cpu 2.4 max 12 c40 1 c45 31 c50 50 c30 0
+  brkga_fair_w20_xk        FG 0.4813 dFG -0.0566 dcov +0.0000 dlate +0.04 gap 0.237 active 0.804 cpu 4.1 max 22 c40 12 c45 50 c50 61 c30 0
+  brkga_fair_w40_xk25      FG 0.4155 dFG -0.1191 dcov +0.0000 dlate +0.11 gap 0.505 active 0.872 cpu 4.3 max 23 c40 56 c45 67 c50 81 c30 2
+  mipfair_a030_x_e000      FG 0.5225 dFG -0.0093 dcov +0.0001 dlate -0.03 gap 0.040 active 0.746 cpu 3.8 max 20 c40 0 c45 8 c50 50 c30 0
+  mipfair_a030_xk_e000     FG 0.4263 dFG -0.1056 dcov +0.0001 dlate -0.01 gap 0.453 active 0.898 cpu 6.9 max 36 c40 35 c45 72 c50 88 c30 0
+  mipfair_a030_xk_e005     FG 0.4261 dFG -0.1058 dcov +0.0001 dlate -0.00 gap 0.454 active 0.899 cpu 6.9 max 36 c40 40 c45 72 c50 88 c30 0
+  mipfair_a030_xk25_e000   FG 0.4007 dFG -0.1312 dcov +0.0001 dlate +0.02 gap 0.563 active 0.908 cpu 11.1 max 53 c40 64 c45 83 c50 96 c30 0
+  paybrkga_l05_xk          FG 0.5062 dFG -0.0268 dcov -0.0000 dlate +0.03 gap 0.115 active 0.769 cpu 4.2 max 22 c40 0 c45 14 c50 57 c30 0
+  brkga_fair_w40_xk50      FG 0.3528 (k25 0.4155) cov 0.7861 (k25 0.7861) gap from grandparent 0.771 c40 73 cpu 5.5 max 30 cpu ratio 1.28
+  mipfair_a030_xk50_e000   FG 0.3986 (k25 0.4007) cov 0.7861 (k25 0.7860) gap from grandparent 0.572 c40 54 cpu 22.3 max 104 cpu ratio 2.01
+
+######## X2
+  greedy                   615 cov +3.30% pts +2.50 FG -0.57% dFG -0.0017 c45 100 base c45 100 cov 0.7829
+  greedy                   1242 cov -9.15% pts -6.93 FG +3.34% dFG +0.0101 c45 100 base c45 100 cov 0.6886
+  hier                     615 cov +2.00% pts +1.54 FG -1.20% dFG -0.0063 c45 4 base c45 4 cov 0.7839
+  hier                     1242 cov -5.57% pts -4.28 FG +2.21% dFG +0.0116 c45 4 base c45 4 cov 0.7257
+  brkga_fair_w40_xk25      615 cov +2.05% pts +1.57 FG -2.37% dFG -0.0103 c45 65 base c45 63 cov 0.7846
+  brkga_fair_w40_xk25      1242 cov -5.83% pts -4.49 FG +3.83% dFG +0.0167 c45 52 base c45 63 cov 0.7240
+  mipfair_a030_xk25_e000   615 cov +2.34% pts +1.79 FG -2.67% dFG -0.0116 c45 73 base c45 61 cov 0.7841
+  mipfair_a030_xk25_e000   1242 cov -7.09% pts -5.43 FG +3.11% dFG +0.0136 c45 52 base c45 60 cov 0.7117
+  paybrkga_l05             615 cov +3.69% pts +2.78 FG -1.48% dFG -0.0081 c45 4 base c45 3 cov 0.7802
+  paybrkga_l05             1242 cov -7.31% pts -5.50 FG +2.46% dFG +0.0134 c45 0 base c45 3 cov 0.6974
+
+######## review
+  manual     greedy_thin                FG 0.2123 cov 0.7195 active 0.994 c30 92 c25 77
+  manual     brkga_fair_w40_thin        FG 0.2495 cov 0.7200 active 0.958 c30 72 c25 60
+  manual     brkga_fair_w40_xk25_thin   FG 0.2237 cov 0.7196 active 0.964 c30 83 c25 71
+  manual     greedy_arrival             FG 0.7506 cov 0.7592 active 0.376 c30 0 c25 0
+  manual     ilp_k8                     FG 0.5494 cov 0.7256 active 0.712 c30 0 c25 0
+  autoaccept greedy_thin                FG 0.2109 cov 0.7547 active 0.996 c30 92 c25 79
+  autoaccept brkga_fair_w40_thin        FG 0.2405 cov 0.7591 active 0.965 c30 77 c25 63
+  autoaccept brkga_fair_w40_xk25_thin   FG 0.2069 cov 0.7591 active 0.971 c30 92 c25 78
+  autoaccept greedy_arrival             FG 0.7444 cov 0.7860 active 0.382 c30 0 c25 0
+  autoaccept ilp_k8                     FG 0.5263 cov 0.7861 active 0.739 c30 0 c25 0
+
+######## pilot
+  pilot instances ['Instancia_0', 'Instancia_1', 'Instancia_2', 'Instancia_4', 'Instancia_5', 'Instancia_7'] cities ['Barranquilla', 'Bogota', 'Cali', 'Medellin', 'Pereira']
+  greedy coverage c1.0 0.7524 c1.3 0.7074 rel +6.36%
+
+######## totals
+  pilot      rows    42 cpu_h 3.1
+  pilot_c13  rows     6 cpu_h 0.3
+  main       rows  8640 cpu_h 413.7
+  gen2       rows  1920 cpu_h 226.6
+  supp       rows  1453 cpu_h 452.6
+  threshold  rows  1197 cpu_h 148.4
+  review     rows  1680 cpu_h 50.0
+  total cpu h 1295
