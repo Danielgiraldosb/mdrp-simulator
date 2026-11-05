@@ -1,10 +1,5 @@
 % references.bib -- CMDP meal-delivery paper (EJOR, Innovative Applications of O.R.)
-% Entries copied from the thesis bibliography are marked "source: thesis"; entries added from the
-% plan's literature anchors are marked "source: plan" and carry TODO notes where a field could not be
-% verified. Entries marked "source: director" are copied verbatim (same keys) from the director's
-% References.bib files (papers/Dani_Calling_New__unmarked_ and papers/Dynamic_Purchasing_vol_1___EJOR)
-% so that he recognises them; they replace our former keys ulmer2021restaurant (-> Ulmer2021),
-% haferkamp2022heatmap (-> haferkamp2023heatmap) and powell2011approximate (-> powell2021reinforcement).
+% DOIs checked against Crossref are kept in the unprinted field verifieddoi.
 
 % ---------------------------------------------------------------- Classics and frameworks (director)
 
@@ -56,9 +51,11 @@ publisher={Elsevier}
   title={Opportunities for reinforcement learning in stochastic dynamic vehicle routing},
   author={Hildebrandt, Florentin D and Thomas, Barrett W and Ulmer, Marlin W},
   journal={Computers \& Operations Research},
+  volume={150},
   pages={106071},
   year={2023},
-  publisher={Elsevier}
+  publisher={Elsevier},
+  verifieddoi={10.1016/j.cor.2022.106071}
 }
 
 @article{ulmer2020modeling,
@@ -88,8 +85,12 @@ author = {Marlin W. Ulmer and Barrett W. Thomas},
   title={Learning state-dependent policy parametrizations for dynamic technician routing with rework},
   author={Stein, Jonas and Hildebrandt, Florentin D and Ulmer, Marlin W and Thomas, Barrett W},
   journal={Transportation Science},
+  volume={59},
+  number={5},
+  pages={1153--1171},
   year={2025},
-  publisher={INFORMS}
+  publisher={INFORMS},
+  verifieddoi={10.1287/trsc.2024.0844}
 }
 
 @article{cuellar2023,
@@ -111,6 +112,7 @@ publisher = {Elsevier}
   title        = {The meal delivery routing problem},
   howpublished = {Optimization Online},
   year         = {2018},
+  url          = {https://optimization-online.org/?p=15139},
 }
 
 @article{yildiz2019provably,
@@ -183,10 +185,14 @@ year = {2023},
 }
 
 @article{bi2023meal,
-  author  = {Bi, Hualing and Zhu, Xiaoning and Lu, Fuqiang and Huang, Min},
+  author  = {Bi, Hualing and Zhu, Xiaoxue and Lu, Fuqiang and Huang, Min},
   title   = {The meal delivery routing problem in e-commerce platforms under the shared logistics mode},
   journal = {Journal of Theoretical and Applied Electronic Commerce Research},
   year    = {2023},
+  volume  = {18},
+  number  = {4},
+  pages   = {1799--1819},
+  verifieddoi = {10.3390/jtaer18040091}
 }
 
 @article{pillac2013review,
@@ -248,12 +254,13 @@ year = {2023},
   year      = {2022},
 }
 
-@misc{rl2025fairdelivery,
-  author = {{TODO authors}},
-  title  = {{TODO title: reinforcement learning for fair courier assignment in food delivery}},
+@misc{cheng2025realtime,
+  author = {Cheng, Jingyi and Sharif Azadeh, Shadi},
+  title  = {Real-time integrated dispatching and idle fleet steering with deep reinforcement learning for a meal delivery platform},
   year   = {2025},
   eprint = {2501.05808},
-  archivePrefix = {arXiv}
+  archivePrefix = {arXiv},
+  howpublished = {arXiv preprint arXiv:2501.05808}
 }
 
 @inproceedings{lesmana2019balancing,
@@ -265,11 +272,15 @@ year = {2023},
   year      = {2019},
 }
 
-@misc{sobhanan2024equity,
-  author       = {Sobhanan, Anoop and Charkhgard, Hadi and Dayarian, Iman},
-  title        = {Equity-driven workload allocation for crowdsourced last-mile delivery},
-  howpublished = {SSRN preprint},
-  year         = {2024},
+@article{sobhanan2026equity,
+  author  = {Sobhanan, Abhay and Charkhgard, Hadi and Dayarian, Iman},
+  title   = {Equity-driven workload allocation for crowdsourced last-mile delivery},
+  journal = {Production and Operations Management},
+  year    = {2026},
+  volume  = {35},
+  number  = {8},
+  pages   = {3180--3203},
+  verifieddoi = {10.1177/10591478261425875}
 }
 
 @article{liao2020multi,
@@ -342,19 +353,23 @@ year = {2023},
 % ---------------------------------------------------------------- Own prior work
 
 @inproceedings{giraldo2024grasp,
-  author    = {Giraldo-Herrera, Daniel and {\'A}lvarez, David},
+  author    = {Giraldo-Herrera, Daniel and {\'A}lvarez-Mart{\'i}nez, David},
   title     = {A {GRASP} algorithm for the meal delivery routing problem},
-  booktitle = {Metaheuristics International Conference (MIC 2024), Lecture Notes in Computer Science 14754},
+  booktitle = {Metaheuristics. MIC 2024},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {14754},
   pages     = {306--320},
   year      = {2024},
   publisher = {Springer},
+  verifieddoi = {10.1007/978-3-031-62922-8_21}
 }
 
-@misc{giraldo2026brkga,
-  author       = {Giraldo-Herrera, Daniel and {TODO co-authors}},
-  title        = {{TODO title: BRKGA with rolling horizon for the meal delivery routing problem (BRKGA-Coverage / BRKGA-Travel)}},
-  howpublished = {Metaheuristics International Conference (MIC 2026)},
-  year         = {2026},
+@inproceedings{giraldo2026brkga,
+  author    = {Giraldo-Herrera, Daniel and {\'A}lvarez-Mart{\'i}nez, David},
+  title     = {A biased random-key genetic algorithm with rolling horizon for the meal delivery routing problem},
+  booktitle = {Metaheuristics International Conference (MIC 2026)},
+  year      = {2026},
+  note      = {To appear},
 }
 
 % ---------------------------------------------------------------- Methodological references
@@ -394,13 +409,7 @@ year = {2023},
   title       = {Greenhouse gas reporting: conversion factors 2023},
   institution = {UK Government},
   year        = {2023},
-}
-
-@techreport{defra2024factors,
-  author      = {{Department for Energy Security and Net Zero (UK)}},
-  title       = {Greenhouse gas reporting: conversion factors 2024},
-  institution = {UK Government},
-  year        = {2024},
+  url         = {https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2023},
 }
 
 @misc{colombia2021smmlv,
