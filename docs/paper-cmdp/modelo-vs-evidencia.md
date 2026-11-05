@@ -8,7 +8,7 @@ paper. Las decisiones marcadas **[autor]** quedan pendientes de Daniel y del dir
 
 | Fuente | Qué es | n | Período | Archivo |
 |---|---|---|---|---|
-| Entrevistas | 44 entrevistas semiestructuradas a domiciliarios de Rappi en Bogotá, codificadas por lectores independientes; 32 decisiones de aceptación de 11 personas estimadas con logit | 44 (32 decisiones) | 2020–2021 | `docs/Comportamiento_domiciliarios_cuantitativo.xlsx` (hoja `Parametros_modelo`) |
+| Entrevistas | 44 entrevistas a domiciliarios de la plataforma en Bogotá, codificadas por lectores independientes; 32 decisiones de aceptación de 11 personas estimadas con logit | 44 (32 decisiones) | 2020–2021 | `docs/Comportamiento_domiciliarios_cuantitativo.xlsx` (hoja `Parametros_modelo`) |
 | Encuesta | Cuestionario por intercepción en puntos de Bogotá; modelos logit y OLS con error robusto HC1 | 135 | mayo–junio 2021 | `docs/Encuesta_cuantitativo_domiciliarios.xlsx` (hojas `Trazabilidad_tesis`, `Modelos_logit`, `Racha`, `Ingreso`, `Triangulacion`) |
 
 Grados (como en las hojas): **A** consistente en ≥15 entrevistados o convergencia clara de las dos fuentes;

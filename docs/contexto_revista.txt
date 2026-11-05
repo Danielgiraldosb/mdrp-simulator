@@ -1,5 +1,5 @@
 Contexto sobre mí
-Soy Daniel Sebastián Giraldo Herrera, estudiante de doctorado en la Universidad de los Andes (Bogotá, Colombia), grupo PyLO. Mi tesis aplica optimización a las plataformas de domicilios bajo demanda (MDRP: Meal Delivery Routing Problem, tipo Rappi o Uber Eats) para diseñar políticas que mejoren el bienestar de los domiciliarios y de los demás actores.
+Soy Daniel Sebastián Giraldo Herrera, estudiante de doctorado en la Universidad de los Andes (Bogotá, Colombia), grupo PyLO. Mi tesis aplica optimización a las plataformas de domicilios bajo demanda (MDRP: Meal Delivery Routing Problem, tipo Uber Eats o DoorDash) para diseñar políticas que mejoren el bienestar de los domiciliarios y de los demás actores.
 
 Mi modelo actual:
 - Un proceso de decisión de Markov con restricciones (CMDP), con una restricción de equidad tipo Gini (alpha) y un estado de equidad acumulada H_t.
