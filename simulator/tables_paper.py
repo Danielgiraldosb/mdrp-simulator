@@ -102,8 +102,8 @@ def fmt_bold(values: pd.Series, best: str | None, fmt: str) -> Dict[str, str]:
     nums = {k: float(t) for k, t in texts.items()}
     target = min(nums.values()) if best == 'min' else max(nums.values())
     winners = [k for k, v in nums.items() if v == target]
-    unique = len(winners) == 1   # no bold when the configurations tie after rounding
-    return {k: (r'\textbf{' + t + '}' if unique and k in winners else t) for k, t in texts.items()}
+    marked = len(winners) < len(nums)   # ties after rounding are all bold; no bold when every configuration ties
+    return {k: (r'\textbf{' + t + '}' if marked and k in winners else t) for k, t in texts.items()}
 
 
 def benchmark_rows(blk: pd.DataFrame, regime: str, configs: List[str]) -> str:

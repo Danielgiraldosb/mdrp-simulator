@@ -4,6 +4,35 @@ Este documento reemplaza a todos los anteriores (`correcciones_main_v53.md`, `ca
 
 Lo revisé contra el `main.tex`, el `references.bib` y el PDF de 53 páginas del repositorio (HEAD 76c726f), contra los datos de `real_instancies/` y contra las páginas renderizadas del PDF.
 
+## Estado de ejecución (rama `correcciones-v53`, actualizado el 10 nov 2026)
+
+Dos decisiones de la tabla siguiente quedaron sin efecto: el artículo se queda con **24 instancias** (la instancia 1 era una copia de la 3; se restauró el día de Cali, ver #11), y **"ablation" no se cambia** (P29 rechazado).
+
+| Prompt | Estado |
+|---|---|
+| P0–P3 | Hecho por David (`17a9a33`): solo se volvió a correr la instancia 1; 24 instancias, 4 por ciudad |
+| P4–P6 | Hecho (`a3fbe4e`, `74f9855`). `jozefowiez2009evolutionary` borrada del .bib (no se citaba); 50 entradas, todas citadas |
+| P7 | Resuelto sin ampliar el Apéndice A (#7–#10, `74f9855`) |
+| P8 | Hecho, leídos los dos artículos: Sühr et al. 2019 (income per active time, month, perfect, —, ✓ historia acumulada en el objetivo, ✓ datos de una empresa de taxis asiática) y Xu y Xu 2020 (match-rate max–min, instance, exogenous, —, —, ✓ viajes de taxi de NYC). Corregida la frase de §2, que decía "perfect acceptance" también para Xu y Xu |
+| P9 | Hecho (`a3fbe4e`) |
+| P10 | Pendiente: verificar las citas en el PDF |
+| P11 | Ver P38 |
+| P12–P18 | Hecho por David (`17a9a33`) |
+| P19–P22 | Hecho (`74f9855`, issues #2–#6) |
+| P23 | En espera (#12) |
+| P24 | Hecho (`a3fbe4e`) |
+| P25 | Hecho: $K$ del decodificador → $K^{\text{dec}}$ (7 apariciones: §4.2 ×3, §5.4, Tabla B.4, Algoritmo 2, Apéndice C.7); $w$ → $\gamma$ en la Tabla C.7; $E(x_t)$ → $\text{Em}(x_t)$. El costo ya era $\mathcal{C}$; la transición $\mathcal{T}$ se deja como está |
+| P26 | Hecho: frase de §8 (con la excepción de Hierarchical en manual), pie de la Tabla 2 ($\FGa$ y $\FD$), encabezado "who delivered" en la Tabla C.16 |
+| P27 | Hecho: $w^*$ = 908.526 / 208 h, con cita a `colombia2021smmlv` en §5.1 y en la Tabla C.5 |
+| P28 | Resuelto: "toy instance" → "test instance" (`a3fbe4e`); los rangos de ecuaciones y el espaciado de "Appendix A" se dejan como están |
+| P29 | Rechazado: "ablation" se queda |
+| P30 | Hecho: párrafo al final de §4.1 que define courier-centric y order-centric por cómo se decide la ronda (no por la restricción de una ruta por mensajero, que comparten todas las políticas) |
+| P31 | Hecho: las negritas no faltaban por error, sino por la regla de `tables_paper.py` (empates sin negrita). Nueva regla en `fmt_bold`: empates parciales todos en negrita, empate total sin negrita; 8 celdas marcadas en las Tablas 2, C.8 y C.9 (y en sus `.tex` generados) y aclaración en §6.1 sobre la cobertura en auto-accept |
+| P32 | Para David (requiere compilar), junto con P33–P36 |
+| P33–P36 | Para David (requieren regenerar figuras o compilar) |
+| P37 | En espera, para revisar con David (ligado a #12). La encuesta (hoja "Ingreso") da 0,35 pedidos por hora conectada sin racha y 1,15 en racha; los registros dan 0,36–0,40. El "1.2" del texto sale de 2.622 COP/h (ingreso con incentivos y propinas) / 2.200 COP (pago por pedido sin ellos), así que "three times" y "field ratio" (§5.1, §6.4, §7, §8, Limitaciones, Apéndice C) no se sostienen; la flota adelgazada corresponde a la oferta en racha. Los resultados no cambian, solo la interpretación |
+| P38–P39 | Pendiente |
+
 ## Decisiones ya tomadas por ti
 
 | Tema | Decisión |
