@@ -1,8 +1,9 @@
 """Review level 2 (2026-11-03): supply diagnostic of the 3-km zones against the full city day.
 
 For every instance, loads the day twice with the paper's loader (zone radius 3 km, and 40 km = the whole city)
-and reports orders, couriers, connected courier-hours and orders per connected courier-hour. The field reference is
-the survey: median 2,622 COP per connected hour at 2,200 COP per order, i.e. about 1.19 orders per hour.
+and reports orders, couriers, connected courier-hours and orders per connected courier-hour. For reference, surveyed
+couriers report 0.35 orders per connected hour outside the bonus ladder and 1.15 inside it (medians, survey_anchors.py);
+the review experiment thins the fleet to one courier in three as a supply sensitivity scenario (P37).
 
     python diag_supply.py            -> output/paper/supply.csv and a summary on stdout
 """
@@ -18,7 +19,7 @@ from batch_paper import DEFAULT_INSTANCES_DIR, all_instances, read_instance_tabl
 from config import Config  # noqa: E402
 from loader_real import load_real_instance  # noqa: E402
 
-FIELD_ORDERS_PER_HOUR = 2622 / 2200
+SURVEY_OUTSIDE, SURVEY_INSIDE = 0.35, 1.15   # orders per connected hour, survey medians (survey_anchors.py)
 
 
 def read(inst: str, radius: float):
@@ -43,10 +44,10 @@ def main() -> None:
     df.to_csv(out, index=False)
     z = df.orders_zone.sum() / df.hours_zone.sum()
     c = df.orders_city.sum() / df.hours_city.sum()
-    print(f"\npooled orders per connected courier-hour: zone {z:.3f}, city {c:.3f}, field {FIELD_ORDERS_PER_HOUR:.2f}")
+    print(f"\npooled orders per connected courier-hour: zone {z:.3f}, city {c:.3f} "
+          f"(survey: {SURVEY_OUTSIDE:.2f} outside the ladder, {SURVEY_INSIDE:.2f} inside)")
     print(f"mean over instances: zone {df.opch_zone.mean():.3f}, city {df.opch_city.mean():.3f}")
-    print(f"fleet fraction that would match the field in the zones: {z / FIELD_ORDERS_PER_HOUR:.2f} (pooled), "
-          f"{(df.opch_zone / FIELD_ORDERS_PER_HOUR).median():.2f} (median instance)")
+    print(f"fleet thinned to one courier in three (supply scenario): zone {3 * z:.2f} orders per connected courier-hour")
     print(df.groupby('city')[['opch_zone', 'opch_city']].mean().round(3).to_string())
 
 

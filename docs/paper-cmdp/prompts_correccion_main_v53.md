@@ -4,7 +4,7 @@ Este documento reemplaza a todos los anteriores (`correcciones_main_v53.md`, `ca
 
 Lo revisé contra el `main.tex`, el `references.bib` y el PDF de 53 páginas del repositorio (HEAD 76c726f), contra los datos de `real_instancies/` y contra las páginas renderizadas del PDF.
 
-## Estado de ejecución (rama `correcciones-v53`, actualizado el 10 nov 2026)
+## Estado de ejecución (rama `correcciones-v53`, actualizado el 18 nov 2026)
 
 Dos decisiones de la tabla siguiente quedaron sin efecto: el artículo se queda con **24 instancias** (la instancia 1 era una copia de la 3; se restauró el día de Cali, ver #11), y **"ablation" no se cambia** (P29 rechazado).
 
@@ -19,7 +19,7 @@ Dos decisiones de la tabla siguiente quedaron sin efecto: el artículo se queda 
 | P11 | Ver P38 |
 | P12–P18 | Hecho por David (`17a9a33`) |
 | P19–P22 | Hecho (`74f9855`, issues #2–#6) |
-| P23 | En espera (#12) |
+| P23 | Título aplicado (decidido en #12): "Who gets the work? End-of-day earnings fairness and price-responsive couriers in meal-delivery dispatching". Contribuciones: en espera (#12) |
 | P24 | Hecho (`a3fbe4e`) |
 | P25 | Hecho: $K$ del decodificador → $K^{\text{dec}}$ (7 apariciones: §4.2 ×3, §5.4, Tabla B.4, Algoritmo 2, Apéndice C.7); $w$ → $\gamma$ en la Tabla C.7; $E(x_t)$ → $\text{Em}(x_t)$. El costo ya era $\mathcal{C}$; la transición $\mathcal{T}$ se deja como está |
 | P26 | Hecho: frase de §8 (con la excepción de Hierarchical en manual), pie de la Tabla 2 ($\FGa$ y $\FD$), encabezado "who delivered" en la Tabla C.16 |
@@ -30,8 +30,10 @@ Dos decisiones de la tabla siguiente quedaron sin efecto: el artículo se queda 
 | P31 | Hecho: las negritas no faltaban por error, sino por la regla de `tables_paper.py` (empates sin negrita). Nueva regla en `fmt_bold`: empates parciales todos en negrita, empate total sin negrita; 8 celdas marcadas en las Tablas 2, C.8 y C.9 (y en sus `.tex` generados) y aclaración en §6.1 sobre la cobertura en auto-accept |
 | P32 | Para David (requiere compilar), junto con P33–P36 |
 | P33–P36 | Para David (requieren regenerar figuras o compilar) |
-| P37 | En espera, para revisar con David (ligado a #12). La encuesta (hoja "Ingreso") da 0,35 pedidos por hora conectada sin racha y 1,15 en racha; los registros dan 0,36–0,40. El "1.2" del texto sale de 2.622 COP/h (ingreso con incentivos y propinas) / 2.200 COP (pago por pedido sin ellos), así que "three times" y "field ratio" (§5.1, §6.4, §7, §8, Limitaciones, Apéndice C) no se sostienen; la flota adelgazada corresponde a la oferta en racha. Los resultados no cambian, solo la interpretación |
+| P37 | Parte 1 hecha (18 nov): la encuesta da 0,35 pedidos por hora conectada sin racha y 1,15 en racha (verificado con los microdatos); los registros dan 0,36–0,40. El "1.2" salía de 2.622 COP/h (ingreso con incentivos y propinas) / 2.200 COP (pago por pedido sin ellos). Reescritas como escenario de sensibilidad (flota a un tercio, cerca de la tasa en racha) todas las frases de "three times", "over-supply" y "field ratio": resumen, viñeta de §1, §5.1, §6.4, §7, §8, Limitaciones, Apéndice C y pie de la Tabla C. Parte 2 (umbral de elegibilidad 0,5 / 1 / 2 h): para David, requiere `output/paper/couriers/*.csv` |
 | P38–P39 | Pendiente |
+
+Issues del informe de árbitro aplicadas el 18 nov: **#14 opción (b)** (Greedy como benchmark courier-céntrico con prioridad de equidad, no como práctica de la plataforma; criterio A = "courier-centric anchor"; **Greedy-Arrival** como segundo benchmark en la Tabla 2 y en la tabla de cumplimiento, desde el lote `review` con `tables_paper.py --extra-runs`) y **#15 opción (a)** (anclas de α recalculadas con los microdatos como Gini del ingreso por hora conectada: 0,28 en racha y 0,41 sin racha; antes 0,26 y 0,39 del ingreso diario; `simulator/survey_anchors.py`).
 
 ## Decisiones ya tomadas por ti
 

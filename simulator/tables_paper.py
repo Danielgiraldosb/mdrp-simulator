@@ -6,7 +6,8 @@ analyze_couriers.py --out) and writes, into --out-dir:
   benchmark.tex   rows of tab:benchmark (both regimes, one configuration per policy)
   scope.tex       rows of tab:scope (manual regime)
   compliance.tex  rows of tab:compliance (both regimes)
-  stats.txt       the numbers quoted in the prose: paired differences vs Greedy with bootstrap
+  city.tex        rows of tab:city (manual regime, one block per city)
+  stats.txt      the numbers quoted in the prose: paired differences vs Greedy with bootstrap
                   intervals, by-city Gini, regime loss, parameter sensitivity, compliance of
                   every configuration, CPU maxima
 
@@ -17,8 +18,13 @@ unless --all-seeds is given. Extra run tables (X3) can be appended with more pos
 they must have matching courier tables (same basename + _couriers.csv) or be covered by one
 --couriers-table that contains their run_ids.
 
+The second benchmark, Greedy in arrival order (greedy_arrival), was run in the review experiment on the
+same ten seeds as X1; --extra-runs/--extra-methods append its rows to tab:benchmark and tab:compliance
+only, so scope.tex, city.tex and stats.txt are computed on the X1 run table alone.
+
 Usage (from simulator/):
-  python tables_paper.py output/paper/main.csv --couriers-table output/paper/main_couriers.csv
+  python tables_paper.py output/paper/main.csv --couriers-table output/paper/main_couriers.csv \
+      --extra-runs output/paper/review.csv --extra-methods greedy_arrival
 """
 from __future__ import annotations
 
@@ -31,7 +37,7 @@ import numpy as np
 import pandas as pd
 
 CONFIGS = ['greedy', 'ilp', 'hier', 'brkga', 'brkga_fair_w40', 'mipfair_a030', 'paybrkga_l05']   # rule of Sec. 6.1 on the eligible statistic
-BENCHMARKS = {'greedy', 'ilp', 'hier', 'brkga'}
+BENCHMARKS = {'greedy', 'greedy_arrival', 'ilp', 'hier', 'brkga'}
 ALPHAS = [0.30, 0.35, 0.40, 0.45, 0.50]
 GINI_COL = 'gini_elig_hourly'
 COUR_COLS = ['run_id', 'gini_elig_hourly', 'gini_elig_active_hourly', 'gini_elig_total',
@@ -39,8 +45,8 @@ COUR_COLS = ['run_id', 'gini_elig_hourly', 'gini_elig_active_hourly', 'gini_elig
 
 
 def display_name(method: str) -> str:
-    base = {'greedy': r'\textbf{Greedy}', 'ilp': r'\textbf{ILP}', 'hier': r'\textbf{Hierarchical}',
-            'brkga': r'\textbf{BRKGA}'}
+    base = {'greedy': r'\textbf{Greedy}', 'greedy_arrival': r'\textbf{Greedy-Arrival}', 'ilp': r'\textbf{ILP}',
+            'hier': r'\textbf{Hierarchical}', 'brkga': r'\textbf{BRKGA}'}
     if method in base:
         return base[method]
     m = re.match(r'^(brkga_fair|mipfair|paybrkga)_(w|a|l)(\d+)(.*)$', method)
@@ -70,8 +76,11 @@ def display_name(method: str) -> str:
     return f'{name} ({par}' + (', ' + ', '.join(tags) if tags else '') + ')'
 
 
-def load(run_paths: List[str], couriers_table: str | None, all_seeds: bool) -> pd.DataFrame:
+def load(run_paths: List[str], couriers_table: str | None, all_seeds: bool,
+         keep_methods: List[str] | None = None) -> pd.DataFrame:
     runs = pd.concat([pd.read_csv(p) for p in run_paths], ignore_index=True)
+    if keep_methods:
+        runs = runs[runs['method'].isin(keep_methods)]
     cour_paths = []
     if couriers_table:
         cour_paths.append(couriers_table)
@@ -252,20 +261,51 @@ def main() -> None:
     ap.add_argument('--out-dir', default='output/paper/tables')
     ap.add_argument('--configs', default=','.join(CONFIGS), help='comma-separated methods for the three tables')
     ap.add_argument('--all-seeds', action='store_true')
+    ap.add_argument('--extra-runs', nargs='*', default=[],
+                    help='run tables whose --extra-methods rows join tab:benchmark and tab:compliance (same seeds as X1)')
+    ap.add_argument('--extra-methods', default='', help='comma-separated methods taken from --extra-runs, inserted '
+                    'after the longest configuration whose name prefixes them (greedy_arrival after greedy)')
     a = ap.parse_args()
     configs = a.configs.split(',')
     df = load(a.csv, a.couriers_table, a.all_seeds)
     cols = ['coverage_rate', 'overage_mean', GINI_COL, 'F_Gini', 'gini_elig_active_hourly', 'share_active_elig',
             'p25_elig_hourly', 'F_Deficit', 'pay_pct', 'cpu_min', 'share_elig']
     blk = df.groupby(['regime', 'method', 'instance'])[cols].mean().reset_index()
+    df_b, blk_b, configs_b = df, blk, configs
+    extra = [m for m in a.extra_methods.split(',') if m]
+    if bool(a.extra_runs) != bool(extra):
+        ap.error('--extra-runs and --extra-methods go together')
+    if extra:
+        need = df[['regime', 'instance', 'seed']].drop_duplicates()
+        parts = []
+        for m in extra:                     # each extra method must pair with every (regime, instance, seed) of X1
+            e = load(a.extra_runs, None, True, keep_methods=[m])
+            e = e[e['seed'].isin(df['seed'].unique())]
+            if e.empty:
+                ap.error(f'{m} is not in --extra-runs')
+            if len(need.merge(e[['regime', 'instance', 'seed']].drop_duplicates())) != len(need):
+                ap.error(f'{m} does not cover every (regime, instance, seed) of the main runs')
+            parts.append(e)
+        df_b = pd.concat([df] + parts, ignore_index=True)
+        blk_b = df_b.groupby(['regime', 'method', 'instance'])[cols].mean().reset_index()
+        configs_b = list(configs)
+        for m in extra:                     # after the longest configuration whose name prefixes it, in the given order
+            parent = max((c for c in configs_b if m.startswith(c + '_')), key=len, default=None)
+            if parent is None or (m not in BENCHMARKS and parent in BENCHMARKS):
+                configs_b.append(m)         # keeps the \hline between benchmarks and proposed policies in place
+            else:
+                pos = configs_b.index(parent) + 1
+                while pos < len(configs_b) and configs_b[pos].startswith(parent + '_'):
+                    pos += 1
+                configs_b.insert(pos, m)
     os.makedirs(a.out_dir, exist_ok=True)
-    bench = (r'\multicolumn{11}{l}{\textit{Manual regime}} \\' + '\n' + benchmark_rows(blk, 'manual', configs) + '\n'
+    bench = (r'\multicolumn{11}{l}{\textit{Manual regime}} \\' + '\n' + benchmark_rows(blk_b, 'manual', configs_b) + '\n'
              + r'\hline' + '\n' + r'\multicolumn{11}{l}{\textit{Auto-accept regime}} \\' + '\n'
-             + benchmark_rows(blk, 'autoaccept', configs) + '\n')
+             + benchmark_rows(blk_b, 'autoaccept', configs_b) + '\n')
     open(os.path.join(a.out_dir, 'benchmark.tex'), 'w', encoding='utf8').write(bench)
     open(os.path.join(a.out_dir, 'scope.tex'), 'w', encoding='utf8').write(scope_rows(blk, configs) + '\n')
     open(os.path.join(a.out_dir, 'compliance.tex'), 'w', encoding='utf8').write(
-        compliance_rows(compliance_table(df, configs)) + '\n')
+        compliance_rows(compliance_table(df_b, configs_b)) + '\n')
     open(os.path.join(a.out_dir, 'city.tex'), 'w', encoding='utf8').write(city_rows(blk, df, configs) + '\n')
     txt = stats_text(df, blk, configs)
     open(os.path.join(a.out_dir, 'stats.txt'), 'w', encoding='utf8').write(txt)

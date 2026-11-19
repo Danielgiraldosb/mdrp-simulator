@@ -142,7 +142,7 @@ ABLATIONS['mipfair_a030_xk50_e000'] = dict(policy='mip_fair', cfg={'mipfair_alph
 E11_BOTH_REGIMES = ['brkga_fair_w40_xk50', 'mipfair_a030_xk50_e000']
 
 # Review level 2 (2026-11-03): ILP on MIP-Fair's candidate pairs (k = 8), a courier-centric benchmark without the
-# least-served priority (arrival order), and the fleet thinned to the field ratio of orders per connected hour
+# least-served priority (arrival order), and the fleet thinned to one courier in three (supply scenario)
 # (keep 1/3: zone 0.40, city 0.35, survey 1.19 orders per connected courier-hour; diag_supply.py).
 THIN_KEEP = 1.0 / 3.0
 REVIEW: Dict[str, Dict[str, Any]] = {
@@ -370,7 +370,7 @@ def estimate(pilot_csv: str, instances_dir: str, radius: float, seeds: int, work
     corp = df[(df['method'] == 'greedy')]
     if len(corp):
         g = corp['F_Gini'].mean()
-        print(f"\nCorporate (greedy, manual) mean end-of-day F_Gini = {g:.3f}  "
+        print(f"\nGreedy (manual) mean end-of-day F_Gini = {g:.3f}  "
               f"-> alpha grid {'stays' if 0.35 <= g <= 0.55 else 'MUST be recentred (see diseno-experimental.md §2)'}")
     big = df.sort_values('n_orders').iloc[-1]
     worst = df[df['instance'] == big['instance']]['wall_clock_sec'].max() / 60.0

@@ -61,7 +61,7 @@ def pilot_tables(df: pd.DataFrame) -> str:
     corp = df[(df['method'] == 'greedy') & (df['regime'] == 'manual')]
     if len(corp):
         g = corp.groupby('city')['F_Gini'].mean()
-        lines.append('\n== corporate (greedy, manual) end-of-day F_Gini by city ==')
+        lines.append('\n== greedy (manual) end-of-day F_Gini by city ==')
         lines.append(g.round(3).to_string())
         gm = float(corp['F_Gini'].mean())
         lines.append(f'mean = {gm:.3f} -> alpha grid '

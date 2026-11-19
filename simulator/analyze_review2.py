@@ -6,7 +6,7 @@
   B. Courier-centric dispatcher in arrival order (greedy_arrival) against the least-served-first Greedy of X1 and
      the order-centric policies: how much of Greedy's equity is the courier-centric structure and how much the
      least-served priority?
-  C. Fleet thinned to the field ratio (keep 1/3): Greedy, BRKGA-Fair (gamma = 40) and its second-generation variant
+  C. Fleet thinned to one courier in three (supply scenario, keep 1/3): Greedy, BRKGA-Fair (gamma = 40) and its second-generation variant
      (k_d = 25), against the same configurations with the full fleet on seeds 1-5: does the gap survive?
 
     python analyze_couriers.py output/paper/review.csv --out output/paper/review_couriers.csv

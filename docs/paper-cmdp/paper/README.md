@@ -1,4 +1,4 @@
-# Manuscript: Fair dispatching with price-responsive couriers (EJOR)
+# Manuscript: Who gets the work? End-of-day earnings fairness and price-responsive couriers in meal-delivery dispatching (EJOR)
 
 This folder is the Overleaf project. It is also a `git subtree` of the main repository
 `Danielgiraldosb/mdrp-simulator` (path `docs/paper-cmdp/paper/`), published as the standalone

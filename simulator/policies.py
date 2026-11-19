@@ -85,7 +85,7 @@ def _remove_from_groups(by_store: Dict[Tuple[float, float], List[Order]], route:
             del by_store[key]
 
 
-# -- Greedy (corporate baseline) -----------------------------------------------------
+# -- Greedy (courier-centric benchmark) -----------------------------------------------------
 
 class GreedyPolicy(Policy):
     """

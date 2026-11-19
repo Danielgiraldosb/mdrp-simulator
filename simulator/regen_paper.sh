@@ -7,7 +7,8 @@ O=output/paper
 for s in main gen2 supp threshold review; do
   python analyze_couriers.py $O/$s.csv --out $O/${s}_couriers.csv > $O/${s}_couriers_all.txt 2>&1
 done
-python tables_paper.py $O/main.csv --couriers-table $O/main_couriers.csv > $O/tables_stdout.txt 2>&1
+python tables_paper.py $O/main.csv --couriers-table $O/main_couriers.csv \
+  --extra-runs $O/review.csv --extra-methods greedy_arrival > $O/tables_stdout.txt 2>&1
 python tables_paper.py $O/main.csv $O/gen2.csv --couriers-table $O/main_couriers.csv \
   --configs greedy,brkga_fair_w40,brkga_fair_w20_xk,brkga_fair_w40_xk25,mipfair_a030,mipfair_a030_xk_e000,mipfair_a030_xk25_e000,paybrkga_l05,paybrkga_l05_xk \
   --out-dir $O/tables/gen2 > $O/tables_gen2_stdout.txt 2>&1
