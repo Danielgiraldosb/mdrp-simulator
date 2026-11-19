@@ -19,7 +19,7 @@ Dos decisiones de la tabla siguiente quedaron sin efecto: el artículo se queda 
 | P11 | Ver P38 |
 | P12–P18 | Hecho por David (`17a9a33`) |
 | P19–P22 | Hecho (`74f9855`, issues #2–#6) |
-| P23 | Título aplicado (decidido en #12): "Who gets the work? End-of-day earnings fairness and price-responsive couriers in meal-delivery dispatching". Contribuciones: en espera (#12) |
+| P23 | Título aplicado (decidido en #12): "Who gets the work? End-of-day earnings fairness and price-responsive couriers in meal-delivery dispatching". Contribuciones aplicadas (19 nov, visto bueno de David): modelado; diagnóstico (población y base del historial) más el remedio (exposición y prefiltro k_d) y la linealización por bloques; gerencial, con la oferta como escenario de sensibilidad y la recomendación condicionada a ella. Resumen recortado a 229 palabras. α* = 0,40 con BRKGA-Fair (γ = 40, k_d = 50): 54 % (manual) y 73 % (auto-accept) de los días; filas de k_d = 50 en la tabla de cumplimiento |
 | P24 | Hecho (`a3fbe4e`) |
 | P25 | Hecho: $K$ del decodificador → $K^{\text{dec}}$ (7 apariciones: §4.2 ×3, §5.4, Tabla B.4, Algoritmo 2, Apéndice C.7); $w$ → $\gamma$ en la Tabla C.7; $E(x_t)$ → $\text{Em}(x_t)$. El costo ya era $\mathcal{C}$; la transición $\mathcal{T}$ se deja como está |
 | P26 | Hecho: frase de §8 (con la excepción de Hierarchical en manual), pie de la Tabla 2 ($\FGa$ y $\FD$), encabezado "who delivered" en la Tabla C.16 |
