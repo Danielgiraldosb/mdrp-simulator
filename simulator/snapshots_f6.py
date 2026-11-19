@@ -32,6 +32,8 @@ OUT_DIR = os.path.join(THIS_DIR, 'output', 'paper', 'f6')
 FIG_DIR = os.path.normpath(os.path.join(THIS_DIR, '..', 'docs', 'paper-cmdp', 'paper', 'figures'))
 MIN_SHIFT_MIN = 60.0
 
+from figures_paper import TEXTWIDTH_IN, policy_style   # one style for every figure of the paper (P35)
+
 
 def gini(values) -> float:
     v = np.sort(np.asarray(values, dtype=float))
@@ -94,37 +96,17 @@ def trajectory(deliveries: pd.DataFrame, couriers: pd.DataFrame, step_min: float
     return pd.DataFrame(rows)
 
 
-LABEL = {'greedy': 'Greedy', 'hier': 'Hierarchical', 'ilp': 'ILP', 'brkga': 'BRKGA'}
-COLOUR = {'greedy': 'k', 'hier': '#969696', 'ilp': '#2171b5', 'brkga': '#41ab5d'}
-
-
 def _label(m: str) -> str:
-    if m in LABEL:
-        return LABEL[m]
-    if m.startswith('mipfair'):
-        return 'MIP-Fair' + (' (2nd gen.)' if '_x' in m else '')
-    if m.startswith('brkga_fair'):
-        return 'BRKGA-Fair' + (' (2nd gen.)' if '_x' in m else '')
-    if m.startswith('paybrkga'):
-        return 'Pay-BRKGA'
-    return m
-
-
-def _colour(m: str) -> str:
-    if m in COLOUR:
-        return COLOUR[m]
-    if m.startswith('mipfair'):
-        return '#d94801' if '_x' not in m else '#fd8d3c'
-    if m.startswith('brkga_fair'):
-        return '#238b45' if '_x' not in m else '#74c476'
-    return '#6a51a3'
+    return policy_style(m)[0] + (' (2nd gen.)' if '_x' in m else '')
 
 
 def plot(args) -> None:
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
-    plt.rcParams.update({'font.size': 9, 'axes.spines.top': False, 'axes.spines.right': False, 'figure.dpi': 150})
+    plt.rcParams.update({'font.size': 8, 'axes.titlesize': 8, 'axes.labelsize': 8, 'xtick.labelsize': 8,
+                         'ytick.labelsize': 8, 'legend.fontsize': 8, 'axes.spines.top': False,
+                         'axes.spines.right': False, 'figure.dpi': 150})
     curves = {}
     for m in args.methods:
         stem = os.path.join(OUT_DIR, f'{args.instance}_{m}_{args.regime}_s{args.seed}')
@@ -132,23 +114,26 @@ def plot(args) -> None:
             print('missing', stem)
             continue
         curves[m] = trajectory(pd.read_csv(stem + '_deliveries.csv'), pd.read_csv(stem + '_couriers.csv'))
-    fig, axes = plt.subplots(1, 2, figsize=(8.4, 3.3), sharex=True)
+    fig, axes = plt.subplots(1, 2, figsize=(TEXTWIDTH_IN, 0.4 * TEXTWIDTH_IN), sharex=True, sharey=True)
     for m, t in curves.items():
         h = t['time_min'] / 60.0
-        axes[0].plot(h, t['gini_elig'], color=_colour(m), lw=1.4, label=_label(m))
-        axes[1].plot(h, t['gini_active'], color=_colour(m), lw=1.4, label=_label(m))
-    for ax, title in zip(axes, ('eligible couriers connected so far, idle at zero (Eq. of the paper)',
-                               'active couriers so far (statistic read by the first-generation policies)')):
+        _, col, _, ls = policy_style(m)
+        axes[0].plot(h, t['gini_elig'], color=col, ls=ls, lw=1.4, label=_label(m))
+        axes[1].plot(h, t['gini_active'], color=col, ls=ls, lw=1.4, label=_label(m))
+    for ax, title in zip(axes, ('Eligible couriers, idle at zero (Eq. (7))', 'Couriers with at least one delivery')):
         ax.axhline(args.alpha, color='#999999', lw=0.8, ls='--')
-        ax.text(0.3, args.alpha + 0.01, f'$\\alpha$ = {args.alpha:.2f}', fontsize=7, color='#666666')
+        ax.text(1.4, args.alpha + 0.015, f'$\\alpha$ = {args.alpha:.2f}', color='#666666')
         ax.set_xlabel('time of day (h)')
         ax.set_xlim(0, 24)
         ax.set_xticks(range(0, 25, 4))
         ax.set_ylim(0, 1)
-        ax.set_title(title, fontsize=7.5)
-    axes[0].set_ylabel('Gini of earnings per connected hour so far')
-    axes[0].legend(fontsize=7, frameon=False, loc='upper right')
-    fig.suptitle(f"instance {args.instance.split('_')[-1]} ({args.regime} regime, seed {args.seed})", fontsize=8, y=1.0)
+        ax.set_title(title)
+    axes[0].set_ylabel('Gini of earnings per\nconnected hour so far')
+    fig.tight_layout()
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 0.0), ncol=len(labels), frameon=False,
+               handlelength=2.5, title=f"instance {args.instance.split('_')[-1]} ({args.regime} regime, seed {args.seed})",
+               title_fontsize=8)
     os.makedirs(FIG_DIR, exist_ok=True)
     for ext in ('pdf', 'png'):
         fig.savefig(os.path.join(FIG_DIR, f'F6_intraday_gini.{ext}'), bbox_inches='tight')

@@ -4,7 +4,7 @@ Este documento reemplaza a todos los anteriores (`correcciones_main_v53.md`, `ca
 
 Lo revisé contra el `main.tex`, el `references.bib` y el PDF de 53 páginas del repositorio (HEAD 76c726f), contra los datos de `real_instancies/` y contra las páginas renderizadas del PDF.
 
-## Estado de ejecución (rama `correcciones-v53`, actualizado el 18 nov 2026)
+## Estado de ejecución (rama `correcciones-v53`, actualizado el 19 nov 2026)
 
 Dos decisiones de la tabla siguiente quedaron sin efecto: el artículo se queda con **24 instancias** (la instancia 1 era una copia de la 3; se restauró el día de Cali, ver #11), y **"ablation" no se cambia** (P29 rechazado).
 
@@ -15,7 +15,7 @@ Dos decisiones de la tabla siguiente quedaron sin efecto: el artículo se queda 
 | P7 | Resuelto sin ampliar el Apéndice A (#7–#10, `74f9855`) |
 | P8 | Hecho, leídos los dos artículos: Sühr et al. 2019 (income per active time, month, perfect, —, ✓ historia acumulada en el objetivo, ✓ datos de una empresa de taxis asiática) y Xu y Xu 2020 (match-rate max–min, instance, exogenous, —, —, ✓ viajes de taxi de NYC). Corregida la frase de §2, que decía "perfect acceptance" también para Xu y Xu |
 | P9 | Hecho (`a3fbe4e`) |
-| P10 | Pendiente: verificar las citas en el PDF |
+| P10 | Hecho (19 nov): las citas salen "Giraldo-Herrera and Álvarez-Martínez (2026, 2024)" y "(… 2026)", sin TODO. En §4.2: "where it was evaluated on the same 24 instances against a greedy dispatching baseline" (el MIC 2026 usa las mismas instancias pero compara con un "Business Model", no con la regla de la plataforma; por #14 b no se dice "platform's rule") |
 | P11 | Ver P38 |
 | P12–P18 | Hecho por David (`17a9a33`) |
 | P19–P22 | Hecho (`74f9855`, issues #2–#6) |
@@ -28,10 +28,10 @@ Dos decisiones de la tabla siguiente quedaron sin efecto: el artículo se queda 
 | P29 | Rechazado: "ablation" se queda |
 | P30 | Hecho: párrafo al final de §4.1 que define courier-centric y order-centric por cómo se decide la ronda (no por la restricción de una ruta por mensajero, que comparten todas las políticas) |
 | P31 | Hecho: las negritas no faltaban por error, sino por la regla de `tables_paper.py` (empates sin negrita). Nueva regla en `fmt_bold`: empates parciales todos en negrita, empate total sin negrita; 8 celdas marcadas en las Tablas 2, C.8 y C.9 (y en sus `.tex` generados) y aclaración en §6.1 sobre la cobertura en auto-accept |
-| P32 | Para David (requiere compilar), junto con P33–P36 |
-| P33–P36 | Para David (requieren regenerar figuras o compilar) |
-| P37 | Parte 1 hecha (18 nov): la encuesta da 0,35 pedidos por hora conectada sin racha y 1,15 en racha (verificado con los microdatos); los registros dan 0,36–0,40. El "1.2" salía de 2.622 COP/h (ingreso con incentivos y propinas) / 2.200 COP (pago por pedido sin ellos). Reescritas como escenario de sensibilidad (flota a un tercio, cerca de la tasa en racha) todas las frases de "three times", "over-supply" y "field ratio": resumen, viñeta de §1, §5.1, §6.4, §7, §8, Limitaciones, Apéndice C y pie de la Tabla C. Parte 2 (umbral de elegibilidad 0,5 / 1 / 2 h): para David, requiere `output/paper/couriers/*.csv` |
-| P38–P39 | Pendiente |
+| P32 | Hecho (19 nov): (B.1)–(B.6) y (B.8)–(B.9) en `align`, (B.7) en `split` con `\label{eqn:app_gini}`; sin `{\small ...}`; el desborde de 115 pt desapareció |
+| P33–P36 | Hecho (19 nov): `POLICY_STYLE` único en `figures_paper.py` (también en `snapshots_f6.py`); figuras al ancho de inclusión con letra de 8 pt y leyendas fuera de los ejes; Figuras 1 y C.3 con paneles lado a lado y una etiqueta con flecha por barrido (los puntos de α y de λ_pay casi coinciden, así que se rotula el rango); Figura 2 con los títulos pedidos y solo α = 0,40; F1 con el cargador (conteos = Tabla C.2) y "median store location" en §5.1 (resto de P18). P36: contadores por sección del apéndice (B.4→B.1; C.5–C.20→C.1–C.16; figuras C.3–C.8→C.1–C.6), tablas de texto con columnas `p{}` y cinco tablas anchas en `sidewaystable`; ninguna bajo 7 pt |
+| P37 | Parte 1 hecha (18 nov): la encuesta da 0,35 pedidos por hora conectada sin racha y 1,15 en racha (verificado con los microdatos); los registros dan 0,36–0,40. El "1.2" salía de 2.622 COP/h (ingreso con incentivos y propinas) / 2.200 COP (pago por pedido sin ellos). Reescritas como escenario de sensibilidad (flota a un tercio, cerca de la tasa en racha) todas las frases de "three times", "over-supply" y "field ratio": resumen, viñeta de §1, §5.1, §6.4, §7, §8, Limitaciones, Apéndice C y pie de la Tabla C. Parte 2 hecha (19 nov, `eligibility_thresholds.py`): el ranking Greedy < resto se mantiene con 0,5, 1 y 2 h en ambos regímenes; tabla en C.6 y frase en §6.1 |
+| P38–P39 | P39 hecho (19 nov; informe en la issue #16). P38 abierto: el cuerpo con referencias termina en la p. 37 (límite 35); multibib no ayuda (las 50 referencias se citan en el cuerpo); propuesta de recorte en la issue, sin aplicar |
 
 Issues del informe de árbitro aplicadas el 18 nov: **#14 opción (b)** (Greedy como benchmark courier-céntrico con prioridad de equidad, no como práctica de la plataforma; criterio A = "courier-centric anchor"; **Greedy-Arrival** como segundo benchmark en la Tabla 2 y en la tabla de cumplimiento, desde el lote `review` con `tables_paper.py --extra-runs`) y **#15 opción (a)** (anclas de α recalculadas con los microdatos como Gini del ingreso por hora conectada: 0,28 en racha y 0,41 sin racha; antes 0,26 y 0,39 del ingreso diario; `simulator/survey_anchors.py`).
 

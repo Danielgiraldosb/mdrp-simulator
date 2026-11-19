@@ -112,6 +112,25 @@ def main():
             x = sel(R, m, r)
             P(f'  {r:10s} {m:26s} FG {lv(x, "gini_elig_hourly"):.4f} cov {lv(x, "coverage_rate"):.4f} active {lv(x, "share_active_elig"):.3f} '
               f'c30 {100 * (x.gini_elig_hourly <= 0.30).mean():.0f} c25 {100 * (x.gini_elig_hourly <= 0.25).mean():.0f}')
+    # corrections v53 (d745164, 18 nov): Greedy-Arrival in the body, compliance at 0.30, lateness of Greedy, supply by city
+    P('\n######## corrections v53')
+    X10 = X[X.seed.isin(R[R.method == 'greedy_arrival'].seed.unique())]
+    for r in ('manual', 'autoaccept'):
+        ga = sel(R, 'greedy_arrival', r)
+        P(f'  {r:10s} greedy_arrival FG {lv(ga, "gini_elig_hourly"):.4f} active {lv(ga, "share_active_elig"):.3f} '
+          f'FGact {lv(ga, "F_Gini"):.4f} FD {lv(ga, "F_Deficit"):.4f} p25 {lv(ga, "p25_elig_hourly"):.1f} '
+          f'min FD by run {ga.F_Deficit.min():.3f} c30-c50 {[round(100 * (ga.gini_elig_hourly <= x).mean()) for x in (0.30, 0.40, 0.50)]}')
+        oc = ['ilp', 'hier', 'brkga', 'brkga_fair_w40', 'mipfair_a030', 'paybrkga_l05']
+        c30 = {m: 100 * (sel(X10, m, r).gini_elig_hourly <= 0.30).mean() for m in oc}
+        c30.update({m: 100 * (sel(G, m, r).gini_elig_hourly <= 0.30).mean() for m in ('brkga_fair_w40_xk25', 'mipfair_a030_xk25_e000')})
+        P(f'  {r:10s} compliance at 0.30 (%), order-centric of tab:compliance: max {max(c30.values()):.1f}', {m: round(v, 1) for m, v in c30.items()})
+        gl = lv(sel(X, 'greedy', r), 'overage_mean')
+        dl = {m: gl - lv(sel(X, m, r), 'overage_mean') for m in oc}
+        P(f'  {r:10s} lateness Greedy minus order-centric (min): {min(dl.values()):.2f} to {max(dl.values()):.2f}')
+    sup = pd.read_csv(os.path.join(a.data, 'supply.csv')).groupby('city')[['orders_zone', 'hours_zone']].sum()
+    P('  orders per connected courier-hour in the zones by city (pooled over its days; text: 0.39-0.42 Bogota/Medellin, '
+      '0.22-0.27 Bucaramanga/Pereira):\n' + (sup.orders_zone / sup.hours_zone).round(3).to_string())
+    P('  survey numbers (anchors 0.41 / 0.28, 0.35 / 1.15 orders per connected hour): survey_anchors.py on the raw file, not in the repo')
     # pilot circuity
     P('\n######## pilot')
     p10 = pd.read_csv(os.path.join(a.data, 'pilot.csv'))

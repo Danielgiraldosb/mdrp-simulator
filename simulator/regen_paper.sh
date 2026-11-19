@@ -20,4 +20,5 @@ python analyze_review.py > $O/review_tables_stdout.txt 2>&1
 python analyze_review2.py > $O/review_analysis.txt 2>&1
 python tables_extra.py --instances > $O/tables_extra_stdout.txt 2>&1
 python diag_supply.py > $O/supply_stdout.txt 2>&1
+python eligibility_thresholds.py > $O/eligibility_stdout.txt 2>&1
 echo regenerated
