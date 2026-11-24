@@ -1,0 +1,985 @@
+%% supplement.tex -- Supplementary material (online appendices A--C) of the EJOR manuscript main.tex.
+%% Moved out of main.tex on 2026-11-24 so that the manuscript meets the 35-page limit (which counts appendices).
+%% Cross-references to main.tex resolve through xr-hyper (\externaldocument{main}); compile main.tex first,
+%% then supplement.tex, then main.tex again. Same class and preamble as main.tex.
+
+\documentclass[a4paper,11pt,review,3p,authoryear]{elsarticle}
+\usepackage{xr-hyper} % before hyperref (loaded by orcidlink): refs into main.tex
+
+\usepackage{setspace}
+\onehalfspacing
+
+\usepackage{amssymb}
+\usepackage{amsmath}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\usepackage{amsthm}
+\usepackage{csquotes}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{comment}
+\usepackage[figuresright]{rotating} % sidewaystable for the widest tables of Appendix C; every landscape page turns the same way
+\usepackage{array} % >{\raggedright\arraybackslash}p{} columns: no hyphenated words in narrow cells
+\usepackage{placeins} % \FloatBarrier: the floats of a subsection stay before the next heading
+\newlength{\portraitwidth}\AtBeginDocument{\setlength{\portraitwidth}{\textwidth}} % text width of a portrait page (inside sidewaystable \textwidth is the page length)
+\usepackage[noend]{algorithmic}
+\usepackage{algorithm}
+\usepackage{mathtools}
+\usepackage{url}
+\usepackage{adjustbox}
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+\usepackage{multirow}
+\usepackage{paralist}
+\usepackage{pifont}
+\urlstyle{same}
+\usepackage[table]{xcolor}
+\usepackage{orcidlink} % after xcolor: it loads xcolor itself, and loading it first clashes with [table]
+\usepackage[most]{tcolorbox}
+\usepackage{float}
+\usepackage{microtype}
+\newcommand{\cmark}{\text{\ding{51}}}%
+\newcommand{\xmark}{\text{\ding{55}}}%
+
+\newtheorem{insight}{Insight}
+\newtcolorbox{mybox}{
+    enhanced jigsaw,
+    colback=white,
+    colframe=black,
+    arc=0mm,
+    boxrule=0mm,
+    leftrule=5pt,rightrule=0pt,toprule=0pt,bottomrule=0pt,
+    before skip=15pt, after skip=15pt
+}
+\newcommand{\Insight}[1]{\vspace{-0.25cm}\begin{mybox}\vspace{-0.25cm}\begin{insight} #1 \vspace{-0.25cm}\end{insight} \end{mybox}}
+
+\definecolor{safeblue}{RGB}{0,90,181}
+\newcommand{\rev}[1]{{\color{safeblue} #1}}
+\definecolor{safered}{RGB}{220,50,32}
+\newcommand{\todo}[1]{{\color{safered} [TODO: #1]}}
+
+% Natbib setup for author-year style (as in the director's manuscripts)
+\usepackage{natbib}
+ \bibpunct[, ]{(}{)}{,}{a}{}{,}%
+ \def\bibfont{\small}%
+ \def\bibsep{\smallskipamount}%
+ \def\bibhang{24pt}%
+ \def\newblock{\ }%
+ \def\BIBand{and}%
+
+%% Enable when the appendix switches to \citeAppx (otherwise BibTeX reports an empty Appx.aux):
+%% \usepackage[]{multibib}
+%% \newcites{Appx}{Appendix references}
+%% The director keeps a separate reference list for the appendix (\citeAppx, ReferencesAppx.bib) so that
+%% it does not count against the 35-page limit. The appendix of this draft still uses \cite; switch to
+%% \citeAppx and add ReferencesAppx.bib once the detailed review is final.
+
+% ---- figure helper: use the PDF when it exists, a framed placeholder otherwise ----------------
+\newcommand{\placeholderfig}[2]{\fbox{\parbox[c][#1][c]{0.9\linewidth}{\centering\color{gray}#2}}}
+\newcommand{\figorph}[4]{\IfFileExists{#1}{\includegraphics[width=#2]{#1}}{\placeholderfig{#3}{#4}}}
+
+% ---- problem-specific macros ---------------------------------------------------------------------
+\newcommand{\Hist}{\mathcal{H}}
+\newcommand{\FG}{F_{\text{Gini}}}
+\newcommand{\FGa}{F_{\text{Gini}}^{\text{act}}}
+\newcommand{\conn}{\mathrm{conn}}
+\newcommand{\FD}{F_{\text{Deficit}}}
+\newcommand{\FO}{F_{\text{Orders}}}
+\newcommand{\FM}{F_{\text{MaxMin}}}
+\DeclareMathOperator{\dist}{dist}
+\DeclareMathOperator{\earn}{earn}
+\DeclareMathOperator{\act}{act}
+\DeclareMathOperator{\busy}{busy}
+\DeclareMathOperator{\pay}{pay}
+\DeclareMathOperator{\ord}{ord}
+
+\externaldocument[][nocite]{main} % [nocite]: import labels, not the \bibcite entries
+
+\journal{European Journal of Operational Research}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{Supplementary material for: Who gets the work? End-of-day earnings fairness and price-responsive couriers in meal-delivery dispatching}
+
+\author[1]{Daniel Giraldo-Herrera\,\orcidlink{0009-0003-8243-723X}\corref{cor1}} \ead{ds.giraldoh@uniandes.edu.co} \cortext[cor1]{Corresponding Author}
+\author[1]{David \'Alvarez-Mart\'inez} \ead{d.alvarezm@uniandes.edu.co}
+
+\affiliation[1]{organization={Department of Industrial Engineering, Universidad de los Andes}, addressline={Cra. 1 No 18a-12}, postcode={111711}, city={Bogot\'a}, country={Colombia}}
+
+\end{frontmatter}
+
+\appendix
+\counterwithin*{table}{section}  % Table A.1, B.1, C.1, ... (the class prefixes the letter but does not reset)
+\counterwithin*{figure}{section}
+\counterwithin*{algorithm}{section}
+\renewcommand{\thealgorithm}{\Alph{section}.\arabic{algorithm}} % Algorithm B.1: distinct from Algorithm 1 of the paper
+
+\section*{Contents of the supplementary material}
+
+This supplementary material accompanies the paper and keeps its numbering: Appendix~A presents a more detailed literature review, Appendix~B an illustrative example of the decision process, the algorithmic details and the complete formulation of the per-round programme of \textbf{MIP-Fair}, and Appendix~C the statistical procedure and additional computational results. Sections, equations, tables and figures without a letter refer to the paper.
+
+\section{Detailed literature review}
+\label{sec:App_literature_review}
+
+This section reviews the literature related to the three components of the problem: the operational MDRP, fairness and compensation in delivery platforms, and courier behaviour. Table~\ref{tab:Litclass} in the main body provides a systematic summary of their similarities and differences relative to our work.
+
+\subsection{Operational block}
+\label{sec:App_lit_operational}
+
+\cite{reyes2018meal} defined the MDRP as a rolling-horizon, dynamic-deterministic problem and released the Grubhub instance library; \cite{yildiz2019provably} obtained provably high-quality solutions for a deterministic variant; \cite{steever2019dynamic} revise assignments on every event; \cite{Ulmer2021} anticipate random ready times with approximate dynamic programming; and later contributions address shared logistics \citep{bi2023meal}, courier operating regions \citep{auad2023courier}, batching for crowdsourced fleets \citep{simoni2023crowdsourced}, ghost kitchens \citep{neria2024restaurant} and on-demand delivery from stores \citep{liu2021multiperiod}. In all of these, acceptance is perfect or exogenous.
+
+\subsection{Economic block}
+\label{sec:App_lit_economic}
+
+Most operational models pay a fixed amount per delivery or minimise distance as a cost proxy. \cite{reyes2018meal} and \cite{yildiz2019provably} include a shift-level guaranteed minimum set by the company; \cite{wen2010dynamic} balance workload and income opportunities within a multi-period routing model; \cite{lesmana2019balancing} trace the efficiency--fairness frontier of ride-sourcing; \cite{bajec2022strategic} use Shapley-value incentives; \cite{sobhanan2026equity} give equity--cost frontiers; \cite{gupta2022fairfoody}, \cite{nair2022work4food} and \cite{martinez2024exploring} bring fairness to food delivery. None integrates acceptance-dependent pay, a real tariff and an intertemporal guarantee within a rolling-horizon routing problem.
+
+\subsection{Behavioural block}
+\label{sec:App_lit_behavioural}
+
+\cite{liao2020multi} balance workload and argue that equitable distribution is an incentive; reinforcement-learning approaches \citep{ahamed2020deep,bozanta2022courier} include availability in the state but keep acceptance exogenous; \cite{haferkamp2023heatmap} address repositioning; \cite{quintero2020computational} makes acceptance depend on distance. The fair-machine-learning literature shows that short- and long-horizon fairness diverge \citep{corbettdavies2023measure}. \citet{cheng2025realtime} train deep Q-networks for dispatching and idle-courier steering on a fixed fleet paid by the hour; the fairness of the workload is reported ex post as the standard deviation of orders and delivery time per courier, but it is neither optimised nor part of the state.
+
+\section{Illustrative example and algorithmic details}
+\label{sec:App_alg_section}
+
+In this section, we first provide an illustrative numerical example connecting the sequential decision process to the dispatching decisions faced by the platform. We then present the complete per-round formulation of \textbf{MIP-Fair} and the tuning of the policy parameters.
+
+\subsection{Notation}
+\label{sec:App_notation}
+
+Table~\ref{tab:notation} collects the symbols used in Sections~\ref{sec:problem_definition} and \ref{sec:method}.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.40\textwidth} >{\raggedright\arraybackslash}p{0.55\textwidth}}
+\hline
+\textbf{Symbol} & \textbf{Meaning} \\
+\hline
+$t \in T = \{0, \dots, t_{\max}\}$ & decision points (one per two-minute window); $t_{\max}$ the last one \\
+$S_t = (\mathcal{L}_t, \mathcal{O}_t, \mathcal{P}_t, \Hist_t)$ & state: couriers, unassigned orders, preparation estimates, equity history \\
+$h_c(t) = (\earn_c, \ord_c, \busy_c)$ & earnings, orders delivered and busy minutes of courier $c$ up to $t$ \\
+$\conn_c(t)$, $w_c(t)$ & connected time since log-in, $\min(t, l_c) - e_c$; hourly earnings so far, $\earn_c(t)/\conn_c(t)$ \\
+$C$, $C^{e}$, $C_t^{\text{free}}$, $C_t$ & couriers; eligible (connected $\ge 1$ h); available at $t$; connected at $t$ \\
+$x_t$, $\mathcal{S}_t$, $K_t$ & decision (courier, route, pay triples); feasible routes; candidate pairs \\
+$\rho_{c,s}$, $\rho_0$, $\rho_1$, $m_c$, $\delta$ & pay offered; base fee and per-km rate of the tariff; pay multiplier and its band \\
+$z_{c,s}$, $\mathbf{z}_t$, $\theta$, $b$ & acceptance indicator and vector; logit threshold (COP/km) and slope \\
+$\omega_{t+1}$, $\mathcal{T}$, $\mathcal{C}$, $c_1$, $c_2$, $\lambda$ & exogenous information; transition; stage cost and its weights; payment weight \\
+$\FG$, $\FGa$, $\FM$, $\FO$, $\FD$, $\alpha$, $w^*$ & Gini over eligible / active couriers, max--min, order-count Gini, minimum-wage deficit, tolerated inequality, minimum wage \\
+$k$, $k_d$, $K^{\text{dec}}$ & nearest-courier prefilter; deficit-aware prefilter; couriers evaluated by the decoder per route \\
+$\gamma$, $\lambda_{\text{pay}}$, $\lambda_{\text{def}}$, $\lambda_{\text{tt}}$, $\mu$ & deficit weight of \textbf{BRKGA-Fair}; pay and deficit weights of \textbf{Pay-BRKGA}; travel-time and lateness weights of \textbf{MIP-Fair} \\
+$v$, $W_{\text{ref}}$, $d_{ij}$, $\varepsilon$ & Gini excess, its scale, the pairwise differences and the coverage slack of \textbf{MIP-Fair} \\
+$\kappa$, $\nu(v)$, $Q$, $\Delta^{\max}$ & circuity factor, vehicle speed, route capacity, slack on the promised time \\
+\hline
+\end{tabular}
+\caption{Notation}
+\label{tab:notation}
+\end{table}
+
+\subsection{Illustrative numerical example}
+\label{sec:example}
+
+We use a two-courier example to connect the components of Section~\ref{sec:SDP} with the dispatching decisions and to show why a policy that is fair within every window can be unfair at the end of the day. Couriers $A$ and $B$ are connected from 12:00 to 13:00, so $\conn_A(T) = \conn_B(T) = 60$ minutes whatever is dispatched; the tariff is flat at 2{,}200 COP per order; $B$ is slightly farther from the store than $A$. Four routes become available during the hour: at 12:00 a bundle of three orders from one store (pay 6{,}600 COP, duration 30 minutes including service), and at 12:30, 12:40 and 12:50 one singleton each (pay 2{,}200 COP, duration 8 minutes, so that the courier who takes one is free again before the next window). Coverage is the first priority of every policy, so all four routes are dispatched in every case; the question is to whom.
+
+At $t = $ 12:00 the state is $S_0$ with both couriers idle and $h_A(0) = h_B(0) = (0, 0, 0)$. Both the per-window policy and the history-aware policy dispatch the bundle to $A$, the nearer courier, since nothing distinguishes the two couriers yet. At $t = $ 12:30 the state contains $h_A = (6{,}600, 3, 30)$ and $h_B = (0, 0, 0)$, that is, hourly earnings so far of $w_A(t) = 13{,}200$ COP/h and $w_B(t) = 0$, and one singleton is available. Consider two decisions. The per-window policy balances the pay offered within the window among the free couriers: with a single route, the window statistic is the same whichever courier receives it (one courier is offered 2{,}200 and the other 0), so the tie is broken by distance and the singleton goes to $A$. The same happens at 12:40 and 12:50. The end-of-day hourly earnings are $w_A = 6{,}600 + 3 \times 2{,}200 = 13{,}200$ COP/h and $w_B = 0$, and by Eq.~\eqref{eqn:gini}
+\begin{equation*}
+\FG = \frac{2 \times |13{,}200 - 0|}{2 \times 2 \times 13{,}200} = 0.5.
+\end{equation*}
+The history-aware policy reads $\Hist_t$ at 12:30: $\text{deficit}_B = 1$ and $\text{deficit}_A = 0$ in Eq.~\eqref{eqn:brkgafair}, or equivalently $w_B(s) = 3{,}474$ and $w_A(s) = 13{,}895$ COP/h in Eq.~\eqref{eqn:mipfair_w} (projected to the end of the window), so the singleton goes to $B$, and likewise at 12:40 and 12:50. The end-of-day hourly earnings are $w_A = w_B = 6{,}600$ COP/h and $\FG = 0$, with the same coverage (six orders), the same connected time, and a difference in travel of a few hundred metres.
+
+This example highlights two points. First, the per-window statistic cannot distinguish the two decisions: within each window after 12:00 the pay offered is $(2{,}200, 0)$ whichever courier is chosen, so a policy that is fair within the window, such as the \textbf{Hierarchical} benchmark, is indifferent between an end-of-day Gini coefficient of $0.5$ and one of $0$. Second, what distinguishes them is the component $\Hist_t$ of the state, which records that $A$ has already earned 6{,}600 COP during the same connected time in which $B$ has earned nothing. The effect compounds when couriers connect at different times, when routes dispatched in different windows differ in value, and when some couriers are systematically nearer to the stores, which is why the \textbf{Hierarchical} policy raises the end-of-day Gini coefficient on real days (Section~\ref{sec:results_quality}).
+
+\subsection{The BRKGA decoder}
+\label{sec:App_decoder}
+
+Algorithm~\ref{alg:decoder} is the decoder shared by \textbf{BRKGA}, \textbf{BRKGA-Fair} and \textbf{Pay-BRKGA} (Section~\ref{sec:method}); the policies differ only in the score it minimises.
+
+\begin{algorithm}[htbp]
+\textbf{Input:} keys $\kappa_o$ for ready orders, $\kappa_c$ for available couriers, candidate pairs $K_t$, score function $\text{score}(s, c)$\\
+\textbf{Output:} assignment $A$
+\begin{algorithmic}[1]
+\STATE{$A \gets \emptyset$; mark all couriers free}
+\FOR{each store $r$ in decreasing order of $\max_{o: r_o = r} \kappa_o$}
+  \FOR{each order $o$ of $r$ in decreasing order of $\kappa_o$, not yet assigned}
+    \STATE{$\mathcal{S}_o \gets$ candidate routes headed by $o$ (singleton and the store bundle containing $o$)}
+    \STATE{$\mathcal{C}_o \gets$ the $K^{\text{dec}}$ free couriers with highest $\kappa_c$ among $\{c : (c,s) \in K_t,\ s \in \mathcal{S}_o\}$}
+    \IF{$\mathcal{C}_o \neq \emptyset$}
+      \STATE{$(s^*, c^*) \gets \argmin \{\text{score}(s, c) : s \in \mathcal{S}_o,\ c \in \mathcal{C}_o,\ (c,s) \in K_t\}$}
+      \STATE{$A \gets A \cup \{(c^*, s^*)\}$; mark $c^*$ busy and the orders of $s^*$ assigned}
+    \ENDIF
+  \ENDFOR
+\ENDFOR
+\RETURN{$A$}
+\end{algorithmic}
+\caption{BRKGA decoder shared by \textbf{BRKGA}, \textbf{BRKGA-Fair} and \textbf{Pay-BRKGA}}
+\label{alg:decoder}
+\end{algorithm}
+
+\subsection{Per-round formulation of MIP-Fair}
+\label{sec:app_MIP}
+
+At round $t$, let $C_t$ be the set of connected couriers, $C_t^{\text{free}} \subseteq C_t$ the free ones, $K_t$ the candidate pairs and $\mathcal{O}_t^{\text{ready}}$ the ready orders. Let $x_{cs} \in \{0,1\}$ for $(c,s) \in K_t$, $y_o \in \{0,1\}$ for $o \in \mathcal{O}_t^{\text{ready}}$, $w_c \ge 0$ for $c \in C_t$, $d_{ij} \ge 0$ for free--free pairs $i < j$, $\text{late}_o \ge 0$ and $v \ge 0$. The three stages of Eq.~\eqref{eqn:mipfair_lex} are solved over the following constraints:
+
+\begin{align}
+\sum_{(c,s) \in K_t : o \in s} x_{cs} & \ge y_o, && \forall o \in \mathcal{O}_t^{\text{ready}} \label{eqn:app_cover} \\
+\sum_{(c,s) \in K_t : o \in s} x_{cs} & \le 1, && \forall o \in \mathcal{O}_t^{\text{ready}} \label{eqn:app_once} \\
+\sum_{s : (c,s) \in K_t} x_{cs} & \le 1, && \forall c \in C_t^{\text{free}} \label{eqn:app_courier} \\
+w_c & = w_c^0 \Bigl(1 - \sum_{s} x_{cs}\Bigr) + \sum_{s} x_{cs}\, w_c(s), && \forall c \in C_t^{\text{free}} \label{eqn:app_w} \\
+w_c & = w_c^0, && \forall c \in C_t \setminus C_t^{\text{free}} \label{eqn:app_wfixed} \\
+d_{ij} & \ge w_i - w_j, \quad d_{ij} \ge w_j - w_i, && \forall i < j \in C_t^{\text{free}} \label{eqn:app_d}
+\end{align}
+\begin{equation}
+\begin{split}
+& \sum_{i<j \in C_t^{\text{free}}} d_{ij} + \sum_{i \in C_t^{\text{free}},\, j \notin C_t^{\text{free}}} \Bigl[\Bigl(1 - \sum_s x_{is}\Bigr)|w_i^0 - w_j^0| + \sum_s x_{is}\, |w_i(s) - w_j^0|\Bigr] \\
+& \qquad + \sum_{i<j,\; i,j \notin C_t^{\text{free}}} |w_i^0 - w_j^0| - \alpha\, n \sum_{c \in C_t} w_c \;\le\; n\, W_{\text{ref}}\, v
+\end{split}
+\label{eqn:app_gini}
+\end{equation}
+\begin{align}
+\text{late}_o & \ge \sum_{(c,s) \in K_t : o \in s} x_{cs}\, \max\bigl(0, \hat\tau_{\text{drop}}(c, s, o) - d_o\bigr), && \forall o \in \mathcal{O}_t^{\text{ready}} \label{eqn:app_late} \\
+& x_{cs} \in \{0,1\},\; y_o \in \{0,1\},\; d_{ij}, w_c, \text{late}_o, v \ge 0. && \label{eqn:app_dom}
+\end{align}
+
+Eq.~\eqref{eqn:app_cover} links coverage to dispatched routes and Eqs.~\eqref{eqn:app_once}--\eqref{eqn:app_courier} ensure that each order is in at most one dispatched route and each courier receives at most one. Eqs.~\eqref{eqn:app_w}--\eqref{eqn:app_wfixed} give the projected hourly earnings, linear in $x$ for free couriers and fixed for the others. Eq.~\eqref{eqn:app_d} defines the pairwise differences for free--free pairs only, and Eq.~\eqref{eqn:app_gini} is the Gini constraint of Eq.~\eqref{eqn:mipfair_gini} with the free--fixed block written out as linear terms and the fixed--fixed block as a constant; $n = |C_t|$ and $W_{\text{ref}}$ is the mean of $w_c^0$ over $C_t$ (or $w^*$ when that mean is zero). Eq.~\eqref{eqn:app_late} computes the projected lateness of each order under its dispatched route, and Eq.~\eqref{eqn:app_dom} defines the domains. Stage 1 maximises $\sum_o y_o$; stage 2 keeps $\sum_o y_o \ge (1 - \varepsilon) \sum_o y_o^*$, with $y^*$ the stage-1 optimum, and minimises $v$; stage 3 fixes $v^*$ and minimises $\lambda_{\text{tt}} \sum_{(c,s)} \tau_s x_{cs} + \mu \sum_o \text{late}_o$. We use $\lambda_{\text{tt}} = 0.01$ per minute of travel and $\mu = 0.02$ per minute of lateness, the tie-breaking weights of the \textbf{ILP} and \textbf{Hierarchical} policies.
+
+\paragraph{Size of the programme and order of the stages} This paragraph details Section~\ref{sec:mipfair}. Building $d_{ij}$ for all pairs is $O(n^2)$ per round, which is prohibitive with thousands of connected couriers: with 188 connected couriers the all-pairs model did not complete a two-hour slice of a Pereira day within four minutes of wall-clock time, and Bogot\'a would require 3.5 million pairs per round. The free--free block keeps $O(|C_t^{\text{free}}|^2)$ variables and the free--fixed block $O(|K_t|\,|C_t \setminus C_t^{\text{free}}|)$ coefficients; in the zones of Section~\ref{sec:instances} a round solves in $0.2$--$0.4$ s on average and in at most $7.6$ s (\ref{sec:App_metrics}), within the 10-second limit per stage. Coverage is placed first because the alternative order (equity first) collapses from a cold start: when every courier has earned nothing, any assignment raises the projected Gini coefficient, so \enquote{assign nothing} minimises $v$ in every round and the system never starts (coverage $0.000$ on the pilot day from a cold start; $0.310$ over the 27 runs of the ablation in Table~\ref{tab:ablations}).
+
+\subsection{Tuning of the policy parameters}
+\label{sec:app_tuning}
+
+The candidate prefilter of \textbf{MIP-Fair} (Section~\ref{sec:implementation}) keeps $k = 8$ couriers per route for budget reasons: with $k = 25$ a two-hour window of Bogot\'a did not finish within seven minutes, while with $k = 8$ it takes 4.5 minutes and covers 0.443 against 0.437 for \textbf{Greedy}.Table~\ref{tab:ablations} in \ref{sec:App_ablations} reports the two tuning ablations on the 24 instances: the BRKGA with population 20 and 20 generations leaves coverage unchanged and raises the end-of-day Gini coefficient by $0.007$ at almost three times the CPU time, and the \textbf{MIP-Fair} prefilter with $k = 25$ lowers it by $0.039$ and raises coverage by $0.008$ at eight times the CPU time (31 minutes per day on average, 227 at most, and beyond the four-hour timeout on the largest Bogot\'a day on four or five of the seeds, depending on the configuration); the deficit-aware prefilter of Section~\ref{sec:results_quality} obtains more than twice that reduction for the same order of CPU time. The settings of Section~\ref{sec:implementation} are therefore kept. In the pilot, the BRKGA-type policies take 9--10 seconds for a full day of Pereira and 30--35 seconds for a two-hour window of Bogot\'a, the \textbf{Hierarchical} policy 16 and 39 seconds, and \textbf{MIP-Fair} with $k = 8$ 36 seconds and 4.5 minutes, respectively; a BRKGA with population 20 and 20 generations did not change coverage on Pereira.
+
+\subsection{Verification against enumeration and the all-pairs model}
+\label{sec:App_verification}
+
+The four pieces (BRKGA port, \textbf{BRKGA-Fair}, \textbf{MIP-Fair}, \textbf{Pay-BRKGA}) are covered by unit tests against exhaustive enumeration on a test instance of three couriers and four orders: the candidate sets coincide with those of the \textbf{ILP} and the \textbf{Hierarchical} policy (18 pairs); the $\text{score}_{\text{fpo}}$ decoder reaches the exhaustive optimum of its fitness; \textbf{MIP-Fair} with $\alpha = 0$ coincides with the exhaustive lexicographic optimum under both priorities and both earnings bases, and with $\alpha = 1$ covers 4 of 4 orders like the \textbf{ILP}; the block linearisation reproduces the all-pairs model; and for \textbf{Pay-BRKGA}, with $\lambda_{\text{pay}}$ alone all offers fall below the tariff, with $\lambda_{\text{def}}$ alone the under-paid courier receives an offer above the tariff and leaves the deficit, and expected coverage equals coverage times the acceptance rate under a fixed-probability model. On real rounds, both formulations of \textbf{MIP-Fair} ($\alpha = 0.30$, $k = 8$, first generation, manual regime, seed 1) were solved on the same candidate pairs and histories in every round of 11:00--13:00 on instance 10 and 12:00--14:00 on instance 4, the block decision driving the simulation: in all 117 rounds the Gini constraint was binding ($v^* > 0$) and the coverage and $v$ optima coincide exactly; the population had a median of 122 and 168 couriers, the pair variables fell from 7{,}381 and 14{,}028 to 78 and 105, and the mean solve time from 1.2 and 2.1 s to 0.04 and 0.05 s per round (\texttt{simulator/diag\_blocks.py}).
+
+\section{Additional results of the experiments}
+\label{sec:App_add_results}
+
+In this section, we provide the detail that complements the main results: the instances, parameters and factors of the study and the statistical procedure, the results by city, the second generation paired with its parents, the metrics not reported in the main tables, the compliance and the earnings by population, the ablations of X3, the Gini coefficient under the sensitivity settings together with the regime loss and the choice of $\alpha$, and the emissions diagnostic.
+
+\subsection{Instances, parameters, factors and statistical procedure}
+\label{sec:App_instances}
+
+Table~\ref{tab:instances} lists the 24 instances described in Section~\ref{sec:instances}, Table~\ref{tab:parameters} the parameters of the simulation with their values, sources and evidence grade, and Table~\ref{tab:factors} the factors and levels of the computational study of Section~\ref{sec:design}; Figure~\ref{fig:map} shows a 3-km zone and Figure~\ref{fig:acceptance} the acceptance curve of Eq.~\eqref{eqn:acceptance}. Each day is projected on a plane centred on the median store location, discarding a few points hundreds of kilometres away.
+
+\paragraph{Computational effort} Section~\ref{sec:design} gives the runs of each experiment. In total 14{,}935 runs and 1{,}295 CPU-hours: a run took 2.9 minutes on average in X1, 7.1 in the second generation of X3, 7.4 in X2, 18.7 in the ablations and 1.8 in the review experiment.
+
+\paragraph{Metrics and statistical procedure} This paragraph details Section~\ref{sec:metrics}. For every run we record the two components of the cost of Eq.~\eqref{eqn:cost} separately, coverage (fraction of orders delivered) and mean and total lateness, the number of late orders, click-to-door mean and 90th percentile, the end-of-day $\FG$, $\FM$, $\FO$ and $\FD$, total payment, the number of active couriers, the mean bundle size, the mean and maximum solve time per round, and the wall-clock time; emissions follow from the per-courier distances by vehicle. The reported Gini coefficient is one and the same for all policies, Eq.~\eqref{eqn:gini} over the eligible couriers, computed ex post from the per-courier table of every run; the active-courier statistic $\FGa$ is reported beside it, and the scope used inside a policy affects what it optimises, not what is measured. To compare the policies, we compute for each policy $\pi$ and instance $i$ the average $\bar y_i^{\pi}$ of a metric over the ten seeds and report the mean over the 24 instances together with its standard error, $\mathrm{SE} = \mathrm{SD}/\sqrt{N}$ with $N = 24$ and SD the sample standard deviation across instances. The cost of the guarantee is the paired difference $\bar y_i^{\pi} - \bar y_i^{\textbf{Greedy}}$ with a 95\% percentile bootstrap interval (2{,}000 resamples) over the 24 instances (instance as block, seeds averaged within); the paired differences between a variant and its parent in Section~\ref{sec:results_quality} and in \ref{sec:App_gen2} and \ref{sec:App_ablations} are over the (instance, seed) pairs with the normal approximation $\pm 1.96\,\mathrm{SE}$. The share of the gap to \textbf{Greedy} closed by a variant is $1 - (\bar F^{\text{var}} - \bar F^{\textbf{Greedy}})/(\bar F^{\text{par}} - \bar F^{\textbf{Greedy}})$, a ratio of means over instances on the same seeds, so that it can be recomputed from the tables. Compliance is the fraction of (instance, seed) pairs, which we call days for short, with $\FG \le \alpha$ by policy and $\alpha$, computed ex post, so the grid of $\alpha$ can be extended without new runs. Under the flat tariff $\FO$ coincides with $\FGa$ for every policy that pays the tariff, so it is not reported separately; $\FM$, click-to-door and the solve time per round are in \ref{sec:App_metrics}. The regime loss is the paired difference manual minus auto-accept. Frontiers are the mean over (instance, seed) of $(\FG, \text{coverage})$ and $(\FG, \text{lateness})$ at each level of the swept parameter, with the non-dominated envelope and the knee selected by the maximum distance from the chord between the extremes, applied identically to the three policies.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{minipage}[b]{0.495\textwidth}
+    \centering
+    \figorph{figures/F1_zone_map.pdf}{\textwidth}{5cm}{F1: map of the 3-km zone of Bogot\'a (instance 0): stores, drop-offs and courier connection points.}
+    \caption{A 3-km dispatching zone in Bogot\'a}
+    \label{fig:map}
+  \end{minipage}
+  \begin{minipage}[b]{0.495\textwidth}
+    \centering
+    \figorph{figures/F2_acceptance_curve.pdf}{\textwidth}{5cm}{F2: logit acceptance curve on pay per km, $\theta = 903$, $b = 2.89$, 95\% band, auto-accept as $p = 1$.}
+    \caption{Acceptance probability as a function of pay per kilometre}
+    \label{fig:acceptance}
+  \end{minipage}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{p{0.25\textwidth}|p{0.29\textwidth}|p{0.29\textwidth}|c}
+\hline
+\textbf{Parameter} & \textbf{Value} & \textbf{Source} & \textbf{Grade} \\
+\hline
+Acceptance threshold $\theta$ & 903 COP/km (95\% [615; 1{,}242]) & interviews, 32 decisions / 11 couriers & C \\
+Acceptance slope $b$ & 2.89 (95\% [2.02; 5.23]) & interviews & C \\
+Acceptance regime & manual / auto-accept & interviews (A), survey 64\% & A \\
+Tariff $\rho_0$ & 2{,}200 COP per order, flat & survey ($n = 132$) & B \\
+Minimum wage $w^*$ & 4{,}367.91 COP/h & Decree 1785 of 2020: 908{,}526 / 208 h & -- \\
+In-store service & 20 min (base), 60 min (stress) & survey / interviews & B / C \\
+Drop-off service & 4 min & public instances & -- \\
+Decision delay & $16 \pm 8$ s & interviews (IQR 9--28 s) & C \\
+Speeds (bike/moto/walk/car) & 15 / 25 / 5 / 20 km/h & assumption & -- \\
+Circuity $\kappa$ & 1.3 (1.0 sensitivity) & assumption & -- \\
+Hard deadline $\Delta^{\max}$ & promised time + 30 min & assumption (interviews) & -- \\
+Route capacity $Q$ & 3 & simulator default & C \\
+Window & 2 min & platform practice & -- \\
+Emission factors & moto 0.114, car 0.167, bike/walk 0 kg CO$_2$e/km & \cite{defra2023factors} & -- \\
+\hline
+\end{tabular}
+\caption{Parameters, values, sources and evidence grade (A: consistent across at least 15 interviewees or clear convergence of both sources; B: 5--14 interviewees or a single solid source; C: fewer than 5, or a small-$n$ estimate with a wide interval)}
+\label{tab:parameters}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.1}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{cl|rrrr|c}
+\hline
+\textbf{Inst.} & \textbf{City} & \textbf{Orders} & \textbf{Couriers} & \textbf{Stores} & \textbf{Orders/courier} & \textbf{Vehicle mix (full city, \%: bike/moto/walk/car)} \\
+\hline
+0 & Bogot\'a & 10{,}215 & 2{,}650 & 926 & 3.9 & 45/39/9/7 \\
+6 & Bogot\'a & 9{,}743 & 2{,}489 & 997 & 3.9 & 43/39/10/8 \\
+12 & Bogot\'a & 5{,}618 & 1{,}967 & 859 & 2.9 & 44/41/6/9 \\
+18 & Bogot\'a & 5{,}875 & 1{,}931 & 912 & 3.0 & 39/39/11/11 \\
+2 & Medell\'in & 6{,}169 & 1{,}692 & 602 & 3.6 & 16/72/6/7 \\
+8 & Medell\'in & 5{,}778 & 1{,}773 & 628 & 3.3 & 15/71/7/7 \\
+14 & Medell\'in & 3{,}953 & 1{,}244 & 614 & 3.2 & 15/72/5/8 \\
+20 & Medell\'in & 3{,}918 & 1{,}259 & 587 & 3.1 & 15/70/7/8 \\
+5 & Barranquilla & 7{,}773 & 1{,}442 & 470 & 5.4 & 21/64/4/10 \\
+11 & Barranquilla & 7{,}116 & 1{,}532 & 474 & 4.6 & 22/63/4/11 \\
+17 & Barranquilla & 3{,}606 & 1{,}168 & 4{,}014$^{a}$ & 3.1 & 19/66/3/13 \\
+23 & Barranquilla & 3{,}612 & 1{,}046 & 431 & 3.5 & 20/59/5/15 \\
+1 & Cali & 1{,}779 & 595 & 257 & 3.0 & 21/72/3/4 \\
+7 & Cali & 1{,}813 & 745 & 269 & 2.4 & 21/72/2/5 \\
+13 & Cali & 1{,}262 & 488 & 260 & 2.6 & 21/73/2/5 \\
+19 & Cali & 1{,}292 & 476 & 264 & 2.7 & 22/71/2/5 \\
+3 & Bucaramanga & 1{,}851 & 574 & 216 & 3.2 & 9/89/1/1 \\
+9 & Bucaramanga & 1{,}527 & 610 & 218 & 2.5 & 9/89/1/1 \\
+15 & Bucaramanga & 976 & 536 & 202 & 1.8 & 7/90/1/1 \\
+21 & Bucaramanga & 948 & 498 & 204 & 1.9 & 9/87/2/1 \\
+4 & Pereira & 568 & 253 & 135 & 2.2 & 5/91/2/2 \\
+10 & Pereira & 498 & 277 & 140 & 1.8 & 6/90/2/2 \\
+16 & Pereira & 342 & 268 & 401$^{a}$ & 1.3 & 5/90/2/3 \\
+22 & Pereira & 374 & 246 & 122 & 1.5 & 6/89/3/3 \\
+\hline
+\multicolumn{7}{l}{$^{a}$ One store record per order in the export; does not affect the simulation.} \\
+\end{tabular}
+\end{adjustbox}
+\caption{The 24 instances: orders, couriers and stores in the 3-km zone, and vehicle mix of the full city}
+\label{tab:instances}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.15\textwidth}|>{\raggedright\arraybackslash}p{0.62\textwidth}|>{\raggedright\arraybackslash}p{0.13\textwidth}}
+\hline
+\textbf{Factor} & \textbf{Levels} & \textbf{Acts on} \\
+\hline
+Policy & \textbf{Greedy}, \textbf{ILP}, \textbf{BRKGA}, \textbf{Hierarchical}; \textbf{Greedy-Arrival} (review experiment); \textbf{BRKGA-Fair} $\gamma \in \{5, 10, 20, 40\}$ min; & round \\
+ & \textbf{MIP-Fair} $\alpha \in \{0.20, 0.25, 0.30, 0.35, 0.40, 1.00\}$; \textbf{Pay-BRKGA} $\lambda_{\text{pay}} \in \{0.1, 0.2, 0.5, 1.0\}$ & \\
+Acceptance regime & manual, auto-accept & Eq.~\eqref{eqn:acceptance} \\
+Logit threshold $\theta$ (X2, manual regime) & 615 / 903 / 1{,}242 COP/km, slope fixed at 2.89 & Eq.~\eqref{eqn:acceptance} \\
+Earnings basis and deficit prefilter $k_d$ (X3) & activity / exposure; $k_d \in \{0, 8, 25, 50\}$ & round \\
+Instance & 24 (six cities), 3-km zone & block \\
+Seed & 10 in X1, five in X2 and X3, the same in every cell & acceptance, delays, BRKGA \\
+\hline
+\end{tabular}
+\caption{Factors and levels of the computational study}
+\label{tab:factors}
+\end{table}
+
+\subsection{Results by city}
+\label{sec:App_by_city}
+
+Table~\ref{tab:city} repeats the manual-regime block of Table~\ref{tab:benchmark}, without \textbf{Greedy-Arrival}, for each of the six cities, with the compliance with $\alpha = 0.40$ as the last column. The central result holds city by city: \textbf{Greedy} is between $0.275$ (Medell\'in) and $0.323$ (Pereira) on the end-of-day Gini coefficient over the eligible couriers and meets $\alpha = 0.40$ on 85--100\% of the days in every city (Pereira lowest), while the six order-centric policies are between $0.448$ (\textbf{ILP}, Bogot\'a and Medell\'in) and $0.643$ (\textbf{BRKGA}, Bucaramanga) and meet it on none. The guarantee is therefore uniformly within reach of the least-served-first rule, and the question of where it is cheap or expensive becomes the question of where the order-centric policies fall furthest from it. They fall furthest in the two smallest fleets, Bucaramanga and Pereira ($0.56$--$0.64$, with only 59--73\% of the eligible couriers active), and closest in Bogot\'a and Medell\'in ($0.45$--$0.51$, 79--87\% active), where couriers outnumber the work less than in Bucaramanga and Pereira (0.39--0.42 against 0.22--0.27 orders per connected courier-hour in the zones, pooled over the days of each city, \texttt{simulator/claims\_text.py}) and the best-placed courier changes more often. The coverage that \textbf{Greedy} gives up with respect to the best policy of the city is between $0.8$ points (Bogot\'a) and $1.5$ points (Cali and Bucaramanga), and its extra lateness against \textbf{Hierarchical}, the least late policy in every city, between $1.4$ (Bucaramanga) and $2.3$ minutes (Bogot\'a); the pay lever of \textbf{Pay-BRKGA} cuts the bill most where the fleet is small and routes are long (Pereira, 19\%; Bucaramanga, 16\%) and least in Bogot\'a and Medell\'in (7--9\%). The second-generation variants with $k_d = 25$ (five seeds) keep the ordering: under the manual regime they reach $0.37$--$0.38$ in Barranquilla, Bogot\'a and Medell\'in, $0.45$--$0.46$ in Cali and $0.50$--$0.55$ in Bucaramanga and Pereira, so the gap to \textbf{Greedy} that remains is again largest in the two smallest fleets.
+
+\begin{sidewaystable}
+\centering
+\scriptsize
+\begin{adjustbox}{max width=\textheight, max totalheight=0.92\portraitwidth}
+\begin{tabular}{l|c|c|c|c|c|c}
+\hline
+\textbf{Policy} & \textbf{Coverage} & \textbf{End-of-day Gini $\FG$} & \textbf{Active eligible} & \textbf{Lateness (min)} & \textbf{Payment (\% of tariff)} & \textbf{$\FG \le 0.40$ (\% of days)} \\
+\hline
+\multicolumn{7}{l}{\textit{Barranquilla (4 instances)}} \\
+\textbf{Greedy} & 0.692 & \textbf{0.304} & \textbf{0.98} & 20.0 & 100 & 100 \\
+\textbf{ILP} & 0.670 & 0.470 & 0.80 & 19.8 & 100 & 0 \\
+\textbf{Hierarchical} & 0.700 & 0.491 & 0.80 & \textbf{18.2} & 100 & 0 \\
+\textbf{BRKGA} & \textbf{0.701} & 0.513 & 0.76 & 18.7 & 100 & 0 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$) & \textbf{0.701} & 0.478 & 0.82 & 18.9 & 100 & 0 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.690 & 0.503 & 0.78 & 19.5 & 100 & 0 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.690 & 0.499 & 0.78 & 19.0 & 92 & 0 \\
+\hline
+\multicolumn{7}{l}{\textit{Bogot\'a (4 instances)}} \\
+\textbf{Greedy} & 0.811 & \textbf{0.282} & \textbf{0.96} & 20.1 & 100 & 100 \\
+\textbf{ILP} & 0.799 & 0.448 & 0.85 & 19.6 & 100 & 0 \\
+\textbf{Hierarchical} & 0.815 & 0.503 & 0.81 & \textbf{17.8} & 100 & 0 \\
+\textbf{BRKGA} & 0.817 & 0.509 & 0.79 & 18.5 & 100 & 0 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$) & \textbf{0.819} & 0.467 & 0.87 & 18.8 & 100 & 0 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.808 & 0.484 & 0.82 & 19.4 & 100 & 0 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.809 & 0.493 & 0.81 & 18.8 & 93 & 0 \\
+\hline
+\multicolumn{7}{l}{\textit{Bucaramanga (4 instances)}} \\
+\textbf{Greedy} & 0.736 & \textbf{0.317} & \textbf{0.96} & 19.6 & 100 & 100 \\
+\textbf{ILP} & 0.722 & 0.598 & 0.62 & 19.0 & 100 & 0 \\
+\textbf{Hierarchical} & 0.750 & 0.583 & 0.71 & \textbf{18.2} & 100 & 0 \\
+\textbf{BRKGA} & 0.750 & 0.643 & 0.59 & 18.5 & 100 & 0 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$) & \textbf{0.751} & 0.613 & 0.65 & 18.5 & 100 & 0 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.748 & 0.629 & 0.59 & 18.6 & 100 & 0 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.733 & 0.619 & 0.61 & 18.7 & 84 & 0 \\
+\hline
+\multicolumn{7}{l}{\textit{Cali (4 instances)}} \\
+\textbf{Greedy} & 0.734 & \textbf{0.320} & \textbf{0.96} & 20.8 & 100 & 100 \\
+\textbf{ILP} & 0.712 & 0.532 & 0.70 & 20.0 & 100 & 0 \\
+\textbf{Hierarchical} & 0.748 & 0.565 & 0.70 & \textbf{18.7} & 100 & 0 \\
+\textbf{BRKGA} & 0.748 & 0.591 & 0.63 & 19.0 & 100 & 0 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$) & \textbf{0.749} & 0.559 & 0.70 & 19.1 & 100 & 0 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.745 & 0.553 & 0.68 & 19.4 & 100 & 0 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.729 & 0.562 & 0.67 & 19.3 & 87 & 0 \\
+\hline
+\multicolumn{7}{l}{\textit{Medell\'in (4 instances)}} \\
+\textbf{Greedy} & 0.812 & \textbf{0.275} & \textbf{0.99} & 18.7 & 100 & 100 \\
+\textbf{ILP} & 0.797 & 0.448 & 0.82 & 18.0 & 100 & 0 \\
+\textbf{Hierarchical} & 0.823 & 0.457 & 0.85 & \textbf{17.0} & 100 & 0 \\
+\textbf{BRKGA} & \textbf{0.824} & 0.490 & 0.79 & 17.4 & 100 & 0 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$) & \textbf{0.824} & 0.461 & 0.85 & 17.5 & 100 & 0 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.820 & 0.474 & 0.82 & 17.7 & 100 & 0 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.815 & 0.475 & 0.81 & 17.6 & 91 & 0 \\
+\hline
+\multicolumn{7}{l}{\textit{Pereira (4 instances)}} \\
+\textbf{Greedy} & 0.762 & \textbf{0.323} & \textbf{0.95} & 20.3 & 100 & 85 \\
+\textbf{ILP} & 0.723 & 0.619 & 0.59 & 20.3 & 100 & 0 \\
+\textbf{Hierarchical} & \textbf{0.776} & 0.564 & 0.73 & \textbf{18.8} & 100 & 0 \\
+\textbf{BRKGA} & 0.775 & 0.637 & 0.61 & 19.1 & 100 & 0 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$) & 0.775 & 0.619 & 0.65 & 19.1 & 100 & 0 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.770 & 0.610 & 0.63 & 19.4 & 100 & 0 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.742 & 0.621 & 0.61 & 19.4 & 81 & 0 \\
+\hline
+\end{tabular}
+\end{adjustbox}
+\caption{Results by city, manual regime: mean over the instances of the city (ten seeds averaged within each instance) for the configurations of Table~\ref{tab:benchmark} other than \textbf{Greedy-Arrival}; the last column is the share of (instance, seed) pairs with $\FG \le 0.40$. Best value per column and city in bold}
+\label{tab:city}
+\end{sidewaystable}
+
+\subsection{The second generation against its parents}
+\label{sec:App_gen2}
+
+Table~\ref{tab:gen2} reports the means of the second-generation configurations of X3 against their first-generation parents and \textbf{Greedy} on the same five seeds, and Table~\ref{tab:gen2_paired} reports, for every configuration, the paired difference with its first-generation parent on the same (instance, seed) pairs, the share of the gap to \textbf{Greedy} closed (ratio of means, Section~\ref{sec:metrics}) and the compliance with $\alpha = 0.40$ and $0.45$. The exposure basis alone moves $\FG$ by $0.004$--$0.025$; the prefilter moves it by $0.054$--$0.131$ for \textbf{BRKGA-Fair} and \textbf{MIP-Fair} and by $0.021$--$0.027$ for \textbf{Pay-BRKGA}, with every interval excluding zero and coverage within $0.006$ of the parent.
+
+\paragraph{Coverage slack, \textbf{Pay-BRKGA}, CPU time and $k_d = 50$} This paragraph completes the discussion of the second generation in Section~\ref{sec:results_quality}. The coverage slack $\varepsilon$ of \textbf{MIP-Fair} does nothing ($\varepsilon = 0.05$ against $0$: $\FG$ within $0.002$ and coverage within $0.001$), which confirms that what bound the Gini block was the candidate set and not the lexicographic priority. \textbf{Pay-BRKGA} responds least to the prefilter (9--11\% of the gap over the two regimes) because its fitness has no equity term: only the prefilter reads the deficit, and the decoder then scores on coverage alone. The price of $k_d$ is CPU time: \textbf{BRKGA-Fair} with $k_d = 25$ costs $4.3$--$4.9$ minutes per day on average and $25$ at most, twice its parent; \textbf{MIP-Fair} with $k_d = 25$ costs $11$--$24$ minutes on average and up to $110$ on a Bogot\'a day under the manual regime, five times its parent, for the same end-of-day Gini, so the heuristic is the practical choice at this scale. Half of the gap to \textbf{Greedy} remains, and the ablation with $k_d = 50$ (Table~\ref{tab:ablations} in \ref{sec:App_ablations}) shows that for \textbf{BRKGA-Fair} it is a matter of candidates, since $\FG$ keeps falling to $0.404$ under the manual regime and $0.353$ under auto-accept at unchanged coverage and $1.3$ times the CPU time, whereas for \textbf{MIP-Fair} the curve flattens ($0.412$ and $0.399$) while the CPU time grows to 51 minutes per day: for the exact round model the one-route-per-courier structure and the solver limit bind before the candidate set does.
+
+\begin{sidewaystable}
+\centering
+\begin{adjustbox}{max width=\textheight}
+\begin{tabular}{l|cc|cc|c|c|c|c|c|c}
+\hline
+\multirow{2}{*}{\textbf{Policy}} & \multicolumn{2}{c|}{\textbf{Coverage}} & \multicolumn{2}{c|}{\textbf{End-of-day Gini $\FG$}} & \textbf{Active} & \textbf{Gini} & \textbf{Lateness} & \textbf{Min.-wage} & \textbf{Payment} & \textbf{CPU time} \\
+ & \textbf{mean} & \textbf{SE} & \textbf{mean} & \textbf{SE} & \textbf{eligible} & $\FGa$ & \textbf{(min)} & \textbf{deficit $\FD$} & \textbf{(\% of tariff)} & \textbf{(min/run)} \\
+\hline
+\multicolumn{11}{l}{\textit{Manual regime}} \\
+\textbf{Greedy} & 0.758 & 0.013 & \textbf{0.303} & 0.008 & \textbf{0.97} & 0.512 & 19.9 & \textbf{0.981} & 100 & \textbf{2.2} \\
+\hline
+\textbf{BRKGA-Fair} ($\gamma = 40$) & \textbf{0.770} & 0.013 & 0.533 & 0.015 & 0.76 & 0.502 & \textbf{18.6} & 0.986 & 100 & 2.4 \\
+\textbf{BRKGA-Fair} ($\gamma = 20$, exposure, $k_d = 8$) & \textbf{0.770} & 0.013 & 0.481 & 0.016 & 0.80 & 0.430 & 18.7 & 0.993 & 100 & 4.6 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$, exposure, $k_d = 25$) & 0.769 & 0.013 & 0.436 & 0.016 & 0.85 & \textbf{0.398} & 18.8 & 0.995 & 100 & 4.9 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.763 & 0.013 & 0.542 & 0.013 & 0.72 & 0.458 & 19.0 & 0.989 & 100 & 4.6 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$, exposure, $k_d = 8$, $\varepsilon = 0.00$) & 0.769 & 0.013 & 0.465 & 0.012 & 0.85 & 0.471 & 19.1 & 0.990 & 100 & 11.3 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$, exposure, $k_d = 25$, $\varepsilon = 0.00$) & 0.766 & 0.013 & 0.435 & 0.014 & 0.88 & 0.464 & 19.3 & 0.990 & 100 & 23.5 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.752 & 0.013 & 0.545 & 0.013 & 0.71 & 0.456 & 18.8 & 0.991 & 88 & 2.8 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$, exposure, $k_d = 8$) & 0.753 & 0.013 & 0.524 & 0.014 & 0.74 & 0.444 & 18.9 & 0.992 & 88 & 5.2 \\
+\hline
+\multicolumn{11}{l}{\textit{Auto-accept regime}} \\
+\textbf{Greedy} & 0.786 & 0.013 & \textbf{0.299} & 0.007 & \textbf{0.97} & 0.585 & 19.1 & \textbf{0.974} & 100 & \textbf{1.8} \\
+\hline
+\textbf{BRKGA-Fair} ($\gamma = 40$) & 0.786 & 0.013 & 0.535 & 0.014 & 0.76 & 0.510 & \textbf{18.2} & 0.984 & 100 & 2.1 \\
+\textbf{BRKGA-Fair} ($\gamma = 20$, exposure, $k_d = 8$) & 0.786 & 0.013 & 0.481 & 0.016 & 0.80 & 0.439 & 18.3 & 0.992 & 100 & 4.1 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$, exposure, $k_d = 25$) & 0.786 & 0.013 & 0.415 & 0.016 & 0.87 & \textbf{0.387} & 18.3 & 0.995 & 100 & 4.3 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.786 & 0.013 & 0.532 & 0.015 & 0.73 & 0.448 & 18.8 & 0.988 & 100 & 3.2 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$, exposure, $k_d = 8$, $\varepsilon = 0.00$) & 0.786 & 0.013 & 0.426 & 0.011 & 0.90 & 0.456 & 18.8 & 0.991 & 100 & 6.9 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$, exposure, $k_d = 25$, $\varepsilon = 0.00$) & 0.786 & 0.013 & 0.401 & 0.011 & 0.91 & 0.453 & 18.8 & 0.991 & 100 & 11.1 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.786 & 0.013 & 0.533 & 0.013 & 0.73 & 0.453 & 18.3 & 0.992 & 80 & 2.2 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$, exposure, $k_d = 8$) & 0.786 & 0.013 & 0.506 & 0.013 & 0.77 & 0.438 & 18.3 & 0.994 & 80 & 4.2 \\
+\end{tabular}
+\end{adjustbox}
+\caption{Second-generation variants (exposure basis over the eligible couriers; deficit-aware prefilter with $k_d$ extra candidates; coverage slack $\varepsilon$ in \textbf{MIP-Fair}) against their first-generation parents and \textbf{Greedy}, on the five seeds of X3 (five of its eight configurations; 1{,}920 runs in all) and the same seeds of X1: mean over the 24 instances and standard error, columns and bold convention as in Table~\ref{tab:benchmark}; the $k_d = 8$ row of \textbf{BRKGA-Fair} descends from $\gamma = 20$ and the $k_d = 25$ row from $\gamma = 40$}
+\label{tab:gen2}
+\end{sidewaystable}
+
+\begin{sidewaystable}
+\centering
+\scriptsize
+\begin{adjustbox}{max width=\textheight}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{l|c|c|c|c|c|cc}
+\hline
+\multirow{2}{*}{\textbf{Configuration}} & \multirow{2}{*}{$n$} & $\Delta \FG$ \textbf{vs parent} & $\Delta$ \textbf{coverage vs parent} & $\Delta$ \textbf{lateness} & \textbf{Gap} & \multicolumn{2}{c}{\textbf{Compliance (\%)}} \\
+ & & \textbf{[95\% CI]} & \textbf{[95\% CI]} & \textbf{(min)} & \textbf{closed (\%)} & $\alpha = 0.40$ & $0.45$ \\
+\hline
+\multicolumn{8}{l}{\textit{Manual regime}} \\
+\textbf{BRKGA-Fair} ($\gamma = 20$) exposure basis & 120 & $-0.023$ [-0.025, -0.021] & $+0.000$ [-0.000, +0.001] & $+0.0$ & 10 & 0 & 28 \\
+\textbf{BRKGA-Fair} ($\gamma = 20$) exposure, $k_d = 8$ & 120 & $-0.054$ [-0.057, -0.051] & $-0.000$ [-0.001, +0.001] & $+0.1$ & 23 & 13 & 50 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$) exposure, $k_d = 25$ & 120 & $-0.096$ [-0.100, -0.093] & $-0.001$ [-0.002, -0.000] & $+0.2$ & 42 & 49 & 63 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) exposure basis & 120 & $-0.004$ [-0.006, -0.003] & $+0.000$ [-0.001, +0.001] & $-0.0$ & 2 & 0 & 4 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) exposure, $k_d = 8$ & 120 & $-0.077$ [-0.081, -0.074] & $+0.005$ [+0.004, +0.007] & $+0.1$ & 32 & 8 & 50 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) exposure, $k_d = 8$, $\varepsilon = 0.05$ & 120 & $-0.078$ [-0.081, -0.074] & $+0.006$ [+0.005, +0.007] & $+0.1$ & 32 & 8 & 50 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) exposure, $k_d = 25$ & 120 & $-0.107$ [-0.111, -0.103] & $+0.003$ [+0.002, +0.004] & $+0.3$ & 45 & 40 & 61 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) exposure, $k_d = 8$ & 120 & $-0.021$ [-0.023, -0.019] & $+0.000$ [-0.001, +0.001] & $+0.1$ & 9 & 0 & 9 \\
+\hline
+\multicolumn{8}{l}{\textit{Auto-accept regime}} \\
+\textbf{BRKGA-Fair} ($\gamma = 20$) exposure basis & 120 & $-0.025$ [-0.027, -0.023] & $+0.000$ [-0.000, +0.000] & $+0.0$ & 11 & 1 & 31 \\
+\textbf{BRKGA-Fair} ($\gamma = 20$) exposure, $k_d = 8$ & 120 & $-0.057$ [-0.059, -0.054] & $+0.000$ [-0.000, +0.000] & $+0.0$ & 24 & 12 & 50 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$) exposure, $k_d = 25$ & 120 & $-0.119$ [-0.124, -0.115] & $+0.000$ [-0.000, +0.000] & $+0.1$ & 51 & 56 & 67 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) exposure basis & 120 & $-0.009$ [-0.011, -0.007] & $+0.000$ [+0.000, +0.000] & $-0.0$ & 4 & 0 & 8 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) exposure, $k_d = 8$ & 120 & $-0.106$ [-0.112, -0.099] & $+0.000$ [+0.000, +0.000] & $-0.0$ & 45 & 35 & 72 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) exposure, $k_d = 8$, $\varepsilon = 0.05$ & 120 & $-0.106$ [-0.112, -0.100] & $+0.000$ [+0.000, +0.000] & $-0.0$ & 45 & 40 & 72 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) exposure, $k_d = 25$ & 120 & $-0.131$ [-0.137, -0.126] & $+0.000$ [+0.000, +0.000] & $+0.0$ & 56 & 64 & 83 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) exposure, $k_d = 8$ & 120 & $-0.027$ [-0.029, -0.025] & $-0.000$ [-0.000, +0.000] & $+0.0$ & 11 & 0 & 14 \\
+\hline
+\end{tabular}
+\end{adjustbox}
+\caption{Second-generation configurations of X3 against their first-generation parents, paired by (instance, seed) on five seeds: paired differences of the end-of-day Gini coefficient and coverage with 95\% intervals ($\pm 1.96$ SE over the pairs) and of mean lateness, share of the gap to \textbf{Greedy} closed as a ratio of means, and compliance with $\alpha = 0.40$ and $0.45$}
+\label{tab:gen2_paired}
+\end{sidewaystable}
+
+\subsection{Lateness frontier and metrics not reported in the main tables}
+\label{sec:App_metrics}
+
+Figure~\ref{fig:pareto_late} is the lateness counterpart of Figure~\ref{fig:pareto}: the three sweeps occupy the same narrow band of the Gini axis, \textbf{Hierarchical} is the least late policy and \textbf{Greedy} the latest, and the second-generation variants stay within $0.3$ minutes of their parents.
+
+\paragraph{CPU time} On CPU time (Table~\ref{tab:benchmark}), \textbf{ILP} is the cheapest policy and \textbf{MIP-Fair} the most expensive ($4.6$ minutes per day on average, $22$ at most on a Bogot\'a instance); the three proposed policies cost between $1.1$ and $2.1$ times \textbf{Greedy}.
+
+\paragraph{Reading of the frontiers} This paragraph details the reading of Figures~\ref{fig:pareto} and \ref{fig:pareto_late} in Section~\ref{sec:results_quality}. The x-axis is the end-of-day Gini coefficient of Eq.~\eqref{eqn:gini}, the y-axis coverage (Figure~\ref{fig:pareto}) and mean lateness (Figure~\ref{fig:pareto_late}), each point is a configuration averaged over the 24 instances and the seeds available, and the benchmarks of X1 appear as single points. The three frontiers occupy a narrow band on the right of each panel, between $0.53$ and $0.55$, and \textbf{Greedy} stands alone on the left at $0.30$, with more lateness than any of them and, under the manual regime, less coverage than all but \textbf{Pay-BRKGA} (coverage ties under auto-accept): no configuration of the three policies trades service for equity along its own parameter at a scale comparable to the gap between the two groups. \textbf{BRKGA-Fair} is the only sweep that moves towards equity, $0.01$ to the left from $\gamma = 5$ to $\gamma = 40$ ($0.03$ from \textbf{BRKGA}, $\gamma = 0$) at constant coverage; \textbf{MIP-Fair} collapses to a point in $\alpha$; \textbf{Pay-BRKGA} loses coverage under the manual regime ($0.757$ to $0.752$) and drifts $0.01$ to the right as $\lambda_{\text{pay}}$ grows, and is flat under auto-accept. The second-generation variants (hollow markers, five seeds) populate the region between the two groups along $k_d$ rather than along the original parameters: from the parent at $0.53$--$0.54$ to $0.46$--$0.48$ at $k_d = 8$ and $0.44$ at $k_d = 25$ under the manual regime ($0.40$--$0.42$ under auto-accept), at constant coverage and with lateness within $0.3$ minutes of the parent. The gap that the first-generation parameters could not close is halved by a change in the candidate set, not in the objective; \textbf{Pay-BRKGA} moves least ($0.02$--$0.03$).
+\begin{figure}[htbp]
+  \centering
+  \figorph{figures/F4_pareto_lateness.pdf}{\textwidth}{5cm}{F4: lateness vs end-of-day Gini coefficient over the eligible couriers, by policy.}
+  \caption{Mean lateness against the end-of-day Gini coefficient by policy, manual (left) and auto-accept (right) regime; conventions as in Figure~\ref{fig:pareto}}
+  \label{fig:pareto_late}
+\end{figure}
+
+Table~\ref{tab:metrics} reports, for the configurations of Table~\ref{tab:benchmark} other than \textbf{Greedy-Arrival}, the max--min fairness $\FM$ (the lowest hourly earnings among the active couriers), the click-to-door time of the delivered orders (mean and 90th percentile) and the solve time per round (mean, and the maximum over all rounds and runs). Under the flat tariff the order-count Gini coefficient $\FO$ coincides with $\FGa$ for every policy that pays the tariff and is therefore not repeated. Click-to-door differs by at most two minutes between policies; every policy of X1 solves a round in less than half a second on average and in at most $7.6$ s, within the 10-second limit per stage of \textbf{MIP-Fair}.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{l|c|cc|cc}
+\hline
+\multirow{2}{*}{\textbf{Policy}} & $\FM$ & \multicolumn{2}{c|}{\textbf{Click-to-door (min)}} & \multicolumn{2}{c}{\textbf{Solve time per round (s)}} \\
+ & \textbf{(COP/h)} & \textbf{mean} & \textbf{p90} & \textbf{mean} & \textbf{max} \\
+\hline
+\multicolumn{6}{l}{\textit{Manual regime}} \\
+\textbf{Greedy} & 195 & 50.6 & 59.2 & 0.18 & 4.5 \\
+\textbf{ILP} & 96 & 50.0 & 59.0 & 0.16 & 3.1 \\
+\textbf{Hierarchical} & 95 & 48.8 & 58.2 & 0.28 & 5.6 \\
+\textbf{BRKGA} & 95 & 49.1 & 58.5 & 0.20 & 3.3 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$) & 94 & 49.3 & 58.5 & 0.20 & 3.5 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 95 & 49.6 & 58.7 & 0.39 & 7.6 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 73 & 49.4 & 58.6 & 0.24 & 3.5 \\
+\hline
+\multicolumn{6}{l}{\textit{Auto-accept regime}} \\
+\textbf{Greedy} & 200 & 49.7 & 58.8 & 0.16 & 3.5 \\
+\textbf{ILP} & 97 & 49.4 & 58.7 & 0.13 & 2.7 \\
+\textbf{Hierarchical} & 97 & 48.6 & 58.1 & 0.25 & 4.7 \\
+\textbf{BRKGA} & 95 & 48.8 & 58.2 & 0.18 & 3.3 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$) & 94 & 48.8 & 58.2 & 0.18 & 3.2 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 94 & 49.4 & 58.6 & 0.28 & 5.3 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 69 & 48.9 & 58.3 & 0.20 & 3.3 \\
+\hline
+\end{tabular}
+\end{adjustbox}
+\caption{Metrics recorded in every run and not shown in the main tables: mean over the 24 instances (ten seeds averaged within each instance), except the maximum solve time, which is the maximum over all rounds and runs}
+\label{tab:metrics}
+\end{table}
+
+\subsection{Review experiments: supply, benchmark priority and candidate set}
+\label{sec:App_review}
+
+Tables~\ref{tab:review_thin}, \ref{tab:review_arrival} and \ref{tab:review_ilp} report the three experiments of Section~\ref{sec:results_sensitivity}. The thinned fleet keeps one courier in three of each zone, drawn once per instance, which multiplies the orders per connected courier-hour of the zones by three, from 0.40 to about 1.2 (\texttt{simulator/diag\_supply.py}), close to the 1.15 orders per connected hour that surveyed couriers report inside the bonus ladder (\texttt{simulator/survey\_anchors.py}); the full-fleet columns are the same configurations on the same (instance, seed) pairs. \textbf{Greedy-Arrival} (Tables~\ref{tab:benchmark} and \ref{tab:review_arrival}) keeps the coverage of \textbf{Greedy} but ends at $0.75$ with 38\% of the eligible couriers active, so the equity of \textbf{Greedy} comes entirely from its least-served-first priority, a one-number reading of $\Hist_t$.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{l|cc|cc|cc|cc|cc}
+\hline
+\multirow{2}{*}{\textbf{Policy}} & \multicolumn{2}{c|}{\textbf{Coverage}} & \multicolumn{2}{c|}{$\FG$} & \multicolumn{2}{c|}{\textbf{Active eligible}} & \multicolumn{2}{c|}{\textbf{Median COP/h}} & \multicolumn{2}{c}{$\FD$} \\
+ & \textbf{full} & \textbf{1/3} & \textbf{full} & \textbf{1/3} & \textbf{full} & \textbf{1/3} & \textbf{full} & \textbf{1/3} & \textbf{full} & \textbf{1/3} \\
+\hline
+\multicolumn{11}{l}{\textit{Manual regime}} \\
+\textbf{Greedy} & 0.758 & 0.719 & 0.303 & 0.212 & 0.97 & 0.99 & 606 & 1818 & 0.981 & 0.966 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$) & 0.770 & 0.720 & 0.533 & 0.249 & 0.76 & 0.96 & 777 & 1857 & 0.986 & 0.977 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$, $k_d = 25$) & 0.769 & 0.720 & 0.436 & 0.224 & 0.85 & 0.96 & 688 & 1802 & 0.995 & 0.981 \\
+\hline
+\multicolumn{11}{l}{\textit{Auto-accept regime}} \\
+\textbf{Greedy} & 0.786 & 0.755 & 0.299 & 0.211 & 0.97 & 1.00 & 629 & 1926 & 0.974 & 0.955 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$) & 0.786 & 0.759 & 0.535 & 0.240 & 0.76 & 0.96 & 798 & 1969 & 0.984 & 0.969 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$, $k_d = 25$) & 0.786 & 0.759 & 0.415 & 0.207 & 0.87 & 0.97 & 692 & 1903 & 0.995 & 0.977 \\
+\hline
+\end{tabular}
+\end{adjustbox}
+\caption{Fleet thinned to one courier in three (supply scenario): coverage, end-of-day Gini coefficient over the eligible couriers, active share of the eligible couriers, median hourly earnings of the active couriers and minimum-wage deficit, with the full fleet and with one third of it, on the same 120 (instance, seed) pairs per regime (seeds 1--5)}
+\label{tab:review_thin}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{l|cc}
+\hline
+ & \textbf{Manual regime} & \textbf{Auto-accept regime} \\
+\hline
+$\FG$, least served first (\textbf{Greedy}) & 0.304 & 0.299 \\
+$\FG$, in order of log-in (\textbf{Greedy-Arrival}) & 0.751 & 0.744 \\
+$\Delta \FG$ [95\% CI] & $+0.447$ [+0.439, +0.455] & $+0.446$ [+0.437, +0.454] \\
+Active eligible, least served first & 0.97 & 0.97 \\
+Active eligible, in order of log-in & 0.38 & 0.38 \\
+$\Delta$ coverage [95\% CI] & $+0.001$ [+0.001, +0.002] & $-0.000$ [-0.000, -0.000] \\
+$\Delta$ lateness (min) & $-0.2$ & $-0.1$ \\
+Days with $\FG \le 0.40$ (\%), least served first & 98 & 100 \\
+Days with $\FG \le 0.40$ (\%), in order of log-in & 0 & 0 \\
+Best order-centric $\FG$ & 0.519 & 0.501 \\
+\hline
+\end{tabular}
+\caption{\textbf{Greedy} (free couriers visited least served first, X1) and \textbf{Greedy-Arrival} (in order of log-in), paired by (instance, seed) on ten seeds; differences are arrival minus least served; the last row is the lowest end-of-day Gini coefficient among the order-centric policies of Table~\ref{tab:benchmark}}
+\label{tab:review_arrival}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{l|c|c|c}
+\hline
+\textbf{Reference configuration} & $\Delta$ \textbf{coverage [95\% CI]} & $\Delta \FG$ \textbf{[95\% CI]} & $\Delta$ \textbf{lateness (min)} \\
+\hline
+\multicolumn{4}{l}{\textit{Manual regime}} \\
+\textbf{ILP} ($k = 25$) & $-0.012$ [-0.013, -0.011] & $+0.030$ [+0.028, +0.032] & $-0.26$ \\
+\textbf{MIP-Fair} ($\alpha = 1$, $k = 8$) & $-0.038$ [-0.040, -0.036] & $+0.008$ [+0.006, +0.009] & $+0.18$ \\
+\textbf{MIP-Fair} ($\alpha = 0.30$, $k = 8$) & $-0.038$ [-0.040, -0.036] & $+0.007$ [+0.006, +0.009] & $+0.19$ \\
+\hline
+\multicolumn{4}{l}{\textit{Auto-accept regime}} \\
+\textbf{ILP} ($k = 25$) & $+0.000$ [-0.000, +0.000] & $+0.025$ [+0.023, +0.028] & $-0.04$ \\
+\textbf{MIP-Fair} ($\alpha = 1$, $k = 8$) & $+0.000$ [+0.000, +0.000] & $-0.003$ [-0.004, -0.002] & $+0.00$ \\
+\textbf{MIP-Fair} ($\alpha = 0.30$, $k = 8$) & $+0.000$ [+0.000, +0.000] & $-0.006$ [-0.007, -0.004] & $+0.00$ \\
+\hline
+\end{tabular}
+\end{adjustbox}
+\caption{\textbf{ILP} on the candidate pairs of \textbf{MIP-Fair} ($k = 8$) minus the reference configuration of each row, paired by (instance, seed) on ten seeds}
+\label{tab:review_ilp}
+\end{table}
+
+\subsection{Compliance and earnings by population}
+\label{sec:App_population}
+
+Table~\ref{tab:compliance} reports the compliance with the end-of-day guarantee by policy and regime, Table~\ref{tab:scope} reports the end-of-day Gini coefficient by population discussed in Section~\ref{sec:results_quality}, Table~\ref{tab:eligibility} the same statistic with eligibility thresholds of 0.5, 1 and 2 hours, and Figure~\ref{fig:violin} the distribution of end-of-day hourly earnings by policy discussed in Section~\ref{sec:results_decisions}.
+
+\paragraph{The inversion of the active-courier statistic} This paragraph details Section~\ref{sec:results_quality}. Table~\ref{tab:scope} shows how the concentration of work inverts the statistic that the fairness literature, and the first version of this study, computed over the active couriers: $\FGa$ is lowest for \textbf{ILP} ($0.411$), then \textbf{Pay-BRKGA} and \textbf{MIP-Fair} ($0.456$, $0.459$), and highest for \textbf{Greedy} ($0.514$) and \textbf{Hierarchical} ($0.530$); in Table~\ref{tab:benchmark} it is lowest of all for \textbf{Greedy-Arrival} ($0.339$), the least equitable policy on Eq.~\eqref{eqn:gini}. Two manoeuvres produce the inversion. Idle couriers leave the active population, so concentrating work on fewer couriers lowers $\FGa$ while raising $\FG$; and the 7\% of couriers who connect for less than one hour, to whom \textbf{Greedy} dispatches because they are free and nearby, enter $\FGa$ with hourly earnings of up to $110{,}000$ COP (one delivery of 2{,}200 COP within a few minutes of connecting) and raise it, whereas Eq.~\eqref{eqn:gini} excludes them. Restricted to the eligible couriers that were active, \textbf{Greedy} is still the most equitable ($0.28$ against $0.34$--$0.39$), so the first manoeuvre is the larger one.
+
+\paragraph{Who receives which route, and what it pays} This paragraph details Section~\ref{sec:results_decisions}. Figure~\ref{fig:violin} compares the distribution of end-of-day hourly earnings over the eligible couriers under \textbf{Greedy} and under each order-centric policy at its best configuration, pooled over the 24 instances of one seed (23{,}947 couriers, manual regime); the x-axis lists the policies, the y-axis the earnings per connected hour, and the share of couriers who end the day idle is printed under each violin. The statutory minimum $w^* = 4{,}368$ COP/h lies above the 99th percentile of every distribution, which is the content of $\FD \ge 0.97$. The policies do not compress the distribution of \textbf{Greedy}; they stretch it at both ends. In this pooled one-seed sample, \textbf{Greedy} leaves 3\% of the eligible couriers idle and its interquartile range is $523$--$877$ COP/h around a median of $688$; the six order-centric policies leave 19--25\% idle, their first quartile is between $0$ (\textbf{BRKGA}) and $209$ COP/h, their median is similar ($548$--$621$) and their third quartile is higher ($1{,}067$--$1{,}209$ COP/h): the orders that \textbf{Greedy} spreads over the couriers who happen to be free go, under an order-centric policy, to the couriers who are best placed, who are then best placed again. The reduction of the Gini coefficient of Eq.~\eqref{eqn:gini} under \textbf{Greedy} therefore comes from below (fewer idle couriers) and from above (fewer high earners) at once, at the same total pay: the mean is $803$ COP/h under \textbf{Greedy} and $708$--$797$ under the policies that pay the tariff. \textbf{Pay-BRKGA} shifts the whole distribution down (mean $690$, median $548$) because it pays 12\% less, and still leaves 23\% idle. No courier crosses $w^*$ under \textbf{Pay-BRKGA} either. Bundling plays no role in these differences: the mean bundle size is $1.03$ orders per route under \textbf{Greedy} and the BRKGA-type policies, $1.01$ under \textbf{MIP-Fair} and $1.00$ under the \textbf{ILP} and \textbf{Hierarchical} policies. For \textbf{Pay-BRKGA} the pay goes where acceptance is at stake. The total payment is 88\% of the tariff under the manual regime and 80\% under auto-accept (Table~\ref{tab:benchmark}), while the median pay per kilometre received by an active courier is $929$ COP/km against $816$ under \textbf{Greedy} in the manual regime ($789$ against $669$ under auto-accept): the multiplier raises the pay of the long routes that would otherwise be rejected and lowers that of the short ones that would not, so the bill falls while the pay per kilometre of what is accepted stays above the threshold. In the auto-accept regime, where nothing is rejected, the same rule only lowers the bill and leaves $\FD$ unchanged.
+
+\paragraph{Intraday trajectories} This paragraph details the reading of Figure~\ref{fig:intraday} in Section~\ref{sec:results_history} (one Bogot\'a day, instance 0, manual regime, seed 1). The x-axis is the time of day, the y-axis the Gini coefficient, recomputed every ten minutes from the delivery log; the horizontal line marks $\alpha = 0.40$, the upper bound of the inequality band. The four trajectories start near $1$: at 08:00, 525 eligible couriers are connected and about forty have delivered, so almost everyone is at zero, and the coefficient falls as orders arrive and the fleet is put to work. The policies separate between 10:00 and 16:00, the hours in which most of the fleet connects. \textbf{Greedy} puts the new couriers to work as they arrive and its trajectory falls from $0.79$ at 10:00 to $0.41$ at 14:00, crosses $\alpha = 0.40$ at about 14:10 and, after a bump to $0.28$ around 16:40, ends the day at $0.23$. \textbf{Hierarchical} and \textbf{MIP-Fair} keep assigning to the couriers already in motion, so their trajectories fall more slowly ($0.59$ and $0.57$ at 14:00) and never reach $\alpha$: they end the day at $0.48$ and $0.47$ with 15--16\% of the eligible couriers idle. The right panel shows why neither policy reacted: on the active couriers both stay at $0.32$--$0.39$ between 12:00 and 16:00, below $\alpha$ until 16:30 (\textbf{Hierarchical}) and 19:50 (\textbf{MIP-Fair}), so the statistic they read reports compliance during the hours in which the fleet grows, while the end-of-day statistic of Eq.~\eqref{eqn:fair_const} ends $0.07$--$0.08$ above $\alpha$, because the couriers who make the difference are not in their population. The second-generation \textbf{BRKGA-Fair}, which admits the idle eligible couriers with the largest deficit as candidates in every round, follows the order-centric trajectory until noon and then bends towards \textbf{Greedy}: $0.51$ at 14:00, below $\alpha$ at 15:50, and $0.36$ at the end of the day with 97\% of the eligible couriers active and coverage $0.780$, the highest of the four.
+
+\begin{table}[htbp]
+\centering
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{l|ccccc|ccccc}
+\hline
+\multirow{2}{*}{\textbf{Policy}} & \multicolumn{5}{c|}{\textbf{Manual}} & \multicolumn{5}{c}{\textbf{Auto-accept}} \\
+ & $\boldsymbol{\alpha = 0.30}$ & $\boldsymbol{0.35}$ & $\boldsymbol{0.40}$ & $\boldsymbol{0.45}$ & $\boldsymbol{0.50}$ & $\boldsymbol{\alpha = 0.30}$ & $\boldsymbol{0.35}$ & $\boldsymbol{0.40}$ & $\boldsymbol{0.45}$ & $\boldsymbol{0.50}$ \\
+\hline
+\textbf{Greedy} & \textbf{45} & \textbf{90} & \textbf{98} & \textbf{100} & \textbf{100} & \textbf{50} & \textbf{96} & \textbf{100} & \textbf{100} & \textbf{100} \\
+\textbf{Greedy-Arrival} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+\textbf{ILP} & 0 & 0 & 0 & 18 & 52 & 0 & 0 & 4 & 46 & 58 \\
+\textbf{Hierarchical} & 0 & 0 & 0 & 4 & 34 & 0 & 0 & 0 & 5 & 42 \\
+\textbf{BRKGA} & 0 & 0 & 0 & 0 & 24 & 0 & 0 & 0 & 0 & 20 \\
+\hline
+\textbf{BRKGA-Fair} ($\gamma = 40$) & 0 & 0 & 0 & 8 & 46 & 0 & 0 & 0 & 5 & 46 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0 & 0 & 0 & 4 & 40 & 0 & 0 & 0 & 8 & 46 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0 & 0 & 0 & 3 & 37 & 0 & 0 & 0 & 4 & 45 \\
+\hline
+\multicolumn{11}{l}{\textit{Second generation (five seeds)}} \\
+\textbf{BRKGA-Fair} ($\gamma = 40$, $k_d = 25$) & 0 & 8 & 49 & 63 & 72 & 2 & 20 & 56 & 67 & 81 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$, $k_d = 25$) & 0 & 8 & 40 & 61 & 82 & 0 & 12 & 64 & 83 & 96 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$, $k_d = 50$) & 2 & 29 & 54 & 72 & 89 & 26 & 65 & 73 & 87 & 94 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$, $k_d = 50$) & 2 & 31 & 50 & 68 & 80 & 4 & 41 & 54 & 75 & 88 \\
+\hline
+\end{tabular}
+\end{adjustbox}
+\caption{Compliance with the end-of-day guarantee: \% of (instance, seed) pairs with $\FG \le \alpha$, by regime. \textbf{Greedy-Arrival} is from the review experiment, on the same ten seeds as X1; the rows with $k_d = 50$ are from the supplement of X3 (Table~\ref{tab:ablations}), on the same five seeds as the second generation}
+\label{tab:compliance}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{l|cc|c|c|c}
+\hline
+\multirow{2}{*}{\textbf{Policy}} & \multicolumn{2}{c|}{\textbf{Eligible couriers (connected $\ge 1$ h)}} & \textbf{Active couriers} & \textbf{Active share} & \textbf{First quartile} \\
+ & $\FG$\textbf{, idle at zero} & \textbf{who delivered} & $\FGa$ & \textbf{of eligible} & \textbf{(COP/h, eligible)} \\
+\hline
+\textbf{Greedy} & \textbf{0.304} & \textbf{0.281} & 0.514 & \textbf{0.97} & \textbf{481} \\
+\textbf{ILP} & 0.519 & 0.344 & \textbf{0.411} & 0.73 & 130 \\
+\textbf{Hierarchical} & 0.527 & 0.387 & 0.530 & 0.77 & 146 \\
+\textbf{BRKGA} & 0.564 & 0.375 & 0.487 & 0.70 & 86 \\
+\hline
+\textbf{BRKGA-Fair} ($\gamma = 40$) & 0.533 & 0.383 & 0.502 & 0.76 & 134 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.542 & 0.365 & 0.459 & 0.72 & 105 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.545 & 0.364 & 0.456 & 0.71 & 97 \\
+\hline
+\end{tabular}
+\end{adjustbox}
+\caption{The end-of-day Gini coefficient of hourly earnings by population, manual regime, mean over the 24 instances: the statistic of Eq.~\eqref{eqn:gini}, its restriction to the eligible couriers that delivered, and the active-courier statistic $\FGa$, which includes the couriers connected for less than one hour}
+\label{tab:scope}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{l|ccc|ccc}
+\hline
+\multirow{2}{*}{\textbf{Policy}} & \multicolumn{3}{c|}{$\FG$\textbf{, eligible if connected}} & \multicolumn{3}{c}{\textbf{Active share of eligible}} \\
+ & $\boldsymbol{\ge 0.5}$ \textbf{h} & $\boldsymbol{\ge 1}$ \textbf{h} & $\boldsymbol{\ge 2}$ \textbf{h} & $\boldsymbol{\ge 0.5}$ \textbf{h} & $\boldsymbol{\ge 1}$ \textbf{h} & $\boldsymbol{\ge 2}$ \textbf{h} \\
+\hline
+\multicolumn{7}{l}{\textit{Manual regime}} \\
+\textbf{Greedy} & 0.339 & 0.304 & 0.247 & 0.96 & 0.97 & 0.99 \\
+\textbf{Greedy-Arrival} & 0.757 & 0.751 & 0.735 & 0.37 & 0.38 & 0.40 \\
+\textbf{ILP} & 0.534 & 0.519 & 0.500 & 0.72 & 0.73 & 0.75 \\
+\textbf{Hierarchical} & 0.541 & 0.527 & 0.507 & 0.76 & 0.77 & 0.78 \\
+\textbf{BRKGA} & 0.576 & 0.564 & 0.550 & 0.69 & 0.70 & 0.71 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$) & 0.547 & 0.533 & 0.518 & 0.75 & 0.76 & 0.77 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.555 & 0.542 & 0.528 & 0.71 & 0.72 & 0.73 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.558 & 0.545 & 0.530 & 0.70 & 0.71 & 0.73 \\
+\hline
+\multicolumn{7}{l}{\textit{Auto-accept regime}} \\
+\textbf{Greedy} & 0.334 & 0.299 & 0.242 & 0.96 & 0.97 & 0.99 \\
+\textbf{Greedy-Arrival} & 0.751 & 0.744 & 0.728 & 0.37 & 0.38 & 0.41 \\
+\textbf{ILP} & 0.516 & 0.501 & 0.481 & 0.74 & 0.75 & 0.77 \\
+\textbf{Hierarchical} & 0.530 & 0.516 & 0.495 & 0.78 & 0.79 & 0.80 \\
+\textbf{BRKGA} & 0.577 & 0.565 & 0.552 & 0.69 & 0.70 & 0.71 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$) & 0.548 & 0.535 & 0.520 & 0.75 & 0.76 & 0.77 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.545 & 0.532 & 0.519 & 0.72 & 0.73 & 0.74 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.547 & 0.533 & 0.517 & 0.72 & 0.73 & 0.74 \\
+\hline
+\end{tabular}
+\caption{Sensitivity of the end-of-day Gini coefficient of Eq.~\eqref{eqn:gini} to the eligibility threshold (idle couriers at zero), mean over the 24 instances and ten seeds, recomputed from the per-courier tables of the runs of Table~\ref{tab:benchmark} (\texttt{simulator/eligibility\_thresholds.py}); the column of 1 h is that of Table~\ref{tab:benchmark}}
+\label{tab:eligibility}
+\end{table}
+
+\begin{figure}[htbp]
+    \centering
+    \figorph{figures/F7_earnings_violin.pdf}{\textwidth}{5cm}{F7: distribution of end-of-day hourly earnings per courier, \textbf{Greedy} vs each policy at its best configuration.}
+    \caption{Distribution of end-of-day hourly earnings over the eligible couriers by policy (manual regime, seed 1, 24 instances pooled; values above the 99th percentile clipped; bar = interquartile range, tick = median)}
+    \label{fig:violin}
+\end{figure}
+
+\FloatBarrier
+\subsection{Ablations}
+\label{sec:App_ablations}
+
+Table~\ref{tab:ablations} reports the ablations of the supplement of X3, each paired with its base configuration on the same (instance, seed) pairs under the manual regime, together with the $k_d = 50$ rows of the second generation under both regimes. The eleven ablations of Section~\ref{sec:design} cover the decoder score, population size, scope and basis of the Gini constraint, equity-first priority, prefilter $k = 25$, coverage slack, and $k_d = 50$; manual regime except $k_d = 50$. The table uses the five seeds of X3. The \textbf{MIP-Fair} rows with the free-only scope, the total-earnings basis and $k = 25$ have 115--116 pairs because their runs on the largest Bogot\'a day (instance 0) did not finish within the 240-minute timeout on four or five of the seeds, and the equity-first row has 27 pairs because the configuration was withdrawn from the grid after those runs (98.7 minutes per run for a policy that the pilot had already shown to be degenerate). The statistic to read is the paired difference with its 95\% interval; the column ``worse/better'' counts the pairs in which the ablation ends more than $0.005$ above or below its base in $\FG$.
+
+\begin{sidewaystable}
+\centering
+\begin{adjustbox}{max width=\textheight}
+\begin{tabular}{l|c|cc|cc|c|c|c|c|c}
+\hline
+\multirow{2}{*}{\textbf{Ablation (base)}} & \multirow{2}{*}{$n$} & \multicolumn{2}{c|}{\textbf{Coverage}} & \multicolumn{2}{c|}{\textbf{End-of-day Gini $\FG$}} & \textbf{Worse /} & \textbf{Active} & \textbf{Gini} & \textbf{CPU time} & \textbf{CPU} \\
+ & & \textbf{mean} & $\Delta$ \textbf{base} & \textbf{mean} & $\Delta$ \textbf{base [95\% CI]} & \textbf{better} & \textbf{eligible} & $\FGa$ & \textbf{min (max)} & $\times$ \textbf{base} \\
+\hline
+\multicolumn{11}{l}{\textit{Manual regime}} \\
+\textbf{BRKGA} decoder score$_{\text{finish}}$ (base: finish per order) & 120 & 0.768 & $-0.001$ & 0.557 & $-0.007$ [-0.009, -0.005] & 13/76 & 0.70 & 0.475 & 3.3 (17) & 1.4 \\
+\textbf{BRKGA} $20 \times 20$ (base: $10 \times 10$) & 120 & 0.769 & $-0.000$ & 0.570 & $+0.007$ [+0.005, +0.008] & 75/8 & 0.69 & 0.499 & 6.2 (27) & 2.7 \\
+\textbf{BRKGA-Fair} ($\gamma = 10$) total-earnings basis (base: hourly) & 120 & 0.770 & $+0.000$ & 0.533 & $-0.005$ [-0.006, -0.003] & 11/53 & 0.75 & 0.490 & 3.3 (17) & 1.4 \\
+\textbf{MIP-Fair} Gini over free couriers only (base: all connected) & 115 & 0.769 & $+0.006$ & 0.496 & $-0.049$ [-0.059, -0.040] & 7/97 & 0.75 & 0.413 & 32.6 (183) & 8.5 \\
+\textbf{MIP-Fair} total-earnings basis (base: hourly) & 116 & 0.770 & $+0.007$ & 0.513 & $-0.032$ [-0.042, -0.022] & 32/77 & 0.73 & 0.410 & 33.0 (240) & 8.3 \\
+\textbf{MIP-Fair} equity-first priority (base: coverage first) & 27 & 0.310 & $-0.443$ & 0.195 & $-0.360$ [-0.457, -0.264] & 3/24 & 0.47 & 0.305 & 98.7 (227) & 36.2 \\
+\textbf{MIP-Fair} prefilter $k = 25$ (base: $k = 8$) & 115 & 0.770 & $+0.008$ & 0.507 & $-0.039$ [-0.046, -0.031] & 9/98 & 0.74 & 0.402 & 30.6 (227) & 8.0 \\
+\textbf{MIP-Fair} coverage slack $\varepsilon = 0.02$ (base: $0$) & 120 & 0.763 & $-0.000$ & 0.541 & $-0.001$ [-0.003, +0.001] & 25/37 & 0.72 & 0.461 & 6.6 (35) & 1.4 \\
+\textbf{MIP-Fair} coverage slack $\varepsilon = 0.05$ (base: $0$) & 120 & 0.763 & $-0.000$ & 0.542 & $-0.000$ [-0.002, +0.002] & 28/25 & 0.72 & 0.462 & 6.6 (35) & 1.5 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$, exposure) $k_d = 50$ (base: $k_d = 25$) & 120 & 0.768 & $-0.001$ & 0.404 & $-0.033$ [-0.035, -0.030] & 0/118 & 0.88 & 0.372 & 6.4 (34) & 1.3 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$, exposure) $k_d = 50$ (base: $k_d = 25$) & 120 & 0.762 & $-0.004$ & 0.412 & $-0.023$ [-0.028, -0.018] & 17/88 & 0.87 & 0.444 & 50.9 (234) & 2.2 \\
+\hline
+\multicolumn{11}{l}{\textit{Auto-accept regime}} \\
+\textbf{BRKGA-Fair} ($\gamma = 40$, exposure) $k_d = 50$ (base: $k_d = 25$) & 120 & 0.786 & $+0.000$ & 0.353 & $-0.063$ [-0.066, -0.059] & 0/120 & 0.90 & 0.322 & 5.5 (30) & 1.3 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$, exposure) $k_d = 50$ (base: $k_d = 25$) & 120 & 0.786 & $+0.000$ & 0.399 & $-0.002$ [-0.006, +0.002] & 44/66 & 0.88 & 0.424 & 22.3 (104) & 2.0 \\
+\hline
+\end{tabular}
+\end{adjustbox}
+\caption{Ablations of the supplement of X3, paired with the base configuration of each row on the same (instance, seed) pairs: number of pairs, coverage and $\FG$ of the ablation with the paired difference with respect to the base, number of pairs worse / better than the base by more than $0.005$ in $\FG$, active share of the eligible couriers, Gini coefficient over the active couriers, CPU time per run (mean and maximum, minutes) and its ratio to the base. Manual regime, five seeds of X3 (1{,}453 runs); the $k_d = 50$ rows also under auto-accept}
+\label{tab:ablations}
+\end{sidewaystable}
+
+\paragraph{BRKGA decoder and size} Scoring a chromosome by the finishing time instead of the finishing time per order lowers $\FG$ by $0.007$ and coverage by $0.001$ at $1.4$ times the CPU time. A population of 20 with 20 generations leaves coverage unchanged, raises $\FG$ by $0.007$ (worse in 75 of the 120 pairs) and costs almost three times the CPU time: the round objective is a coverage objective, and a longer search improves a quantity that the orders whose deadline can no longer be met already saturate while doing nothing for the end-of-day statistic. The $10 \times 10$ setting and the per-order score are retained.
+
+\paragraph{Scope and basis of the \textbf{MIP-Fair} constraint, and prefilter $k$} Three ablations tighten the round constraint of \textbf{MIP-Fair}: the Gini over the free couriers only, the total-earnings basis and the prefilter with $k = 25$. The three lower $\FG$ by $0.032$--$0.049$ and raise coverage by $0.006$--$0.008$, with 77--98 of the pairs better than the base. The expectation that the free-only scope would raise the end-of-day Gini because the free couriers are a biased subset is not borne out: $\FG$ falls by $0.049$ and the active-courier Gini from $0.460$ to $0.413$ on the same 115 pairs. None of the three reaches the second-generation variant with $k_d = 25$ ($\FG = 0.435$, Table~\ref{tab:gen2}), and all three cost eight to nine times the CPU time of the base (31--33 minutes per day on average and up to four hours on a Bogot\'a day), which is consistent with rounds that run to the 10-second solver limit once the constraint binds. A tighter round constraint is therefore not a substitute for the candidate set. The total-earnings basis in \textbf{BRKGA-Fair} moves $\FG$ by $0.005$: the weighted score reads the deficit only through the $K^{\text{dec}} = 3$ candidates of the decoder, so the basis matters little, as the exposure basis of the second generation also showed.
+
+\paragraph{Equity-first priority} The lexicographic order with equity before coverage, the first design of \textbf{MIP-Fair}, reproduces the collapse of the pilot on the 27 runs completed: coverage $0.310$ against $0.753$ for the base, a Gini of $0.195$ obtained by not assigning (47\% of the eligible couriers active, lateness nine minutes lower because few orders are served) and 36 times the CPU time. The paper's \textbf{MIP-Fair} keeps coverage first for this reason.
+
+\paragraph{Coverage slack} The slack $\varepsilon \in \{0.02, 0.05\}$ leaves $\FG$ and coverage within $0.001$ of the base, with 25--28 pairs worse and 25--37 better out of 120; this is the first-generation counterpart of the $\varepsilon$ result in Table~\ref{tab:gen2_paired}, and confirms that the lexicographic priority was not what bound the Gini block.
+
+\paragraph{$k_d = 50$} The last two rows of each block answer the question left open in Section~\ref{sec:results_quality}: whether the half of the gap to \textbf{Greedy} that remains at $k_d = 25$ is a matter of candidates or of the one-route-per-courier structure of the round. For \textbf{BRKGA-Fair} it is a matter of candidates: $\FG$ falls from $0.436$ to $0.404$ under the manual regime and from $0.415$ to $0.353$ under auto-accept, no pair is worse than at $k_d = 25$, coverage is unchanged, 54\% and 73\% of the days meet $\alpha = 0.40$, and the CPU time grows by a third (6 minutes per day on average, 34 at most). The $k_d$ curve of the heuristic, $0.533 \to 0.436 \to 0.404$ (manual) and $0.535 \to 0.415 \to 0.353$ (auto-accept) for $k_d \in \{0, 25, 50\}$, the $k_d = 0$ point being the activity-basis parent, is still descending. For \textbf{MIP-Fair} the curve flattens: $0.542 \to 0.465 \to 0.435 \to 0.412$ (manual) and $0.532 \to 0.426 \to 0.401 \to 0.399$ (auto-accept) for $k_d \in \{0, 8, 25, 50\}$, the last step within noise under auto-accept and with a coverage loss of $0.004$ under the manual regime, while the CPU time grows to 51 minutes per day on average and almost four hours on the largest Bogot\'a day. For the exact round model the structure of the round and the solver limit bind before the candidate set does.
+
+\subsection{Coverage and Gini coefficient under the sensitivity settings, and emissions}
+\label{sec:App_sens_gini}
+
+Table~\ref{tab:sensitivity} reports the relative difference of coverage over the base case discussed in Section~\ref{sec:results_sensitivity}, and Table~\ref{tab:sensitivity_gini} is the companion of Table~\ref{tab:sensitivity} for the end-of-day Gini coefficient over the eligible couriers. The statistic moves less than coverage under every factor: the regime lowers it by $2$\% for the first-generation policies and by $5$--$8$\% for the second-generation ones, whose deficit-aware prefilter reaches more idle couriers when every offer is accepted; the threshold moves it by at most $3.8$\%; $\alpha$ leaves it unchanged in the first generation.
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\begin{adjustbox}{max width=\textwidth}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{l|cc|ccc|ccc}
+\hline
+\multicolumn{1}{c}{} & \multicolumn{8}{c}{\textbf{Relative difference of $\FG$ over the base-case setting (in \%)}} \\
+\hline
+\multirow{2}{*}{\textbf{Policy\textbackslash Setting}}
+& \multicolumn{2}{c|}{\textbf{Regime}}
+& \multicolumn{3}{c|}{\textbf{Threshold} $\theta$ (COP/km)}
+& \multicolumn{3}{c}{\textbf{Tolerated inequality} $\alpha$} \\
+\cline{2-9}
+& \textbf{manual} & \textbf{auto} & \textbf{615} & \textbf{903} & \textbf{1,242} & \textbf{0.20} & \textbf{0.30} & \textbf{0.40} \\
+\hline
+\textbf{Greedy} & 0.0 & $-1.6$ & $-0.6$ & 0.0 & +3.3 & -- & -- & -- \\
+\textbf{Hierarchical} & 0.0 & $-2.2$ & $-1.2$ & 0.0 & +2.2 & -- & -- & -- \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.0 & $-1.9$ & -- & 0.0 & -- & 0.0 & 0.0 & +0.1 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$, $k_d = 25$) & 0.0 & $-4.8$ & $-2.4$ & 0.0 & +3.8 & -- & -- & -- \\
+\textbf{MIP-Fair} ($\alpha = 0.30$, $k_d = 25$) & 0.0 & $-7.9$ & $-2.7$ & 0.0 & +3.1 & -- & -- & -- \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.0 & $-2.2$ & $-1.5$ & 0.0 & +2.5 & -- & -- & -- \\
+\hline
+\end{tabular}
+\end{adjustbox}
+\caption{Sensitivity of the end-of-day Gini coefficient over the eligible couriers across operational settings: relative difference over the base case (manual regime, $\theta = 903$, $\alpha = 0.30$); sources and dashes as in Table~\ref{tab:sensitivity}}
+\label{tab:sensitivity_gini}
+\end{table}
+
+Figure~\ref{fig:regime_loss} shows the regime loss discussed in Section~\ref{sec:results_sensitivity}, and Table~\ref{tab:alpha} the three criteria for the tolerated inequality $\alpha$ and the policy that satisfies each at the least coverage cost. The survey anchors of criterion B, 0.28 inside the bonus ladder and 0.41 outside it, are Gini coefficients of income per connected hour among respondents, the basis of Eq.~\eqref{eqn:gini}; the respondents were active couriers, only three of whom report no income outside the ladder, so the anchors include almost none of the idle couriers that Eq.~\eqref{eqn:gini} counts at zero.
+
+\begin{figure}[htbp]
+    \centering
+    \figorph{figures/F5_regime_loss.pdf}{\textwidth}{5cm}{F5: regime loss by policy.}
+    \caption{Regime loss, manual minus auto-accept, paired by instance: coverage (left) and end-of-day Gini coefficient over the eligible couriers (right); mean and 95\% bootstrap interval over the 24 instances, ten seeds averaged within each instance}
+    \label{fig:regime_loss}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.22\textwidth}|>{\raggedright\arraybackslash}p{0.25\textwidth}|>{\raggedright\arraybackslash}p{0.30\textwidth}|>{\raggedright\arraybackslash}p{0.11\textwidth}}
+\hline
+\textbf{Criterion} & $\boldsymbol{\alpha}$ & \textbf{Policy satisfying it at least cost} & \textbf{Coverage cost vs. Greedy (pts)} \\
+\hline
+A: courier-centric anchor (Gini of \textbf{Greedy}) & 0.30 (X1: 0.304 manual, 0.299 auto-accept; 0.27--0.32 by city) & \textbf{Greedy} only; no order-centric policy of X1, nor \textbf{Greedy-Arrival}, meets it on any day & 0 (reference) \\
+B: inequality band & 0.30 (anchors 0.28 / 0.41); upper bound 0.40 & $\alpha^* = 0.40$: \textbf{BRKGA-Fair} ($\gamma = 40$, $k_d = 50$) on 54\% (manual) and 73\% (auto-accept) of the days; with $k_d = 25$, 49\% and 56\% & $-1.0$ manual (coverage gain), 0 auto-accept \\
+C: Pareto knee & none: coverage flat within 0.3 points along $\alpha$ and within 0.7 along $k_d$ & -- & -- \\
+\hline
+\end{tabular}
+\caption{The tolerated inequality $\alpha$ under the three criteria and the recommended policy}
+\label{tab:alpha}
+\end{table}
+
+Table~\ref{tab:emissions} and Figure~\ref{fig:emissions} show the emissions diagnostic discussed in Section~\ref{sec:results_sensitivity}: distance and kg CO$_2$e per delivered order, the share of the distance driven by each vehicle type by policy, and the kg per order by policy and city, from the per-courier distances of the 240 manual-regime runs of each policy and the emission factors of Table~\ref{tab:parameters}. Fairness in hourly earnings is neutral to vehicle type by construction; any emissions effect comes from which couriers receive distance, so the diagnostic is informative precisely where fleets are mixed. Fleet composition sets the level: a delivered order costs $0.13$--$0.18$ kg CO$_2$e in Bogot\'a, where bicycles and walkers carry about two fifths of the distance (a third to a half, by policy), and $0.25$--$0.36$ in Pereira, where motorcycles carry nine tenths. The policy sets the rest, and in the opposite direction to equity. \textbf{Greedy} drives $2.95$ km per delivered order against $2.26$--$2.34$ for the six order-centric policies, 30\% more, because it sends the least-served free courier rather than the nearest one; it shifts distance towards bicycles and walkers (21\% of its kilometres on average over the instances, 30\% when they are pooled as in Figure~\ref{fig:emissions}; as much as \textbf{ILP} and \textbf{MIP-Fair} and twice the share of the BRKGA family and \textbf{Hierarchical}), so its emissions per kilometre are as low as those of the two ILP-based policies (92--95 g against 104--108 g), but the extra distance dominates: $0.280$ kg per delivered order against $0.213$--$0.216$ for \textbf{MIP-Fair} and \textbf{ILP}, 24\% less, and $0.234$--$0.250$ for the BRKGA family and \textbf{Hierarchical}. The two ILP-based policies are the cleanest because they drive less and use the slow vehicles more; bundling plays no part, since bundle sizes are $1.00$--$1.03$ for every policy. Equity and emissions therefore pull in opposite directions at this scale: the policy that spreads work also spreads distance.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{l|c|c|c|cccc}
+\hline
+\multirow{2}{*}{\textbf{Policy}} & \textbf{km per} & \textbf{kg CO$_2$e per} & \textbf{g CO$_2$e} & \multicolumn{4}{c}{\textbf{Share of distance by vehicle (\%)}} \\
+ & \textbf{delivered order} & \textbf{delivered order} & \textbf{per km} & \textbf{motorcycle} & \textbf{car} & \textbf{bicycle} & \textbf{walking} \\
+\hline
+\textbf{Greedy} & 2.95 & 0.280 & 95 & 73 & 7 & 18 & 3 \\
+\textbf{ILP} & 2.34 & 0.216 & 92 & 71 & 6 & 17 & 5 \\
+\textbf{Hierarchical} & 2.32 & 0.250 & 108 & 87 & 5 & 7 & 1 \\
+\textbf{BRKGA} & 2.26 & 0.241 & 107 & 86 & 5 & 8 & 1 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$) & 2.28 & 0.238 & 105 & 84 & 5 & 10 & 1 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 2.27 & 0.213 & 94 & 73 & 6 & 16 & 4 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 2.26 & 0.234 & 104 & 83 & 5 & 10 & 1 \\
+\hline
+\end{tabular}
+\end{adjustbox}
+\caption{Emissions diagnostic by policy, manual regime: distance and emissions per delivered order and share of the distance by vehicle type, mean over the 24 instances (ten seeds averaged within each instance), from the per-courier distances and the emission factors of Table~\ref{tab:parameters}}
+\label{tab:emissions}
+\end{table}
+
+\begin{figure}[htbp]
+    \centering
+    \figorph{figures/F8_emissions.pdf}{\textwidth}{5cm}{F8: emissions by policy and city; share of distance by vehicle type.}
+    \caption{Emissions diagnostic: kg CO$_2$e per delivered order by policy and city, manual regime, mean over the ten seeds and the instances of the city (left); share of the distance driven by each vehicle type, by policy, 24 instances pooled (right)}
+    \label{fig:emissions}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\begin{adjustbox}{max width=\textwidth}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{l|cc|ccc|ccc}
+\hline
+\multicolumn{1}{c}{} & \multicolumn{8}{c}{\textbf{Relative difference over the base-case setting (in \%)}} \\
+\hline
+\multirow{2}{*}{\textbf{Policy\textbackslash Setting}}
+& \multicolumn{2}{c|}{\textbf{Regime}}
+& \multicolumn{3}{c|}{\textbf{Threshold} $\theta$ (COP/km)}
+& \multicolumn{3}{c}{\textbf{Tolerated inequality} $\alpha$} \\
+\cline{2-9}
+& \textbf{manual} & \textbf{auto} & \textbf{615} & \textbf{903} & \textbf{1,242} & \textbf{0.20} & \textbf{0.30} & \textbf{0.40} \\
+\hline
+\textbf{Greedy} & 0.0 & +3.7 & +3.3 & 0.0 & $-9.1$ & -- & -- & -- \\
+\textbf{Hierarchical} & 0.0 & +2.3 & +2.0 & 0.0 & $-5.6$ & -- & -- & -- \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.0 & +3.0 & -- & 0.0 & -- & 0.0 & 0.0 & 0.0 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$, $k_d = 25$) & 0.0 & +2.2 & +2.0 & 0.0 & $-5.8$ & -- & -- & -- \\
+\textbf{MIP-Fair} ($\alpha = 0.30$, $k_d = 25$) & 0.0 & +2.6 & +2.3 & 0.0 & $-7.1$ & -- & -- & -- \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.0 & +4.4 & +3.7 & 0.0 & $-7.3$ & -- & -- & -- \\
+\hline
+\end{tabular}
+\end{adjustbox}
+\caption{Sensitivity analysis across operational settings: relative difference of coverage over the base case (manual regime, $\theta = 903$, $\alpha = 0.30$). Regime and $\alpha$ from X1 (ten seeds) and, for the rows with $k_d = 25$, from X3 (five seeds); $\theta$ from X2 (five seeds, the five configurations of the threshold experiment); a dash marks a parameter the policy does not have or a level not run in X2 or X3. The companion for the Gini coefficient is Table~\ref{tab:sensitivity_gini} in \ref{sec:App_sens_gini}}
+\label{tab:sensitivity}
+\end{table}
+
+\FloatBarrier
+\subsection{Supply inside the bonus ladder and populations not based on hours}
+\label{sec:App_objections}
+
+This subsection reports two checks of the central result computed from the instances and the per-courier tables of the runs, without new runs (\texttt{analysis\_objections.py}; seeds 1--5, shared by X1, the second generation and the $k_d = 50$ supplement).
+
+\paragraph{Supply} Over the 24 zones the recorded fleet gives $0.40$ orders per connected courier-hour. By clock hour, the busiest hour of each zone (12:00--14:00 in 15 instances, 19:00--20:00 in nine) reaches a median of $0.70$ ($0.30$--$1.26$); $9.0\%$ of the connected courier-hours fall in clock hours with at least $0.75$ orders per courier-hour and $0.9\%$, in two instances, in clock hours with at least the $1.15$ that surveyed couriers report inside the bonus ladder. With the fleet thinned to one courier in three the share at $1.15$ or more is $43\%$ ($0$--$64\%$ by instance, median $39\%$). The survey implies about a quarter of the time inside the ladder, so the full fleet understates and the thinned fleet overstates in-ladder conditions, and the two scenarios of Section~\ref{sec:results_sensitivity} bracket them. The clock-hour reading is generous to the ladder, since the survey ratio is a daily average. Realised per courier, at most $3.3\%$ of the eligible couriers reach $1.15$ orders per connected hour over the day under any policy ($1.7$--$2.0\%$ under \textbf{Greedy}), with at most $1\%$ of their connected hours.
+
+\paragraph{Populations not based on hours} Table~\ref{tab:alt_population} recomputes the end-of-day Gini coefficient, idle couriers at zero, over populations that do not use the one-hour threshold: the couriers connected at any moment of the zone's busiest clock hour; the couriers connected during either of its two busiest hours, with earnings divided by the orders placed in the zone while each was connected (a demand-weighted exposure that uses no hours); the eligible couriers with the same exposure; and all the couriers of the zone, with either normalisation. On the busiest-hour populations and on the demand-weighted exposure over the eligible couriers, \textbf{Greedy} is the most equitable policy in both regimes, and it is below the best first-generation order-centric policy on 24 of the 24 instances under manual acceptance and on 21--23 under auto-accept. Without any floor on connection time the ranking narrows, and under auto-accept \textbf{ILP} ends below \textbf{Greedy}: \textbf{Greedy} is above the best first-generation policy on 9 (manual) and 15 (auto-accept) instances in hourly earnings and on 13 and 17 in demand-weighted exposure, for the reason given in Section~\ref{sec:results_quality}: it dispatches to couriers connected for a few minutes, who enter with hourly earnings far above the rest. \textbf{BRKGA-Fair} with $k_d = 50$ is the most equitable policy over all the couriers.
+
+\paragraph{Benchmark and candidate set} \textbf{Greedy} ranks the free couriers by the orders delivered so far (\texttt{policies.py}), which under the flat tariff is proportional to daily earnings, not to earnings per connected hour, and it does not know which couriers will be connected long enough to be eligible; it is therefore not tuned to the statistic of Eq.~\eqref{eqn:gini}. The deficit-aware prefilter of the second generation already applies its least-served-first rule to the candidate set; a decoder that also breaks coverage ties least served first is the natural hybrid, which we leave for future work. Whether a per-round model over all the free couriers would close the rest of the gap is open: with $k_d = 50$ \textbf{MIP-Fair} flattens at $0.40$--$0.41$ while its CPU time grows to 51 minutes per day, so a Bogot\'a zone calls for column generation over courier--route pairs rather than a larger prefilter.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{l|c|cc|c|cc}
+\hline
+ & \textbf{Eligible} & \textbf{Busiest hour} & \textbf{Two busiest hours} & \textbf{Eligible} & \multicolumn{2}{c}{\textbf{All couriers, no floor}} \\
+\textbf{Policy} & \textbf{per hour, $\FG$} & \textbf{per hour} & \textbf{per order placed} & \textbf{per order placed} & \textbf{per hour} & \textbf{per order placed} \\
+\hline
+\multicolumn{7}{l}{\textit{Manual regime}} \\
+\textbf{Greedy} & \textbf{0.303} & \textbf{0.265} & \textbf{0.253} & \textbf{0.357} & 0.539 & 0.601 \\
+\textbf{ILP} & 0.520 & 0.509 & 0.497 & 0.542 & 0.591 & 0.607 \\
+\textbf{Hierarchical} & 0.527 & 0.529 & 0.512 & 0.570 & 0.647 & 0.688 \\
+\textbf{BRKGA} & 0.563 & 0.566 & 0.554 & 0.604 & 0.655 & 0.689 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$) & 0.533 & 0.537 & 0.521 & 0.576 & 0.638 & 0.676 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.542 & 0.543 & 0.526 & 0.575 & 0.627 & 0.663 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.545 & 0.549 & 0.530 & 0.574 & 0.630 & 0.657 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$, $k_d = 25$) & 0.436 & 0.416 & 0.410 & 0.492 & 0.516 & 0.558 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$, $k_d = 25$) & 0.435 & 0.412 & 0.403 & 0.475 & 0.552 & 0.596 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$, $k_d = 50$) & 0.404 & 0.378 & 0.372 & 0.462 & \textbf{0.483} & \textbf{0.533} \\
+\hline
+\multicolumn{7}{l}{\textit{Auto-accept regime}} \\
+\textbf{Greedy} & \textbf{0.299} & \textbf{0.290} & \textbf{0.289} & \textbf{0.365} & 0.601 & 0.654 \\
+\textbf{ILP} & 0.501 & 0.485 & 0.476 & 0.523 & 0.572 & 0.591 \\
+\textbf{Hierarchical} & 0.516 & 0.535 & 0.517 & 0.570 & 0.666 & 0.705 \\
+\textbf{BRKGA} & 0.566 & 0.576 & 0.561 & 0.606 & 0.667 & 0.697 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$) & 0.535 & 0.546 & 0.530 & 0.578 & 0.643 & 0.679 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$) & 0.532 & 0.537 & 0.516 & 0.568 & 0.615 & 0.654 \\
+\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.533 & 0.538 & 0.521 & 0.558 & 0.621 & 0.637 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$, $k_d = 25$) & 0.415 & 0.397 & 0.388 & 0.477 & 0.497 & 0.544 \\
+\textbf{MIP-Fair} ($\alpha = 0.30$, $k_d = 25$) & 0.401 & 0.393 & 0.379 & 0.462 & 0.527 & 0.574 \\
+\textbf{BRKGA-Fair} ($\gamma = 40$, $k_d = 50$) & 0.353 & 0.321 & 0.319 & 0.422 & \textbf{0.426} & \textbf{0.483} \\
+\hline
+\end{tabular}
+\end{adjustbox}
+\caption{End-of-day Gini coefficient over populations not defined by the one-hour threshold, idle couriers at zero, mean over the 24 instances (seeds 1--5 averaged within each instance). ``Busiest hour'': couriers connected at any moment of the clock hour with most orders placed in the zone; ``two busiest hours'': connected during either of the two; ``per order placed'': earnings divided by the orders placed in the zone while the courier was connected; ``all couriers'': every courier of the zone, whatever its connection time. The first column is $\FG$ of Eq.~\eqref{eqn:gini} on the same seeds; the rows with $k_d$ are the second-generation variants (exposure basis). Best value per column and regime in bold}
+\label{tab:alt_population}
+\end{table}
+
+\bibliographystyle{elsarticle-harv}
+\bibliography{references}
+
+\end{document}

@@ -20,6 +20,7 @@ python tables_paper.py $O/main.csv $O/gen2.csv --couriers-table $O/main_couriers
 python analyze_gen2_final.py > $O/gen2_final.txt 2>&1
 python analyze_supp.py > $O/supp_analysis.txt 2>&1
 python analyze_x2.py > $O/x2_analysis.txt 2>&1
+python analyze_x2_k50.py > $O/x2_k50_stdout.txt 2>&1   # writes $O/x2_k50_summary.txt (X2k50, BRKGA-Fair k_d = 50)
 python figures_paper.py --fig f3f4 f5 f7 f8 --extra-csv $O/gen2.csv > $O/figures_stdout.txt 2>&1
 python analyze_review.py > $O/review_tables_stdout.txt 2>&1
 python analyze_review2.py > $O/review_analysis.txt 2>&1

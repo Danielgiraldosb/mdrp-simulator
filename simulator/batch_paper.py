@@ -6,6 +6,7 @@ Experiments
   main       18 method configurations x 2 regimes x 24 instances x 10 seeds           (8,640 runs)
   threshold  5 selected configurations x logit threshold {615, 1242} x greedy/hier/BRKGA-Fair xk25/MIP-Fair xk25/Pay-BRKGA, manual (E12)
              x 24 instances x 5 seeds                                                 (1,200 runs)
+             + BRKGA-Fair xk50 (w = 40, the alpha* = 0.40 policy; X2k50, run with --methods brkga_fair_w40_xk50) (240 runs)
   supp       4 ablations x manual x 24 instances x 5 seeds                            (480 runs)
 
 Every run executes in its OWN Python subprocess with retries and a timeout
@@ -159,6 +160,11 @@ REVIEW_FIVE_SEEDS = ['greedy_thin', 'brkga_fair_w40_thin', 'brkga_fair_w40_xk25_
 
 PILOT_METHODS = ['greedy', 'ilp', 'hier', 'brkga', 'brkga_fair_w10', 'mipfair_a030', 'paybrkga_l02']
 THRESHOLD_METHODS = ['greedy', 'hier', 'brkga_fair_w40_xk25', 'mipfair_a030_xk25_e000', 'paybrkga_l05']   # E12
+# X2k50 (2026-11-24): the alpha* = 0.40 operating point is BRKGA-Fair (w = 40, k_d = 50), so X2 adds it (same 24 zones,
+# seeds 1-5, manual regime, theta in {615, 1242}); its theta = 903 reference is supp.csv (same seeds). run_ids hash the
+# method key, so the existing threshold.csv rows are skipped. MIP-Fair k_d = 50 (mipfair_a030_xk50_e000, ~50 CPU-min per
+# day at theta = 903, up to 4 h) is in the catalogue but not in the default list: pass it with --methods to run it.
+THRESHOLD_METHODS.append('brkga_fair_w40_xk50')
 
 
 # ---------------------------------------------------------------- instances
@@ -220,7 +226,7 @@ def build_grid(experiment: str, instances: List[str], cities: Dict[str, str], ra
         # --mipfair-knee is accepted and ignored (kept for the old command lines).
         mkeys = list(methods or THRESHOLD_METHODS)
         add(instances, mkeys, ['manual'], range(1, (seeds or 5) + 1), list(PPK_THRESHOLD_CI),
-            catalogue={**METHODS, **GEN2})
+            catalogue={**METHODS, **GEN2, **ABLATIONS})
     elif experiment == 'supp':
         mkeys = list(methods or list(ABLATIONS))
         add(instances, mkeys, ['manual'], range(1, (seeds or 5) + 1), [PPK_THRESHOLD_POINT], catalogue=ABLATIONS)
