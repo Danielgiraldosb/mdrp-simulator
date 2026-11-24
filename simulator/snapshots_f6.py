@@ -90,7 +90,8 @@ def trajectory(deliveries: pd.DataFrame, couriers: pd.DataFrame, step_min: float
         hours_act = (np.minimum(t, c.loc[act, 'off_time']) - c.loc[act, 'on_time']).clip(lower=1e-9) / 60.0
         hourly_act = earned.loc[act] / hours_act
         rows.append({'time_min': t, 'n_eligible_connected': len(pop), 'n_active': len(act),
-                     'gini_elig': gini(hourly_elig) if len(pop) else np.nan,
+                     # undefined (NaN, not 0) while nobody has earned yet: a Gini of 0 there is an artefact
+                     'gini_elig': gini(hourly_elig) if len(pop) and earn.sum() > 0 else np.nan,
                      'gini_active': gini(hourly_act) if len(act) else np.nan,
                      'share_active_elig': float((earn > 0).mean()) if len(pop) else np.nan})
     return pd.DataFrame(rows)
@@ -108,7 +109,17 @@ def plot(args) -> None:
                          'ytick.labelsize': 8, 'legend.fontsize': 8, 'axes.spines.top': False,
                          'axes.spines.right': False, 'figure.dpi': 150})
     curves = {}
-    for m in args.methods:
+    if args.from_csv:
+        # replot from the curves already computed (figures/F6_intraday_gini.csv), without the delivery logs
+        saved = pd.read_csv(os.path.join(FIG_DIR, 'F6_intraday_gini.csv'), float_precision='round_trip')
+        for m in args.methods:
+            t = saved[saved['method'] == m].drop(columns='method').reset_index(drop=True)
+            if t.empty:
+                print('missing in F6_intraday_gini.csv:', m)
+                continue
+            t.loc[t['n_active'] == 0, 'gini_elig'] = np.nan   # same rule as trajectory(): undefined before any earnings
+            curves[m] = t
+    for m in ([] if args.from_csv else args.methods):
         stem = os.path.join(OUT_DIR, f'{args.instance}_{m}_{args.regime}_s{args.seed}')
         if not os.path.exists(stem + '_deliveries.csv'):
             print('missing', stem)
@@ -121,7 +132,8 @@ def plot(args) -> None:
         axes[0].plot(h, t['gini_elig'], color=col, ls=ls, lw=1.4, label=_label(m))
         axes[1].plot(h, t['gini_active'], color=col, ls=ls, lw=1.4, label=_label(m))
     for ax, title in zip(axes, ('Eligible couriers, idle at zero (Eq. (7))', 'Couriers with at least one delivery')):
-        ax.axhline(args.alpha, color='#999999', lw=0.8, ls='--')
+        # solid light grey: a style no policy uses (Hierarchical is grey and dashed)
+        ax.axhline(args.alpha, color='#bdbdbd', lw=0.6, ls='-', zorder=0)
         ax.text(1.4, args.alpha + 0.015, f'$\\alpha$ = {args.alpha:.2f}', color='#666666')
         ax.set_xlabel('time of day (h)')
         ax.set_xlim(0, 24)
@@ -138,7 +150,7 @@ def plot(args) -> None:
     for ext in ('pdf', 'png'):
         fig.savefig(os.path.join(FIG_DIR, f'F6_intraday_gini.{ext}'), bbox_inches='tight')
     out = pd.concat([t.assign(method=m) for m, t in curves.items()], ignore_index=True)
-    out.to_csv(os.path.join(FIG_DIR, 'F6_intraday_gini.csv'), index=False)
+    out.to_csv(os.path.join(FIG_DIR, 'F6_intraday_gini.csv'), index=False, lineterminator='\n')
     print('wrote', os.path.join(FIG_DIR, 'F6_intraday_gini.pdf'))
     # numbers for the prose: the time at which each curve first goes below alpha and the end-of-day values
     for m, t in curves.items():
@@ -160,6 +172,8 @@ def main() -> None:
     ap.add_argument('--seed', type=int, default=1)
     ap.add_argument('--solver', default='GUROBI')
     ap.add_argument('--alpha', type=float, default=0.40)
+    ap.add_argument('--from-csv', action='store_true',
+                    help='plot: read the curves from figures/F6_intraday_gini.csv instead of the delivery logs')
     args = ap.parse_args()
     run(args) if args.cmd == 'run' else plot(args)
 

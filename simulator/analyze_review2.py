@@ -17,7 +17,7 @@ import os
 import numpy as np
 import pandas as pd
 
-OUT = r'C:/MDRP/simulator/output/paper/'
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'output', 'paper', '')
 TAB = OUT + 'tables/'
 COLS = ['run_id', 'gini_elig_hourly', 'share_active_elig', 'p25_elig_hourly', 'median_hourly']
 KEY = ['instance', 'seed']

@@ -6,10 +6,11 @@ and the compliance curve of the k_d = 25 variants for alpha in 0.30..0.50 (Table
 
     python analyze_gen2_final.py > output/paper/gen2_final.txt
 """
+import os
 import numpy as np
 import pandas as pd
 
-OUT = r'C:/MDRP/simulator/output/paper/'
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'output', 'paper', '')
 COLS = ['run_id', 'gini_elig_hourly', 'gini_elig_active_hourly', 'share_active_elig', 'p25_elig_hourly']
 FIRST = ['greedy', 'ilp', 'hier', 'brkga', 'brkga_fair_w20', 'brkga_fair_w40', 'mipfair_a030', 'paybrkga_l05']
 PARENT = {'brkga_fair_w20_x': 'brkga_fair_w20', 'brkga_fair_w20_xk': 'brkga_fair_w20',

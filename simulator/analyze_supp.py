@@ -10,24 +10,25 @@ of the appendix table to output/paper/tables/ablations.tex.
 
     python analyze_supp.py > output/paper/supp_analysis.txt
 """
+import os
 import numpy as np
 import pandas as pd
 
-OUT = r'C:/MDRP/simulator/output/paper/'
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'output', 'paper', '')
 COLS = ['run_id', 'gini_elig_hourly', 'gini_elig_active_hourly', 'share_active_elig', 'p25_elig_hourly']
 KEY = ['instance', 'seed']
 # ablation -> (parent key, source of the parent, label for the table)
 ABL = {
     'brkga_finish':           ('brkga', 'main', r'\textbf{BRKGA} decoder score$_{\text{finish}}$ (base: finish per order)'),
     'brkga_p20g20':           ('brkga', 'main', r'\textbf{BRKGA} $20 \times 20$ (base: $10 \times 10$)'),
-    'brkga_fair_w10_total':   ('brkga_fair_w10', 'main', r'\textbf{BRKGA-Fair} ($w = 10$) total-earnings basis (base: hourly)'),
+    'brkga_fair_w10_total':   ('brkga_fair_w10', 'main', r'\textbf{BRKGA-Fair} ($\gamma = 10$) total-earnings basis (base: hourly)'),
     'mipfair_a030_idle':      ('mipfair_a030', 'main', r'\textbf{MIP-Fair} Gini over free couriers only (base: all connected)'),
     'mipfair_a030_total':     ('mipfair_a030', 'main', r'\textbf{MIP-Fair} total-earnings basis (base: hourly)'),
     'mipfair_a030_fairfirst': ('mipfair_a030', 'main', r'\textbf{MIP-Fair} equity-first priority (base: coverage first)'),
     'mipfair_a030_k25':       ('mipfair_a030', 'main', r'\textbf{MIP-Fair} prefilter $k = 25$ (base: $k = 8$)'),
     'mipfair_a030_slack002':  ('mipfair_a030', 'main', r'\textbf{MIP-Fair} coverage slack $\varepsilon = 0.02$ (base: $0$)'),
     'mipfair_a030_slack005':  ('mipfair_a030', 'main', r'\textbf{MIP-Fair} coverage slack $\varepsilon = 0.05$ (base: $0$)'),
-    'brkga_fair_w40_xk50':    ('brkga_fair_w40_xk25', 'gen2', r'\textbf{BRKGA-Fair} ($w = 40$, exposure) $k_d = 50$ (base: $k_d = 25$)'),
+    'brkga_fair_w40_xk50':    ('brkga_fair_w40_xk25', 'gen2', r'\textbf{BRKGA-Fair} ($\gamma = 40$, exposure) $k_d = 50$ (base: $k_d = 25$)'),
     'mipfair_a030_xk50_e000': ('mipfair_a030_xk25_e000', 'gen2', r'\textbf{MIP-Fair} ($\alpha = 0.30$, exposure) $k_d = 50$ (base: $k_d = 25$)'),
 }
 GRAND = {'brkga_fair_w40_xk50': 'brkga_fair_w40', 'mipfair_a030_xk50_e000': 'mipfair_a030'}

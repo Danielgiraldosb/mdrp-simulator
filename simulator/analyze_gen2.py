@@ -1,10 +1,11 @@
 """Preliminary read of X3 gen2 (partial): seed 1, instances complete for all gen2 methods, paired with
 the first-generation runs of X1 (seed 1, same instances)."""
+import os
 import sys
 import numpy as np
 import pandas as pd
 
-OUT = r'C:/MDRP/simulator/output/paper/'
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'output', 'paper', '')
 cols = ['run_id', 'gini_elig_hourly', 'gini_elig_active_hourly', 'share_active_elig', 'p25_elig_hourly']
 main = pd.read_csv(OUT + 'main.csv').merge(pd.read_csv(OUT + 'main_couriers.csv')[cols], on='run_id')
 gen2 = pd.read_csv(OUT + 'gen2.csv').merge(pd.read_csv(OUT + 'gen2_couriers.csv')[cols], on='run_id')

@@ -131,6 +131,26 @@ def main():
     P('  orders per connected courier-hour in the zones by city (pooled over its days; text: 0.39-0.42 Bogota/Medellin, '
       '0.22-0.27 Bucaramanga/Pereira):\n' + (sup.orders_zone / sup.hours_zone).round(3).to_string())
     P('  survey numbers (anchors 0.41 / 0.28, 0.35 / 1.15 orders per connected hour): survey_anchors.py on the raw file, not in the repo')
+    # corrections v54 (24 nov): numbers introduced or checked by docs/paper-cmdp/correcciones_v54.md
+    P('\n######## corrections v54')
+    for r in ('manual', 'autoaccept'):
+        gr5 = sel(X5, 'greedy', r).set_index(KEY)
+        k50 = sel(S, 'brkga_fair_w40_xk50', r).set_index(KEY)
+        dl = (k50.overage_mean - gr5.overage_mean.reindex(k50.index)).groupby(level=0).mean().mean()
+        dc = (k50.coverage_rate - gr5.coverage_rate.reindex(k50.index)).groupby(level=0).mean().mean()
+        P(f'  {r:10s} C1/C2 BRKGA-Fair k_d=50 minus Greedy, paired on seeds 1-5: lateness {dl:+.2f} min, coverage {100 * dc:+.2f} pts')
+        gx = sel(X, 'greedy', r).set_index(KEY)
+        hx = sel(X, 'hier', r).set_index(KEY)
+        P(f'  {r:10s} L520 Hierarchical minus Greedy lateness, paired (X1): '
+          f'{(hx.overage_mean - gx.overage_mean.reindex(hx.index)).groupby(level=0).mean().mean():+.2f} min')
+        for v, p in (('brkga_fair_w40_xk25', 'brkga_fair_w40'), ('mipfair_a030_xk25_e000', 'mipfair_a030')):
+            vv = sel(G, v, r).set_index(KEY)
+            d = (vv.gini_elig_hourly - sel(X5, p, r).set_index(KEY).gini_elig_hourly.reindex(vv.index)).dropna()
+            P(f'  {r:10s} C13 {v:24s} pairs worse than the parent by more than 0.005 in FG: {int((d > 0.005).sum())} of {len(d)}')
+    idle = sel(S, 'mipfair_a030_idle', 'manual').set_index(KEY)
+    base = sel(X5, 'mipfair_a030', 'manual').set_index(KEY).reindex(idle.index)
+    P(f'  C35 MIP-Fair free-only scope: active-courier Gini {lv(base.reset_index(), "F_Gini"):.3f} (base) -> '
+      f'{lv(idle.reset_index(), "F_Gini"):.3f} on the same {len(idle)} pairs')
     # pilot circuity
     P('\n######## pilot')
     p10 = pd.read_csv(os.path.join(a.data, 'pilot.csv'))

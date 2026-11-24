@@ -13,9 +13,9 @@ import sys
 import numpy as np
 import pandas as pd
 
-OUT = r'C:/MDRP/simulator/output/paper/'
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'output', 'paper', '')
 TAB = OUT + 'tables/'
-FIG = r'C:/MDRP/docs/paper-cmdp/paper/figures/'
+FIG = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'docs', 'paper-cmdp', 'paper', 'figures', '')
 COLS = ['run_id', 'gini_elig_hourly', 'share_active_elig']
 KEY = ['instance', 'seed']
 PARENT = {'brkga_fair_w20_x': 'brkga_fair_w20', 'brkga_fair_w20_xk': 'brkga_fair_w20',

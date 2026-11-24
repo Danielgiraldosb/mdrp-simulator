@@ -4,7 +4,9 @@ eligibility threshold (connected at least 0.5, 1 or 2 hours; idle couriers at ze
 per-courier tables of the runs (output/paper/couriers/<run_id>.csv). No new runs.
 
 Configurations: those of tab:benchmark (X1, main.csv, ten complete seeds) plus Greedy-Arrival (review.csv,
-same seeds). With threshold 1 h it reproduces the F_G column of tab:benchmark (check printed).
+same seeds). With threshold 1 h it reproduces the F_G and active-eligible columns of tab:benchmark; the check
+against main_couriers.csv / review_couriers.csv is printed. A courier is active when it delivered at least one order.
+The per-courier tables output/paper/couriers/<run_id>.csv are not in the repository (they stay on the machine that ran X1).
 
   python eligibility_thresholds.py [--out output/paper/eligibility_thresholds.csv] [--tex output/paper/tables/eligibility.tex]
 """
@@ -35,14 +37,27 @@ def runs() -> pd.DataFrame:
 
 
 def per_run(path: str) -> dict:
-    t = pd.read_csv(path, usecols=['shift_h', 'payment'])
+    t = pd.read_csv(path, usecols=['shift_h', 'payment', 'orders'])
     out = {}
     for thr in THRESHOLDS:
         e = t[t['shift_h'] >= thr]
         out[f'gini_{thr:g}h'] = gini(e['payment'] / e['shift_h'].clip(lower=1e-9))
-        out[f'active_{thr:g}h'] = float((e['payment'] > 0).mean()) if len(e) else np.nan
+        # active = delivered at least one order, as in analyze_couriers.py and Table 2 ("active eligible");
+        # pay is credited at acceptance, so payment > 0 would also count a courier whose order is still on the way
+        out[f'active_{thr:g}h'] = float((e['orders'] > 0).mean()) if len(e) else np.nan
         out[f'n_{thr:g}h'] = len(e)
     return out
+
+
+def check_against_courier_tables(df: pd.DataFrame) -> None:
+    """The 1 h column must reproduce gini_elig_hourly and share_active_elig of the courier tables (Table 2)."""
+    cour = pd.concat([pd.read_csv(os.path.join(O, f)) for f in ('main_couriers.csv', 'review_couriers.csv')],
+                     ignore_index=True).drop_duplicates('run_id')
+    m = df.merge(cour[['run_id', 'gini_elig_hourly', 'share_active_elig']], on='run_id', how='inner')
+    dg = (m['gini_1h'] - m['gini_elig_hourly']).abs().max()
+    da = (m['active_1h'] - m['share_active_elig']).abs().max()
+    print(f'check vs courier tables ({len(m)} of {len(df)} runs): max |gini_1h - gini_elig_hourly| = {dg:.2e}, '
+          f'max |active_1h - share_active_elig| = {da:.2e} -> {"OK" if dg < 1e-6 and da < 1e-6 else "MISMATCH"}')
 
 
 def main() -> None:
@@ -54,6 +69,7 @@ def main() -> None:
     rows = [{'run_id': r.run_id, **per_run(os.path.join(O, 'couriers', f'{r.run_id}.csv'))} for r in df.itertuples()]
     df = df.merge(pd.DataFrame(rows), on='run_id')
     df.to_csv(a.out, index=False)
+    check_against_courier_tables(df)
     order = CONFIGS[:1] + ['greedy_arrival'] + CONFIGS[1:]
     cols = [f'gini_{t:g}h' for t in THRESHOLDS]
     tab = df.groupby(['regime', 'method'])[cols + [f'active_{t:g}h' for t in THRESHOLDS]].mean()

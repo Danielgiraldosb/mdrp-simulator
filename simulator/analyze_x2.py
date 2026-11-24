@@ -15,7 +15,7 @@ import os
 import numpy as np
 import pandas as pd
 
-OUT = r'C:/MDRP/simulator/output/paper/'
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'output', 'paper', '')
 COLS = ['run_id', 'gini_elig_hourly', 'gini_elig_active_hourly', 'share_active_elig', 'p25_elig_hourly']
 KEY = ['instance', 'seed']
 SRC903 = {'greedy': 'main', 'hier': 'main', 'paybrkga_l05': 'main', 'brkga_fair_w40_xk25': 'gen2', 'mipfair_a030_xk25_e000': 'gen2'}

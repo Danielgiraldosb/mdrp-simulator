@@ -127,7 +127,9 @@ def fig_f2(out_dir: str) -> None:
     corners = [p(t, b) for t in (THETA_CI[0], THETA, THETA_CI[1]) for b in (SLOPE_CI[0], SLOPE, SLOPE_CI[1])]
     lo, hi = np.min(corners, axis=0), np.max(corners, axis=0)
 
-    fig, ax = plt.subplots(figsize=(0.495 * TEXTWIDTH_IN, 0.37 * TEXTWIDTH_IN))   # minipage of 0.495\textwidth
+    # minipage of 0.495\textwidth; drawn a little narrower because the tight bounding box adds the rotated tick
+    # labels, so that the PDF is not scaled below 8 pt when it is included
+    fig, ax = plt.subplots(figsize=(0.475 * TEXTWIDTH_IN, 0.37 * TEXTWIDTH_IN))
     ax.fill_between(ppk, lo, hi, color='#c6dbef', alpha=0.7, label='95 % CI of the fit')
     ax.plot(ppk, p(THETA, SLOPE), c='#08519c', lw=2, label=f'manual: logit, $\\theta$ = {THETA:.0f}, $b$ = {SLOPE}')
     ax.axhline(1.0, c='#fd8d3c', lw=2, ls='--', label='auto-accept: P = 1')
@@ -176,26 +178,38 @@ GEN2_PATHS = {   # family -> (label, [(parent, None), (variant, annotation), ...
 FRONTIER_LABELS = {
     ('coverage_rate', 'manual'): {'brkga_fair': (28, 21), 'mipfair': (25, -4), 'paybrkga': (25, -13),
                                   'mipfair_a030_xk_e000': (3, -21), 'mipfair_a030_xk25_e000': (-12, -18),
-                                  'brkga_fair_w20_xk': (0, 14), 'brkga_fair_w40_xk25': (-21, 19),
+                                  'brkga_fair_w20_xk': (8, 15), 'brkga_fair_w40_xk25': (-27, 19),
                                   'paybrkga_l05_xk': (-20, -10)},
-    ('coverage_rate', 'autoaccept'): {'brkga_fair': (28, -52), 'mipfair': (32, -25), 'paybrkga': (31, -80),
-                                      'mipfair_a030_xk_e000': (5, -43), 'mipfair_a030_xk25_e000': (-18, -20),
-                                      'brkga_fair_w20_xk': (-10, -90), 'brkga_fair_w40_xk25': (-15, -70),
-                                      'paybrkga_l05_xk': (-6, -112)},
-    ('overage_mean', 'manual'): {'brkga_fair': (31, -14), 'mipfair': (28, 18), 'paybrkga': (28, -6),
+    # auto-accept: every policy covers 0.786, so the labels go in rows under the points, x-ordered, short leaders
+    ('coverage_rate', 'autoaccept'): {'mipfair_a030_xk25_e000': (-8, -14), 'mipfair_a030_xk_e000': (4, -28),
+                                      'brkga_fair_w40_xk25': (-14, -44), 'brkga_fair_w20_xk': (0, -14),
+                                      'paybrkga_l05_xk': (2, -30), 'mipfair': (6, -46), 'brkga_fair': (18, -62),
+                                      'paybrkga': (34, -14)},
+    ('overage_mean', 'manual'): {'brkga_fair': (30, -30), 'mipfair': (28, 18), 'paybrkga': (28, -6),
                                  'mipfair_a030_xk_e000': (3, 18), 'mipfair_a030_xk25_e000': (-21, 16),
                                  'brkga_fair_w20_xk': (0, -14), 'brkga_fair_w40_xk25': (-21, -16),
                                  'paybrkga_l05_xk': (39, 10)},
-    ('overage_mean', 'autoaccept'): {'brkga_fair': (30, -14), 'mipfair': (35, 16), 'paybrkga': (34, 2),
+    ('overage_mean', 'autoaccept'): {'brkga_fair': (10, 22), 'mipfair': (35, 16), 'paybrkga': (34, 2),
                                      'mipfair_a030_xk_e000': (8, 19), 'mipfair_a030_xk25_e000': (-18, 14),
                                      'brkga_fair_w20_xk': (0, -16), 'brkga_fair_w40_xk25': (-15, -15),
-                                     'paybrkga_l05_xk': (50, 22)},
+                                     'paybrkga_l05_xk': (-30, 14)},
 }
 
 
 def _arrow_label(ax, text, xy, off, col):
-    ax.annotate(text, xy, textcoords='offset points', xytext=off, color=col, ha='center', va='center',
-                arrowprops=dict(arrowstyle='-', color=col, lw=0.6, shrinkA=1, shrinkB=2))
+    # white box behind the text: the leader stops at the box instead of crossing the label
+    ax.annotate(text, xy, textcoords='offset points', xytext=off, color=col, ha='center', va='center', zorder=7,
+                bbox=dict(boxstyle='round,pad=0.12', fc='white', ec='none', alpha=0.9),
+                arrowprops=dict(arrowstyle='-', color=col, lw=0.6, shrinkA=0, shrinkB=2))
+
+
+def _sweep_text(sym: str, rng: str, x_first: float, x_last: float, fam: str) -> str:
+    """Label of a first-generation sweep with both ends in the order they sit on the Gini axis, so that the
+    direction of the sweep is readable (e.g. 'γ 40 ← 5': BRKGA-Fair moves left as γ grows)."""
+    lo, hi = rng.split('–')
+    if fam == 'mipfair' or abs(x_last - x_first) < 0.002:
+        return f'{sym} {rng}'
+    return f'{sym} {hi} ← {lo}' if x_last < x_first else f'{sym} {lo} → {hi}'
 
 
 def _frontier_panel(ax, pts: pd.DataFrame, ycol: str, regime: str) -> None:
@@ -209,7 +223,8 @@ def _frontier_panel(ax, pts: pd.DataFrame, ycol: str, regime: str) -> None:
         _, col, mk, _ = POLICY_STYLE[fam]
         ax.plot(sub['F_Gini'], sub[ycol], '-', marker=mk, c=col, ms=3.5, lw=1.0, label=lab)
         if fam in labels:
-            _arrow_label(ax, f'{sym} {rng}', (sub['F_Gini'].mean(), sub[ycol].mean()), labels[fam], col)
+            txt = _sweep_text(sym, rng, sub['F_Gini'].iloc[0], sub['F_Gini'].iloc[-1], fam)
+            _arrow_label(ax, txt, (sub['F_Gini'].mean(), sub[ycol].mean()), labels[fam], col)
     for m in BENCH:
         if m in pts.index:
             lab, col, mk, _ = POLICY_STYLE[m]
@@ -223,7 +238,7 @@ def _frontier_panel(ax, pts: pd.DataFrame, ycol: str, regime: str) -> None:
         xs = [pts.loc[m, 'F_Gini'] for m, _ in path]
         ys = [pts.loc[m, ycol] for m, _ in path]
         ax.plot(xs, ys, ':', c=col, lw=1.0)
-        ax.plot(xs[1:], ys[1:], 'o', mfc='white', mec=col, ms=4.5, ls='none', label=lab)
+        ax.plot(xs[1:], ys[1:], 'o', mfc='white', mec=col, ms=4.5, ls='none', label=lab, zorder=6)   # above the benchmarks
         for (m, a), x, y in zip(path[1:], xs[1:], ys[1:]):
             if m in labels:
                 _arrow_label(ax, a, (x, y), labels[m], col)
@@ -375,9 +390,10 @@ def fig_earnings_violin(out_dir: str, main_csv: str, couriers_dir: str, methods=
     ax.set_ylabel('end-of-day earnings per\nconnected hour (COP/h)')
     ax.set_ylim(-0.03 * cap, cap * 1.02)
     ax.axhline(0, color='#999999', lw=0.6)
-    ax.set_title(f'eligible couriers (connected $\\geq$ {min_shift_h:g} h), {regime} regime, seed {seed}, '
-                 f'pooled over {max(n_inst.values())} instances; values above the {int(clip_q * 100)}th percentile\n'
-                 f'({cap:,.0f} COP/h) are clipped; vertical bar = interquartile range, horizontal tick = median')
+    # no title: the caption of fig:violin says it, and a two-line title wider than the axes made LaTeX scale the
+    # figure to 7.5 pt
+    print(f'F7: eligible couriers (connected >= {min_shift_h:g} h), {regime} regime, seed {seed}, pooled over '
+          f'{max(n_inst.values())} instances; values above the {int(clip_q * 100)}th percentile ({cap:,.0f} COP/h) clipped')
     _save(fig, out_dir, 'F7_earnings_violin')
     pd.DataFrame({'method': order, 'n_couriers': [len(data[m]) for m in order],
                   'share_idle': [zeros[m] for m in order],
