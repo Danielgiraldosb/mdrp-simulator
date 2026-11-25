@@ -265,7 +265,7 @@ In this section, we provide the detail that complements the main results: the in
 
 Table~\ref{tab:instances} lists the 24 instances described in Section~\ref{sec:instances}, Table~\ref{tab:parameters} the parameters of the simulation with their values, sources and evidence grade, and Table~\ref{tab:factors} the factors and levels of the computational study of Section~\ref{sec:design}; Figure~\ref{fig:map} shows a 3-km zone and Figure~\ref{fig:acceptance} the acceptance curve of Eq.~\eqref{eqn:acceptance}. Each day is projected on a plane centred on the median store location, discarding a few points hundreds of kilometres away.
 
-\paragraph{Computational effort} Section~\ref{sec:design} gives the runs of each experiment. In total 14{,}935 runs and 1{,}295 CPU-hours: a run took 2.9 minutes on average in X1, 7.1 in the second generation of X3, 7.4 in X2, 18.7 in the ablations and 1.8 in the review experiment.
+\paragraph{Computational effort} Section~\ref{sec:design} gives the runs of each experiment. In total 15{,}175 runs and 1{,}317 CPU-hours: a run took 2.9 minutes on average in X1, 7.1 in the second generation of X3, 7.1 in X2, 18.7 in the ablations and 1.8 in the review experiment.
 
 \paragraph{Metrics and statistical procedure} This paragraph details Section~\ref{sec:metrics}. For every run we record the two components of the cost of Eq.~\eqref{eqn:cost} separately, coverage (fraction of orders delivered) and mean and total lateness, the number of late orders, click-to-door mean and 90th percentile, the end-of-day $\FG$, $\FM$, $\FO$ and $\FD$, total payment, the number of active couriers, the mean bundle size, the mean and maximum solve time per round, and the wall-clock time; emissions follow from the per-courier distances by vehicle. The reported Gini coefficient is one and the same for all policies, Eq.~\eqref{eqn:gini} over the eligible couriers, computed ex post from the per-courier table of every run; the active-courier statistic $\FGa$ is reported beside it, and the scope used inside a policy affects what it optimises, not what is measured. To compare the policies, we compute for each policy $\pi$ and instance $i$ the average $\bar y_i^{\pi}$ of a metric over the ten seeds and report the mean over the 24 instances together with its standard error, $\mathrm{SE} = \mathrm{SD}/\sqrt{N}$ with $N = 24$ and SD the sample standard deviation across instances. The cost of the guarantee is the paired difference $\bar y_i^{\pi} - \bar y_i^{\textbf{Greedy}}$ with a 95\% percentile bootstrap interval (2{,}000 resamples) over the 24 instances (instance as block, seeds averaged within); the paired differences between a variant and its parent in Section~\ref{sec:results_quality} and in \ref{sec:App_gen2} and \ref{sec:App_ablations} are over the (instance, seed) pairs with the normal approximation $\pm 1.96\,\mathrm{SE}$. The share of the gap to \textbf{Greedy} closed by a variant is $1 - (\bar F^{\text{var}} - \bar F^{\textbf{Greedy}})/(\bar F^{\text{par}} - \bar F^{\textbf{Greedy}})$, a ratio of means over instances on the same seeds, so that it can be recomputed from the tables. Compliance is the fraction of (instance, seed) pairs, which we call days for short, with $\FG \le \alpha$ by policy and $\alpha$, computed ex post, so the grid of $\alpha$ can be extended without new runs. Under the flat tariff $\FO$ coincides with $\FGa$ for every policy that pays the tariff, so it is not reported separately; $\FM$, click-to-door and the solve time per round are in \ref{sec:App_metrics}. The regime loss is the paired difference manual minus auto-accept. Frontiers are the mean over (instance, seed) of $(\FG, \text{coverage})$ and $(\FG, \text{lateness})$ at each level of the swept parameter, with the non-dominated envelope and the knee selected by the maximum distance from the chord between the extremes, applied identically to the three policies.
 
@@ -809,7 +809,7 @@ Table~\ref{tab:ablations} reports the ablations of the supplement of X3, each pa
 \subsection{Coverage and Gini coefficient under the sensitivity settings, and emissions}
 \label{sec:App_sens_gini}
 
-Table~\ref{tab:sensitivity} reports the relative difference of coverage over the base case discussed in Section~\ref{sec:results_sensitivity}, and Table~\ref{tab:sensitivity_gini} is the companion of Table~\ref{tab:sensitivity} for the end-of-day Gini coefficient over the eligible couriers. The statistic moves less than coverage under every factor: the regime lowers it by $2$\% for the first-generation policies and by $5$--$8$\% for the second-generation ones, whose deficit-aware prefilter reaches more idle couriers when every offer is accepted; the threshold moves it by at most $3.8$\%; $\alpha$ leaves it unchanged in the first generation.
+Table~\ref{tab:sensitivity} reports the relative difference of coverage over the base case discussed in Section~\ref{sec:results_sensitivity}, and Table~\ref{tab:sensitivity_gini} is the companion of Table~\ref{tab:sensitivity} for the end-of-day Gini coefficient over the eligible couriers. The statistic moves less than coverage under every factor: the regime lowers it by $2$\% for the first-generation policies and by $5$--$13$\% for the second-generation ones, whose deficit-aware prefilter reaches more idle couriers when every offer is accepted; the threshold moves it by at most $3.8$\%, and by $6.8$\% for \textbf{BRKGA-Fair} with $k_d = 50$; $\alpha$ leaves it unchanged in the first generation.
 
 \begin{table}[htbp]
 \centering
@@ -833,6 +833,7 @@ Table~\ref{tab:sensitivity} reports the relative difference of coverage over the
 \textbf{MIP-Fair} ($\alpha = 0.30$) & 0.0 & $-1.9$ & -- & 0.0 & -- & 0.0 & 0.0 & +0.1 \\
 \textbf{BRKGA-Fair} ($\gamma = 40$, $k_d = 25$) & 0.0 & $-4.8$ & $-2.4$ & 0.0 & +3.8 & -- & -- & -- \\
 \textbf{MIP-Fair} ($\alpha = 0.30$, $k_d = 25$) & 0.0 & $-7.9$ & $-2.7$ & 0.0 & +3.1 & -- & -- & -- \\
+\textbf{BRKGA-Fair} ($\gamma = 40$, $k_d = 50$) & 0.0 & $-12.6$ & $-5.2$ & 0.0 & +6.8 & -- & -- & -- \\
 \textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.0 & $-2.2$ & $-1.5$ & 0.0 & +2.5 & -- & -- & -- \\
 \hline
 \end{tabular}
@@ -920,11 +921,12 @@ Table~\ref{tab:emissions} and Figure~\ref{fig:emissions} show the emissions diag
 \textbf{MIP-Fair} ($\alpha = 0.30$) & 0.0 & +3.0 & -- & 0.0 & -- & 0.0 & 0.0 & 0.0 \\
 \textbf{BRKGA-Fair} ($\gamma = 40$, $k_d = 25$) & 0.0 & +2.2 & +2.0 & 0.0 & $-5.8$ & -- & -- & -- \\
 \textbf{MIP-Fair} ($\alpha = 0.30$, $k_d = 25$) & 0.0 & +2.6 & +2.3 & 0.0 & $-7.1$ & -- & -- & -- \\
+\textbf{BRKGA-Fair} ($\gamma = 40$, $k_d = 50$) & 0.0 & +2.3 & +2.1 & 0.0 & $-6.5$ & -- & -- & -- \\
 \textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$) & 0.0 & +4.4 & +3.7 & 0.0 & $-7.3$ & -- & -- & -- \\
 \hline
 \end{tabular}
 \end{adjustbox}
-\caption{Sensitivity analysis across operational settings: relative difference of coverage over the base case (manual regime, $\theta = 903$, $\alpha = 0.30$). Regime and $\alpha$ from X1 (ten seeds) and, for the rows with $k_d = 25$, from X3 (five seeds); $\theta$ from X2 (five seeds, the five configurations of the threshold experiment); a dash marks a parameter the policy does not have or a level not run in X2 or X3. The companion for the Gini coefficient is Table~\ref{tab:sensitivity_gini} in \ref{sec:App_sens_gini}}
+\caption{Sensitivity analysis across operational settings: relative difference of coverage over the base case (manual regime, $\theta = 903$, $\alpha = 0.30$). Regime and $\alpha$ from X1 (ten seeds) and, for the rows with $k_d$, from X3 (five seeds); $\theta$ from X2 (five seeds, the six configurations of the threshold experiment); a dash marks a parameter the policy does not have or a level not run in X2 or X3. The companion for the Gini coefficient is Table~\ref{tab:sensitivity_gini} in \ref{sec:App_sens_gini}}
 \label{tab:sensitivity}
 \end{table}
 

@@ -17,9 +17,10 @@ ROWS = [  # (method, label, source of the regime column)
     ('mipfair_a030', r'\textbf{MIP-Fair} ($\alpha = 0.30$)', 'main'),
     ('brkga_fair_w40_xk25', r'\textbf{BRKGA-Fair} ($\gamma = 40$, $k_d = 25$)', 'gen2'),
     ('mipfair_a030_xk25_e000', r'\textbf{MIP-Fair} ($\alpha = 0.30$, $k_d = 25$)', 'gen2'),
+    ('brkga_fair_w40_xk50', r'\textbf{BRKGA-Fair} ($\gamma = 40$, $k_d = 50$)', 'supp'),
     ('paybrkga_l05', r'\textbf{Pay-BRKGA} ($\lambda_{\text{pay}} = 0.5$)', 'main'),
 ]
-X2 = {'greedy', 'hier', 'brkga_fair_w40_xk25', 'mipfair_a030_xk25_e000', 'paybrkga_l05'}
+X2 = {'greedy', 'hier', 'brkga_fair_w40_xk25', 'mipfair_a030_xk25_e000', 'paybrkga_l05', 'brkga_fair_w40_xk50'}
 
 
 def load(data, stem):
@@ -41,15 +42,15 @@ def fmt(v):
     return f'+{r:.1f}' if r > 0 else f'${r:.1f}$'
 
 
-def rows_for(col, main, gen2, thr):
+def rows_for(col, main, gen2, thr, supp):
     out = []
     for meth, lab, src in ROWS:
-        d = main if src == 'main' else gen2
+        d = {'main': main, 'gen2': gen2, 'supp': supp}[src]
         man = level(d[(d.method == meth) & (d.regime == 'manual')], col)
         aut = level(d[(d.method == meth) & (d.regime == 'autoaccept')], col)
         cells = ['0.0', fmt(100 * (aut / man - 1))]
         if meth in X2:
-            base_src = main if meth in ('greedy', 'hier', 'paybrkga_l05') else gen2
+            base_src = d
             seeds = sorted(thr.seed.unique())
             t = thr[thr.method == meth]
             b = base_src[(base_src.method == meth) & (base_src.regime == 'manual') & base_src.seed.isin(seeds)]
@@ -97,9 +98,10 @@ def main():
     ap.add_argument('--instances', action='store_true', help='also write instances.csv (loads the 24 zones)')
     a = ap.parse_args()
     main_df, gen2, thr = load(a.data, 'main'), load(a.data, 'gen2'), load(a.data, 'threshold')
+    supp = load(a.data, 'supp')
     os.makedirs(a.out, exist_ok=True)
     for name, col in (('sensitivity', 'coverage_rate'), ('sensitivity_gini', 'gini_elig_hourly')):
-        body = rows_for(col, main_df, gen2, thr)
+        body = rows_for(col, main_df, gen2, thr, supp)
         open(os.path.join(a.out, name + '.tex'), 'w', encoding='utf-8').write(body)
         print(f'== {name}\n{body}')
     if a.instances:
