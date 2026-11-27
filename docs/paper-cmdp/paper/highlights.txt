@@ -2,4 +2,4 @@ End-of-day Gini bound on hourly earnings of couriers who may reject pay offers
 Under manual acceptance, order-centric policies end at Gini 0.52 to 0.56 on 24 days
 They leave a quarter of couriers idle; a least-served-first benchmark ends at 0.30
 Exposure history and an idle-courier prefilter close half the gap at no coverage cost
-With a third of the fleet, a supply scenario, all policies end at 0.21 to 0.25
+With a third of the fleet, the three policies tested end at Gini 0.21 to 0.25
